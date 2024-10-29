@@ -1,26 +1,35 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to My life.js App" />
+  <router-view>
+    <!-- <landing-page> </landing-page> -->
+    <home-page></home-page>
+  </router-view>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
-
+// import LandingPage from "./components/pages/LandingPage.vue";
+import HomePage from "./components/pages/HomePage.vue";
 export default {
-  name: "App",
   components: {
-    HelloWorld,
+    // LandingPage,
+    HomePage,
   },
 };
 </script>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Poppins", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-style: normal;
+  font-size: 62.5%;
+  overflow: hidden;
 }
 </style>
