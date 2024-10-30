@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="container">
     <section class="card-content" v-if="$slots.title">
       <slot name="title" class="title">
         <h2>Titolo</h2>
@@ -9,9 +9,9 @@
       </slot>
     </section>
     <section class="card-type">
-      <base-button>
-        <template v-slot:button></template>
-      </base-button>
+      <slot name="button">
+        <button>Press me</button>
+      </slot>
     </section>
   </div>
 </template>
@@ -20,12 +20,12 @@
 export default {};
 </script>
 <style scoped>
-.card {
+.container {
   display: flex;
   flex-direction: row;
   box-shadow: 1rem 1rem 3rem grey;
-  background: transparent;
   border-radius: 20px;
+  font-size: 3rem;
 }
 
 .card-content {
@@ -34,15 +34,17 @@ export default {};
   background-color: azure;
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
-  border: solid rgba(0, 0, 0, 0.188) 2px;
-  width: 25rem;
-  height: 30rem;
 }
 
 .card-type {
-  background-color: rgb(43, 226, 147);
-  width: 6rem;
+  background-color: transparent;
+  flex: 1;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
+}
+
+input {
+  font-size: 3rem;
+  height: 5rem;
 }
 </style>

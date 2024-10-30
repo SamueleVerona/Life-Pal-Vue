@@ -1,17 +1,14 @@
 <template>
-  <router-view>
-    <!-- <landing-page> </landing-page> -->
-    <home-page></home-page>
-  </router-view>
+  <the-header></the-header>
+  <router-view> </router-view>
 </template>
 
 <script>
-// import LandingPage from "./components/pages/LandingPage.vue";
-import HomePage from "./components/pages/HomePage.vue";
+import TheHeader from "./components/UI/TheHeader.vue";
+
 export default {
   components: {
-    // LandingPage,
-    HomePage,
+    TheHeader,
   },
 };
 </script>

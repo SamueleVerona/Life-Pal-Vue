@@ -1,9 +1,7 @@
 <template>
-  <button>
+  <button @click="sendText">
     {{ props.textContent }}
   </button>
-  <!-- <slot name="button"> -->
-  <!-- </slot> -->
 </template>
 
 <!-- <script>
@@ -20,8 +18,13 @@ export default {
 </script> -->
 
 <script setup>
-import { defineProps } from "vue";
+import { defineProps, defineEmits } from "vue";
 const props = defineProps(["textContent"]);
+const emit = defineEmits(["get-text"]);
+
+const sendText = function () {
+  emit("get-text", props.textContent);
+};
 </script>
 
 <style scoped>
