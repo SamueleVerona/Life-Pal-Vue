@@ -1,30 +1,48 @@
 <template>
   <header>
     <h1>Life Pal</h1>
-    <a :href="toHref" @click="goTo">{{ switchBtn }}</a>
+    <router-link :to="goTo">{{ switchBtn }}</router-link>
+    <h2 id="user" v-if="!user.value">
+      {{ sessionID }}
+    </h2>
+    <button id="logout" @click="logout" v-if="!user.value">Logout</button>
   </header>
 </template>
 
 <script setup>
-import { useRouter, useRoute } from "vue-router";
-import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import { computed, ref, onUpdated, onBeforeMount } from "vue";
+import { useStore } from "vuex";
 
-const router = useRouter();
 const thisRoute = useRoute();
-const toHref = ref("");
+const store = useStore();
+const user = ref("");
+onBeforeMount(() => (user.value = store.getters.auth.userId));
+
+onUpdated(() => (user.value = store.getters.auth.userId));
+
+const sessionID = computed(() => {
+  if (user.value === "") return "Login";
+  else {
+    return user.value;
+  }
+});
 
 const switchBtn = computed(() =>
   thisRoute.path === "/users" ? "Start Planning" : "Sign Up"
 );
 
-function goTo() {
+const goTo = computed(() => {
   if (thisRoute.path === "/users") {
-    router.push("/home");
-    toHref.value = "/home";
+    return "/home";
   } else {
-    router.push("/users");
-    toHref.value = "/users";
+    return "/users";
   }
+});
+
+function logout() {
+  store.dispatch("logout");
+  user.value = store.getters.auth.userId;
 }
 </script>
 
@@ -47,7 +65,9 @@ h1 {
   font-size: 5rem;
 }
 
-a {
+a,
+#user,
+#logout {
   text-decoration: none;
   font-size: 3rem;
   color: #2c3e50;

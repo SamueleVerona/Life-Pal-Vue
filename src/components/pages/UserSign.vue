@@ -5,12 +5,12 @@
       <base-card class="card">
         <template #title>
           <label for="email">Type in your email</label>
-          <input type="email" name="email" id="email" />
+          <input type="email" name="email" id="email" v-model="userName" />
         </template>
         <template #description>
           <label for="password">Type in your password</label>
 
-          <input type="text" name="password" id="password" />
+          <input type="text" name="password" id="password" v-model="userPwd" />
         </template>
         <template #button>
           <button>Sign up</button>
@@ -22,10 +22,21 @@
 
 <script setup>
 import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import { ref } from "vue";
 
 const router = useRouter();
+const store = useStore();
+
+const userName = ref("");
+const userPwd = ref("");
+
 function submit() {
   router.push("/home");
+  store.dispatch("userLogin", {
+    email: userName.value,
+    password: userPwd.value,
+  });
 }
 </script>
 

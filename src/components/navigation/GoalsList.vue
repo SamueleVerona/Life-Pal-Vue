@@ -9,15 +9,23 @@
     </h2>
     <section id="content">
       <h2 v-if="filteredData.length === 0">
-        <a @click="showNew" v-if="!isVisible"> No goals yet ! Start planning</a>
-        <a v-else-if="isVisible" @click="showNew">Close</a>
+        No goals yet!
+        <a @click="showNew" v-if="!isVisible">Start planning</a>
       </h2>
       <ul v-else-if="filteredData.length > 0">
         <li v-for="el in filteredData" :key="el.id">
-          <h2>{{ el.title }}</h2>
+          <h2 class="title">{{ el.title }}</h2>
           <hr />
-          <h2>{{ el.desc }}</h2>
-          <div :class="classType(el.type)"></div>
+          <h2 class="desc">{{ el.desc }}</h2>
+          <div class="time-id" :class="classType(el.type)"></div>
+
+          <input
+            type="checkbox"
+            :key="el.id"
+            :name="el.id"
+            class="selector"
+            @input="getId"
+          />
         </li>
       </ul>
     </section>
@@ -42,6 +50,7 @@
       </template>
       <template #button>
         <button id="button-save" @click="addGoal">Save</button>
+        <button id="button-close" @click="showNew">X</button>
       </template>
     </base-card>
 
@@ -52,26 +61,39 @@
     >
       Add Goal
     </button>
+    <button
+      id="button-rem"
+      v-if="filteredData.length > 0 && isShowing"
+      @click="remGoal"
+    >
+      Remove Goal
+    </button>
   </section>
 </template>
 
 <script setup>
 import { useStore } from "vuex";
-import { watch, ref, computed, inject } from "vue";
+import { watch, ref, computed, inject, onBeforeMount } from "vue";
 
 const timeDivId = inject("time-div-id");
 const store = useStore();
 
-const data = store.getters.goals;
+const data = ref(store.getters.goals);
 const filteredData = ref([]);
 
+function refetchData() {
+  filteredData.value = data.value.filter(
+    (goal) => goal.type === timeDivId.value
+  );
+}
+
+onBeforeMount(() => refetchData);
+
 watch(timeDivId, () => {
-  filteredData.value = data.filter((goal) => goal.type === timeDivId.value);
+  refetchData();
   isVisible.value = false;
   isShowing.value = true;
 });
-
-watch(data, (newData) => console.log(newData));
 
 const goalsTimeDiv = computed(() =>
   timeDivId.value ? "This " + timeDivId.value : "Goals"
@@ -90,16 +112,19 @@ const isShowing = ref(true);
 
 function addGoal() {
   store.dispatch("setGoal", {
+    user: "test@test",
     id: "g" + new Date().getTime() + counter,
     title: inputTitle.value,
     desc: inputDesc.value,
     date: "",
     type: timeDivId.value,
   });
-  filteredData.value = data.filter((goal) => goal.type === timeDivId.value);
+  refetchData();
   inputTitle.value = "";
   inputDesc.value = "";
   counter++;
+  isVisible.value = false;
+  isShowing.value = true;
 }
 
 function showNew() {
@@ -110,6 +135,23 @@ function showNew() {
 function showAdd() {
   isVisible.value = true;
   isShowing.value = false;
+}
+
+const selectedGoals = ref([]);
+
+function getId(event) {
+  const goalId = event.target.attributes.name.value;
+  if (event.target.checked && !selectedGoals.value[goalId])
+    selectedGoals.value.push(goalId);
+  if (!event.target.checked && selectedGoals.value[goalId])
+    selectedGoals.value = selectedGoals.value.filter((id) => id !== goalId);
+}
+
+function remGoal() {
+  store.dispatch("remGoal", selectedGoals.value);
+  selectedGoals.value = [];
+  data.value = store.getters.goals;
+  refetchData();
 }
 </script>
 
@@ -141,7 +183,6 @@ function showAdd() {
 
 li {
   display: flex;
-  justify-content: space-between;
   border-radius: 10px;
   background: white;
   margin: 1rem 0;
@@ -153,8 +194,25 @@ a {
   padding: 0.5rem 0.5rem;
 }
 
+.title,
+.desc {
+  font-size: 2rem;
+  flex: 3;
+}
+.selector,
+.time-id {
+  flex: 1;
+}
+
+.selector {
+  border: solid;
+  border-radius: 10px;
+}
+.checked {
+  background: #827bff;
+}
 .day {
-  width: 3rem;
+  width: 1fr;
   background: rgb(47, 255, 137);
 }
 .week {
@@ -164,6 +222,14 @@ a {
 .month {
   width: 3rem;
   background: rgb(47, 47, 255);
+}
+.year {
+  width: 3rem;
+  background: rgb(255, 203, 47);
+}
+.decade {
+  width: 3rem;
+  background: rgb(47, 210, 255);
 }
 
 #timeDiv {
@@ -215,7 +281,7 @@ textarea {
 }
 
 #button-save {
-  height: 100%;
+  flex: 3;
   width: 100%;
   background: rgb(161, 255, 151);
   border: none;
@@ -227,24 +293,43 @@ textarea {
 }
 
 #button-save:active,
-#button-add:active {
+#button-add:active,
+#button-rem:active {
   background: rgb(219, 255, 214);
 }
 
-#button-add {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  /* align-self: center; */
+#button-close {
+  width: 100%;
+  flex: 1;
+  border: none;
+  font-size: 2rem;
+  font-weight: 600;
+  background: rgb(255, 151, 151);
+}
 
-  width: 20rem;
-  height: 10%;
+#button-add,
+#button-rem {
+  position: absolute;
   font-size: 2rem;
   font-weight: 800;
   color: #2c3e50;
-  background: rgb(248, 151, 255);
+  height: 5rem;
   border-radius: 30px;
   border: none;
   cursor: pointer;
+  padding: 0 1rem;
+}
+
+#button-add {
+  bottom: 1rem;
+  right: 1rem;
+  height: 5rem;
+  background: rgb(248, 151, 255);
+}
+
+#button-rem {
+  bottom: 1rem;
+  left: 1rem;
+  background: rgb(255, 165, 151);
 }
 </style>

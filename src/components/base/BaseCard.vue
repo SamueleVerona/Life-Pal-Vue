@@ -37,6 +37,8 @@ export default {};
 }
 
 .card-type {
+  display: flex;
+  flex-direction: column;
   background-color: transparent;
   flex: 1;
   border-top-right-radius: 20px;
