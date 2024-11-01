@@ -1,60 +1,74 @@
 <template>
   <div>
-    <dialog open v-if="isVisible">
-      <slot name="title"> </slot>
-      <slot name="description"> </slot>
-      <button @click="closeDialog">Close</button>
-    </dialog>
-    <div class="underlay" v-if="isVisible" @click="closeDialog"></div>
+    <teleport to="body">
+      <dialog open v-if="show">
+        <slot name="title">
+          <h2>{{ props.message }}</h2>
+        </slot>
+        <slot name="description"> </slot>
+        <button @click="closeDialog">Close</button>
+      </dialog>
+      <div class="underlay" @click="closeDialog" v-if="show"></div>
+    </teleport>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { defineProps, defineEmits } from "vue";
 
-const isVisible = ref(true);
+const props = defineProps(["message", "show"]);
+const emits = defineEmits(["close"]);
 
 const closeDialog = () => {
-  isVisible.value = false;
+  emits("close");
 };
 </script>
 
 <style scoped>
+* {
+  font-family: "Poppins", sans-serif;
+}
 .underlay {
+  position: fixed;
+  top: 10vh;
+  left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.359);
-  width: 100vw;
-  height: 90vh;
-  z-index: -1;
+  background: rgba(169, 181, 202, 0.171);
+  backdrop-filter: blur(3px);
+  height: 100vh;
+  width: 100%;
 }
 
 dialog {
   display: flex;
   flex-direction: column;
-
-  background-color: rgb(81, 249, 249);
+  background-color: rgb(140, 81, 249);
   border-radius: 20px;
-  border: solid rgba(0, 0, 0, 0.188) 2px;
-  box-shadow: 1rem 1rem 3rem rgba(128, 128, 128, 0.333);
+  border: none;
   z-index: 1;
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  /* width: 25rem;
-  height: 30rem; */
+  height: 20vh;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
 }
 
 h2,
-p,
-button {
+p {
   font-size: 3rem;
-  padding: 1rem;
+  padding: 4rem 3rem;
+  width: max-content;
+  color: white;
 }
 
 button {
-  justify-self: end;
+  font-size: 3rem;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border: none;
 }
 </style>

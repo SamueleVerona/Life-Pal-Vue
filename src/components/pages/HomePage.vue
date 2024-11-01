@@ -1,5 +1,6 @@
 <template>
-  <router-link to="/home"></router-link>
+  <!-- <router-view></router-view> -->
+  <router-link></router-link>
   <section id="content">
     <calendar-nav
       class="nav"

@@ -6,11 +6,19 @@ import UserSign from "./components/pages/UserSign.vue";
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", redirect: "/home" },
+    { path: "/", redirect: "/landing" },
     { path: "/landing", component: LandingPage },
-    { path: "/home", component: HomePage },
-    { path: "/users", component: UserSign },
+    {
+      path: "/users",
+      component: UserSign,
+      children: [{ path: ":home", component: HomePage, props: true }],
+    },
   ],
 });
+
+// router.beforeEnter((to, from, next)=>{
+//   if(to === '/home' && from === 'users' )
+
+// })
 
 export default router;

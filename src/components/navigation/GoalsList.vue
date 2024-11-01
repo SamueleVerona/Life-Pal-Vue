@@ -8,10 +8,12 @@
       {{ goalsTimeDiv }}
     </h2>
     <section id="content">
-      <h2 v-if="filteredData.length === 0">
-        No goals yet!
-        <a @click="showNew" v-if="!isVisible">Start planning</a>
-      </h2>
+      <div v-if="filteredData.length === 0" id="no-goals">
+        <h2 v-if="!isVisible">No goals yet!</h2>
+        <button @click="showNew" v-if="!isVisible" id="button-start">
+          Start planning
+        </button>
+      </div>
       <ul v-else-if="filteredData.length > 0">
         <li v-for="el in filteredData" :key="el.id">
           <h2 class="title">{{ el.title }}</h2>
@@ -180,6 +182,9 @@ function remGoal() {
 .setting {
   background: linear-gradient(90deg, #fbffbe 0%, #fff67e 100%);
 }
+button:hover {
+  cursor: pointer;
+}
 
 li {
   display: flex;
@@ -189,9 +194,24 @@ li {
 }
 
 h2,
-a {
+#button-start {
   font-size: 2.5rem;
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem 1.5rem;
+  /* line-height: 3rem; */
+}
+
+#button-start {
+  background: rgb(169, 247, 207);
+  border: none;
+  font-weight: bold;
+  color: #2c3e50;
+  border-radius: 30px;
+
+  /* padding: 1rem; */
+}
+#button-start:hover {
+  color: rgb(255, 255, 255);
+  background: #7ea7ff;
 }
 
 .title,

@@ -7,6 +7,7 @@ export default {
     state.users.push(userCred);
     state.auth.userId = userCred.email;
     state.auth.userPwd = userCred.password;
+    console.log("new User : ", userCred);
   },
   logout(state) {
     state.auth.userId = "";
