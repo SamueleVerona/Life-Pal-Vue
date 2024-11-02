@@ -1,45 +1,18 @@
 <template>
   <header>
     <h1>Life Pal</h1>
-    <router-link to="/users" v-if="!isVisible">{{ switchBtn }}</router-link>
-    <h2 id="user" v-if="isVisible">
-      {{ sessionID }}
-    </h2>
-    <button id="logout" @click="logout" v-if="isVisible">Logout</button>
+    <router-link :to="toPath">{{ pathText }}</router-link>
+    <h2 id="user" v-if="route.params.isAuth">{{ route.params.userId }}</h2>
   </header>
 </template>
 
 <script setup>
 import { useRoute } from "vue-router";
-import { computed, ref, onBeforeMount, onBeforeUpdate, watch } from "vue";
-import { useStore } from "vuex";
+import { computed } from "vue";
 
-const thisRoute = useRoute();
-const store = useStore();
-const user = ref("");
-onBeforeMount(() => (user.value = store.getters.auth.userId));
-
-onBeforeUpdate(() => (user.value = store.getters.auth.userId));
-
-const sessionID = computed(() => {
-  if (!user.value) return "Login";
-  else {
-    return user.value;
-  }
-});
-
-const isVisible = ref(false);
-
-watch(sessionID, () => (isVisible.value = !isVisible.value));
-
-const switchBtn = computed(() =>
-  thisRoute.path === "/users" ? "Log In" : "Sign Up"
-);
-
-function logout() {
-  store.dispatch("logout");
-  user.value = store.getters.auth.userId;
-}
+const route = useRoute();
+const pathText = computed(() => (route.params.isAuth ? "Log Out" : "Sign In"));
+const toPath = computed(() => (route.params.isAuth ? "/landing" : "UserSign"));
 </script>
 
 <style scoped>

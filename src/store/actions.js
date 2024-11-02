@@ -1,30 +1,24 @@
 export default {
   userLogin(context, userCred) {
-    const users = context.rootGetters.users;
+    const users = context.getters.users;
 
-    users.forEach((user) => {
-      if (
-        user.email === userCred.email &&
-        user.password === userCred.password
-      ) {
-        context.commit("userLogin", userCred);
-        console.log("same creds");
-      } else {
-        throw new Error("This user doesn't exist! Sign up instead!");
-      }
-    });
-
-    // context.commit("userLogin", userCred);
+    if (
+      users.some(
+        (user) =>
+          user.email === userCred.email && user.password === userCred.password
+      )
+    ) {
+      context.commit("userLogin", userCred);
+    } else {
+      throw new Error("This user doesn't exist! Sign up instead!");
+    }
   },
   setNewUser(context, userCred) {
     const users = context.rootGetters.users;
 
     if (users.some((user) => user.email === userCred.email)) {
-      // console.log("setUser error");
       throw new Error("User already exists! Log in insted");
     } else if (!userCred.email) {
-      // console.log("setUser error");
-
       throw new Error("Fields must not be empty");
     } else {
       context.commit("setNewUser", userCred);
@@ -37,7 +31,7 @@ export default {
   setGoal(context, newGoal) {
     context.commit("setGoal", newGoal);
   },
-  remGoal(context, goalIdArr) {
-    context.commit("remGoal", goalIdArr);
+  remGoal(context, goalsToRemove) {
+    context.commit("remGoal", goalsToRemove);
   },
 };

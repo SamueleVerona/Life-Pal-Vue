@@ -7,7 +7,6 @@ export default {
     state.users.push(userCred);
     state.auth.userId = userCred.email;
     state.auth.userPwd = userCred.password;
-    console.log("new User : ", userCred);
   },
   logout(state) {
     state.auth.userId = "";
@@ -15,11 +14,18 @@ export default {
   },
 
   setGoal(state, newGoal) {
-    state.goals.push(newGoal);
+    const userId = newGoal.userId;
+    const goalToAdd = newGoal.newGoal;
+    state.users.find((user) => user.email === userId).goals.push(goalToAdd);
   },
-  remGoal(state, goalIdArr) {
-    goalIdArr.forEach((id) => {
-      state.goals = state.goals.filter((goal) => goal.id !== id);
+  remGoal(state, goalsToRemove) {
+    const goalsArr = goalsToRemove.goalsArr;
+    const userId = goalsToRemove.userId;
+
+    goalsArr.forEach((goalId) => {
+      state.users.find((user) => user.email === userId).goals = state.users
+        .find((user) => user.email === userId)
+        .goals.filter((goal) => goal.id !== goalId);
     });
   },
 };

@@ -50,6 +50,17 @@
           v-model="inputDesc"
         ></textarea>
       </template>
+      <template #options v-if="timeDivId.value === 'al'">
+        <label for="time-selection">Choose a Time:</label>
+        <select id="time-selection">
+          <option value="day">day</option>
+          <option value="week">week</option>
+          <option value="month">month</option>
+          <option value="year">year</option>
+          <option value="decade">decade</option>
+        </select>
+      </template>
+
       <template #button>
         <button id="button-save" @click="addGoal">Save</button>
         <button id="button-close" @click="showNew">X</button>
@@ -75,18 +86,27 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { watch, ref, computed, inject, onBeforeMount } from "vue";
+import { watch, ref, onBeforeMount, defineProps, toRefs, computed } from "vue";
 
-const timeDivId = inject("time-div-id");
 const store = useStore();
-
-const data = ref(store.getters.goals);
 const filteredData = ref([]);
+const props = defineProps(["activeUser", "timeDivId"]);
+
+const { activeUser, timeDivId } = toRefs(props);
+
+const data = ref(
+  store.getters.users.find((user) => user.email === activeUser.value).goals
+);
+
+filteredData.value = data.value;
 
 function refetchData() {
-  filteredData.value = data.value.filter(
-    (goal) => goal.type === timeDivId.value
-  );
+  if (timeDivId.value === "al") filteredData.value = data.value;
+  else {
+    filteredData.value = data.value.filter(
+      (goal) => goal.type === timeDivId.value
+    );
+  }
 }
 
 onBeforeMount(() => refetchData);
@@ -98,7 +118,7 @@ watch(timeDivId, () => {
 });
 
 const goalsTimeDiv = computed(() =>
-  timeDivId.value ? "This " + timeDivId.value : "Goals"
+  timeDivId.value === "al" ? "All Goals" : "This " + timeDivId.value
 );
 
 const classType = function (type) {
@@ -114,12 +134,14 @@ const isShowing = ref(true);
 
 function addGoal() {
   store.dispatch("setGoal", {
-    user: "test@test",
-    id: "g" + new Date().getTime() + counter,
-    title: inputTitle.value,
-    desc: inputDesc.value,
-    date: "",
-    type: timeDivId.value,
+    userId: activeUser.value,
+    newGoal: {
+      id: "g" + new Date().getTime() + counter,
+      title: inputTitle.value,
+      desc: inputDesc.value,
+      date: "",
+      type: timeDivId.value,
+    },
   });
   refetchData();
   inputTitle.value = "";
@@ -150,9 +172,14 @@ function getId(event) {
 }
 
 function remGoal() {
-  store.dispatch("remGoal", selectedGoals.value);
+  store.dispatch("remGoal", {
+    userId: activeUser.value,
+    goalsArr: selectedGoals.value,
+  });
   selectedGoals.value = [];
-  data.value = store.getters.goals;
+  data.value = store.getters.users.find(
+    (user) => user.email === activeUser.value
+  ).goals;
   refetchData();
 }
 </script>
@@ -298,6 +325,9 @@ textarea {
   flex: 1;
   font-size: 2rem;
   border: none;
+}
+#time-selection {
+  flex: 1;
 }
 
 #button-save {

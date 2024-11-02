@@ -1,5 +1,5 @@
 <template>
-  <router-link to="/users"></router-link>
+  <router-link to="/userSign"></router-link>
   <section class="container">
     <form @submit.prevent class="form">
       <base-card class="card">
@@ -41,7 +41,7 @@
 <script setup>
 import { useStore } from "vuex";
 import { ref, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 
 const store = useStore();
 const isSignup = ref(true);
@@ -50,7 +50,7 @@ const userName = ref("");
 const userPwd = ref("");
 const gottenError = ref(null);
 
-const route = useRoute();
+const router = useRouter();
 
 function closeDialog() {
   gottenError.value = false;
@@ -59,14 +59,10 @@ function closeDialog() {
 function signUp() {
   isSignup.value = true;
   isLogin.value = false;
-  userName.value = "";
-  userPwd.value = "";
 }
 function logIn() {
   isLogin.value = true;
   isSignup.value = false;
-  userName.value = "";
-  userPwd.value = "";
 }
 
 const mode = computed(function () {
@@ -83,9 +79,12 @@ async function submit() {
       password: userPwd.value,
     });
 
-    const user = route.path;
-    // router.push("/user/home");
-    console.log(user);
+    if (store.getters.auth.userId)
+      router.push({
+        name: "user-home",
+        params: { userId: userName.value },
+        meta: { isAuth: true },
+      });
   } catch (err) {
     gottenError.value = err.message;
   }

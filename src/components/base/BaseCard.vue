@@ -7,6 +7,7 @@
       <slot name="description" class="description">
         <p>Ipse dixit descritione</p>
       </slot>
+      <slot name="options" class="description"> </slot>
     </section>
     <section class="card-type">
       <slot name="button">

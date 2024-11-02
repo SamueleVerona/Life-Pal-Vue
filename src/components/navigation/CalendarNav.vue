@@ -16,7 +16,11 @@ const props = defineProps(["timeDivs"]);
 const emit = defineEmits(["gotten-text"]);
 
 const getText = function (gottenText) {
-  emit("gotten-text", (time.value = gottenText.slice(0, -1).toLowerCase()));
+  emit(
+    "gotten-text",
+
+    (time.value = gottenText.slice(0, -1).toLowerCase())
+  );
 };
 </script>
 
@@ -25,8 +29,8 @@ nav {
   display: flex;
   margin: auto 0;
   margin-left: 2rem;
-  padding: 1rem;
-  height: 80vh;
+  padding: 0.5rem;
+  /* height: 80vh; */
   text-align: center;
 
   background: linear-gradient(90deg, #89f7fe 0%, #66a6ff 100%);
@@ -41,13 +45,12 @@ ul {
 }
 
 button {
-  width: 18rem;
+  width: 13rem;
   height: 8rem;
-  border-radius: 10px;
+  border-radius: 15px;
   border: none;
-  margin: 0.6rem 0;
-
+  margin: 0.2rem 0;
   font-size: 3rem;
-  background: linear-gradient(90deg, #ffeb3b 0%, #f0f3bd 100%);
+  background: linear-gradient(90deg, #ffc26d 0%, #f3e6bd 100%);
 }
 </style>

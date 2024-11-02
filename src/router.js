@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import LandingPage from "./components/pages/LandingPage.vue";
 import HomePage from "./components/pages/HomePage.vue";
 import UserSign from "./components/pages/UserSign.vue";
+import store from "./store";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -9,16 +10,36 @@ const router = createRouter({
     { path: "/", redirect: "/landing" },
     { path: "/landing", component: LandingPage },
     {
-      path: "/users",
+      path: "/userSign",
       component: UserSign,
-      children: [{ path: ":home", component: HomePage, props: true }],
+      props: true,
+    },
+    {
+      name: "user-home",
+      path: "/:userId",
+      component: HomePage,
+      props: true,
+      // meta: { needsAuth: true },
+      beforeEnter(to, fom, next) {
+        if (store.getters.auth.userId) {
+          to.params.userId = store.getters.auth.userId;
+          to.params.isAuth = true;
+          next();
+        } else {
+          to.params.isAuth = false;
+
+          next("/userSign");
+        }
+      },
     },
   ],
 });
 
-// router.beforeEnter((to, from, next)=>{
-//   if(to === '/home' && from === 'users' )
-
-// })
+// router.beforeEach((to, from, next) => {
+//   if (to.name === "user-home" && store.getters.auth.userID) next();
+//   else {
+//     next(false);
+//   }
+// });
 
 export default router;

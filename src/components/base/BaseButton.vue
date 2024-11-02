@@ -4,19 +4,6 @@
   </button>
 </template>
 
-<!-- <script>
-export default {
-  props: ["textContent"],
-  methods: {
-    print() {
-      alert(this.textContent);
-    },
-  },
-};
-
-
-</script> -->
-
 <script setup>
 import { defineProps, defineEmits } from "vue";
 const props = defineProps(["textContent"]);
@@ -30,12 +17,10 @@ const sendText = function () {
 <style scoped>
 button {
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  width: 20rem;
   font-size: 2.5rem;
   font-weight: bold;
-  text-align: left;
+  text-align: center;
   line-height: 2rem;
-  padding: 0.5rem 0rem 0.5rem 2rem;
 }
 
 button:active {
