@@ -3,27 +3,14 @@
     <calendar-nav
       class="nav"
       :timeDivs="timeDivsArr"
-      @gotten-text="passText"
+      @sendText="passText"
     ></calendar-nav>
-    <goals-list
-      class="goals"
-      :timeDivId="timeDivId"
-      :activeUser="userId"
-      :userGoals="userGoals"
-    >
-      <!-- <template #btn-remove>
-        <button id="button-rem">Remove Goal</button>
-      </template>
-
-      <template #btn-add>
-        <button id="button-add">Dum</button>
-      </template> -->
-    </goals-list>
+    <goals-list class="goals" :goalType="timeDivId"> </goals-list>
   </section>
 </template>
 
 <script setup>
-import { defineComponent, ref, onBeforeUpdate } from "vue";
+import { defineComponent, ref } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import CalendarNav from "../navigation/CalendarNav.vue";
@@ -42,13 +29,8 @@ const route = useRoute();
 const userId = route.params.userId;
 
 const userData = ref(store.getters.users.find((user) => user.email === userId));
-const userGoals = ref(userData.value.goals);
 const timeDivsArr = ref([]);
 timeDivsArr.value = new Set(userData.value.goals.map((goal) => goal.type));
-
-onBeforeUpdate(() => console.log(userGoals.value));
-
-// console.log(userGoals.value);
 </script>
 
 <style scoped>

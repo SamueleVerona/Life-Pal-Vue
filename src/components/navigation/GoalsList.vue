@@ -25,8 +25,9 @@
             type="checkbox"
             :key="el.id"
             :name="el.id"
+            :value="el.id"
+            v-model="selectedGoals"
             class="selector"
-            @input="getId"
           />
         </li>
       </ul>
@@ -50,7 +51,7 @@
           v-model="inputDesc"
         ></textarea>
       </template>
-      <template #options v-if="timeDivId.value === 'All Goals'">
+      <template #options v-if="props.goalType === 'All Goals'">
         <label for="time-selection">Choose a Time:</label>
         <select id="time-selection">
           <option value="day">day</option>
@@ -89,30 +90,32 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { watch, ref, defineProps, toRefs } from "vue";
+import { watch, ref, defineProps, onBeforeMount } from "vue";
+import { useRoute } from "vue-router";
 
+const route = useRoute();
 const store = useStore();
-const props = defineProps(["userGoals", "activeUser", "timeDivId"]);
-const { userGoals, activeUser, timeDivId } = toRefs(props);
+const props = defineProps(["goalType"]);
+const timeDivId = ref("All Goals");
+
+const userData = ref([]);
 const filteredData = ref([]);
-filteredData.value = userGoals.value;
 
-function refetchData() {
-  filteredData.value = userGoals.value;
+function fetchData() {
+  userData.value = store.getters.users.find(
+    (user) => user.email === route.params.userId
+  ).goals;
 
-  if (timeDivId.value === "All Goals") filteredData.value = userGoals.value;
+  if (props.goalType === "All Goals") filteredData.value = userData.value;
   else {
-    filteredData.value = userGoals.value.filter(
-      (goal) => goal.type === timeDivId.value
+    filteredData.value = userData.value.filter(
+      (goal) => goal.type === props.goalType
     );
   }
 }
 
-watch(timeDivId, () => {
-  refetchData();
-  isVisible.value = false;
-  isShowing.value = true;
-});
+onBeforeMount(() => fetchData());
+watch(props, () => fetchData());
 
 const inputTitle = ref("");
 const inputDesc = ref("");
@@ -122,38 +125,30 @@ const isShowing = ref(true);
 
 function addGoal() {
   store.dispatch("setGoal", {
-    userId: activeUser.value,
+    userId: route.params.userId,
     newGoal: {
       id: "g" + new Date().toISOString,
       title: inputTitle.value,
       desc: inputDesc.value,
       date: "",
-      type: timeDivId.value,
+      type: props.goalType,
     },
   });
-  refetchData();
+  fetchData();
   inputTitle.value = "";
   inputDesc.value = "";
   isVisible.value = false;
   isShowing.value = true;
 }
 const selectedGoals = ref([]);
-
-function getId(event) {
-  const goalId = event.target.attributes.name.value;
-  if (event.target.checked && !selectedGoals.value[goalId])
-    selectedGoals.value.push(goalId);
-  if (!event.target.checked && selectedGoals.value[goalId])
-    selectedGoals.value = selectedGoals.value.filter((id) => id !== goalId);
-}
+watch(selectedGoals, () => console.log(selectedGoals.value));
 
 function remGoal() {
   store.dispatch("remGoal", {
-    userId: activeUser.value,
+    userId: route.params.userId,
     goalsArr: selectedGoals.value,
   });
-  selectedGoals.value = [];
-  refetchData();
+  fetchData();
 }
 
 function showNew() {

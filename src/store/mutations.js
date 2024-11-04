@@ -22,6 +22,8 @@ export default {
     const userId = goalsToRemove.userId;
     const goalsArr = goalsToRemove.goalsArr;
 
+    console.log(goalsToRemove);
+
     goalsArr.forEach((goalId) => {
       state.users.find(({ email }) => email === userId).goals = state.users
         .find(({ email }) => email === userId)

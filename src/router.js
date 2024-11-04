@@ -19,11 +19,11 @@ const router = createRouter({
       path: "/:userId",
       component: HomePage,
       props: true,
-      // meta: { needsAuth: true },
       beforeEnter(to, fom, next) {
         if (store.getters.auth.userId) {
           to.params.userId = store.getters.auth.userId;
           to.params.isAuth = true;
+          to.params.goalType = "";
           next();
         } else {
           to.params.isAuth = false;

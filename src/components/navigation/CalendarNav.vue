@@ -14,14 +14,16 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits } from "vue";
 
-const time = ref("day");
 const props = defineProps(["timeDivs"]);
-const emit = defineEmits(["gotten-text"]);
+const emits = defineEmits(["sendText"]);
 
 const getText = function (gottenText) {
-  emit("gotten-text", (time.value = gottenText));
+  // console.log(gottenText);
+  emits("sendText", gottenText);
+
+  // console.log(route.params);
 };
 </script>
 
