@@ -19,12 +19,12 @@ export default {
     state.users.find((user) => user.email === userId).goals.push(goalToAdd);
   },
   remGoal(state, goalsToRemove) {
-    const goalsArr = goalsToRemove.goalsArr;
     const userId = goalsToRemove.userId;
+    const goalsArr = goalsToRemove.goalsArr;
 
     goalsArr.forEach((goalId) => {
-      state.users.find((user) => user.email === userId).goals = state.users
-        .find((user) => user.email === userId)
+      state.users.find(({ email }) => email === userId).goals = state.users
+        .find(({ email }) => email === userId)
         .goals.filter((goal) => goal.id !== goalId);
     });
   },

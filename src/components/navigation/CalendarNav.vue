@@ -1,6 +1,11 @@
 <template>
   <nav>
     <ul>
+      <li>
+        <base-button text-content="All Goals" @get-text="getText"
+          >All Goals</base-button
+        >
+      </li>
       <li v-for="division in props.timeDivs" :key="division">
         <base-button :text-content="division" @get-text="getText"></base-button>
       </li>
@@ -16,11 +21,7 @@ const props = defineProps(["timeDivs"]);
 const emit = defineEmits(["gotten-text"]);
 
 const getText = function (gottenText) {
-  emit(
-    "gotten-text",
-
-    (time.value = gottenText.slice(0, -1).toLowerCase())
-  );
+  emit("gotten-text", (time.value = gottenText));
 };
 </script>
 

@@ -2,19 +2,28 @@
   <section id="content">
     <calendar-nav
       class="nav"
-      :timeDivs="timeDivisions"
+      :timeDivs="timeDivsArr"
       @gotten-text="passText"
     ></calendar-nav>
     <goals-list
       class="goals"
       :timeDivId="timeDivId"
       :activeUser="userId"
-    ></goals-list>
+      :userGoals="userGoals"
+    >
+      <!-- <template #btn-remove>
+        <button id="button-rem">Remove Goal</button>
+      </template>
+
+      <template #btn-add>
+        <button id="button-add">Dum</button>
+      </template> -->
+    </goals-list>
   </section>
 </template>
 
 <script setup>
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, onBeforeUpdate } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import CalendarNav from "../navigation/CalendarNav.vue";
@@ -23,16 +32,23 @@ defineComponent(CalendarNav);
 defineComponent(GoalsList);
 
 const store = useStore();
-
-const timeDivisions = store.getters.timeDivisions;
 const timeDivId = ref("");
+
 function passText(gottenText) {
   timeDivId.value = gottenText;
 }
 
 const route = useRoute();
-
 const userId = route.params.userId;
+
+const userData = ref(store.getters.users.find((user) => user.email === userId));
+const userGoals = ref(userData.value.goals);
+const timeDivsArr = ref([]);
+timeDivsArr.value = new Set(userData.value.goals.map((goal) => goal.type));
+
+onBeforeUpdate(() => console.log(userGoals.value));
+
+// console.log(userGoals.value);
 </script>
 
 <style scoped>
@@ -49,4 +65,30 @@ p {
   font-size: 3rem;
   padding: 1rem;
 }
+
+/* #button-add,
+#button-rem {
+  position: absolute;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #2c3e50;
+  height: 5rem;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  padding: 0 1rem;
+}
+
+#button-add {
+  bottom: 1rem;
+  right: 1rem;
+  height: 5rem;
+  background: rgb(248, 151, 255);
+}
+
+#button-rem {
+  bottom: 1rem;
+  left: 1rem;
+  background: rgba(255, 165, 151, 0.995);
+} */
 </style>

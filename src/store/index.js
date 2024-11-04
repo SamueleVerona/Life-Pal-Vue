@@ -43,6 +43,13 @@ const store = createStore({
               date: "",
               type: "month",
             },
+            {
+              id: "g5",
+              title: "Esempio",
+              desc: "desc es",
+              date: "",
+              type: "month",
+            },
           ],
         },
         {
@@ -80,7 +87,6 @@ const store = createStore({
           ],
         },
       ],
-      timeDivisions: ["All", "Days", "Weeks", "Months", "Years", "Decades"],
     };
   },
   actions,

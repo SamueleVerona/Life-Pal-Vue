@@ -5,7 +5,7 @@
     :class="{ setting: filteredData.length === 0 }"
   >
     <h2 id="timeDiv">
-      {{ goalsTimeDiv }}
+      {{ timeDivId }}
     </h2>
     <section id="content">
       <div v-if="filteredData.length === 0" id="no-goals">
@@ -19,7 +19,7 @@
           <h2 class="title">{{ el.title }}</h2>
           <hr />
           <h2 class="desc">{{ el.desc }}</h2>
-          <div class="time-id" :class="classType(el.type)"></div>
+          <div class="time-id" :class="el.type"></div>
 
           <input
             type="checkbox"
@@ -50,7 +50,7 @@
           v-model="inputDesc"
         ></textarea>
       </template>
-      <template #options v-if="timeDivId.value === 'al'">
+      <template #options v-if="timeDivId.value === 'All Goals'">
         <label for="time-selection">Choose a Time:</label>
         <select id="time-selection">
           <option value="day">day</option>
@@ -66,6 +66,9 @@
         <button id="button-close" @click="showNew">X</button>
       </template>
     </base-card>
+
+    <slot name="btn-remove"></slot>
+    <slot name="btn-add"></slot>
 
     <button
       id="button-add"
@@ -86,30 +89,24 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { watch, ref, onBeforeMount, defineProps, toRefs, computed } from "vue";
+import { watch, ref, defineProps, toRefs } from "vue";
 
 const store = useStore();
+const props = defineProps(["userGoals", "activeUser", "timeDivId"]);
+const { userGoals, activeUser, timeDivId } = toRefs(props);
 const filteredData = ref([]);
-const props = defineProps(["activeUser", "timeDivId"]);
-
-const { activeUser, timeDivId } = toRefs(props);
-
-const data = ref(
-  store.getters.users.find((user) => user.email === activeUser.value).goals
-);
-
-filteredData.value = data.value;
+filteredData.value = userGoals.value;
 
 function refetchData() {
-  if (timeDivId.value === "al") filteredData.value = data.value;
+  filteredData.value = userGoals.value;
+
+  if (timeDivId.value === "All Goals") filteredData.value = userGoals.value;
   else {
-    filteredData.value = data.value.filter(
+    filteredData.value = userGoals.value.filter(
       (goal) => goal.type === timeDivId.value
     );
   }
 }
-
-onBeforeMount(() => refetchData);
 
 watch(timeDivId, () => {
   refetchData();
@@ -117,18 +114,9 @@ watch(timeDivId, () => {
   isShowing.value = true;
 });
 
-const goalsTimeDiv = computed(() =>
-  timeDivId.value === "al" ? "All Goals" : "This " + timeDivId.value
-);
-
-const classType = function (type) {
-  if (type === timeDivId.value) return type;
-};
-
 const inputTitle = ref("");
 const inputDesc = ref("");
 
-let counter = 0;
 const isVisible = ref(false);
 const isShowing = ref(true);
 
@@ -136,7 +124,7 @@ function addGoal() {
   store.dispatch("setGoal", {
     userId: activeUser.value,
     newGoal: {
-      id: "g" + new Date().getTime() + counter,
+      id: "g" + new Date().toISOString,
       title: inputTitle.value,
       desc: inputDesc.value,
       date: "",
@@ -146,21 +134,9 @@ function addGoal() {
   refetchData();
   inputTitle.value = "";
   inputDesc.value = "";
-  counter++;
   isVisible.value = false;
   isShowing.value = true;
 }
-
-function showNew() {
-  isVisible.value = !isVisible.value;
-  isShowing.value = !isShowing.value;
-}
-
-function showAdd() {
-  isVisible.value = true;
-  isShowing.value = false;
-}
-
 const selectedGoals = ref([]);
 
 function getId(event) {
@@ -177,10 +153,17 @@ function remGoal() {
     goalsArr: selectedGoals.value,
   });
   selectedGoals.value = [];
-  data.value = store.getters.users.find(
-    (user) => user.email === activeUser.value
-  ).goals;
   refetchData();
+}
+
+function showNew() {
+  isVisible.value = !isVisible.value;
+  isShowing.value = !isShowing.value;
+}
+
+function showAdd() {
+  isVisible.value = true;
+  isShowing.value = false;
 }
 </script>
 
@@ -380,6 +363,6 @@ textarea {
 #button-rem {
   bottom: 1rem;
   left: 1rem;
-  background: rgb(255, 165, 151);
+  background: rgba(255, 165, 151, 0.995);
 }
 </style>
