@@ -17,12 +17,12 @@ export default {
     const userId = newGoal.userId;
     const goalToAdd = newGoal.newGoal;
     state.users.find((user) => user.email === userId).goals.push(goalToAdd);
+
+    console.log("someting");
   },
   remGoal(state, goalsToRemove) {
     const userId = goalsToRemove.userId;
     const goalsArr = goalsToRemove.goalsArr;
-
-    console.log(goalsToRemove);
 
     goalsArr.forEach((goalId) => {
       state.users.find(({ email }) => email === userId).goals = state.users

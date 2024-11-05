@@ -2,9 +2,11 @@
   <nav>
     <ul>
       <li>
-        <base-button text-content="All Goals" @get-text="getText"
-          >All Goals</base-button
-        >
+        <base-button
+          text-content="All Goals"
+          @get-text="getText('type')"
+          id="button-all"
+        ></base-button>
       </li>
       <li v-for="division in props.timeDivs" :key="division">
         <base-button :text-content="division" @get-text="getText"></base-button>
@@ -55,5 +57,8 @@ button {
   margin: 0.2rem 0;
   font-size: 3rem;
   background: linear-gradient(90deg, #ffc26d 0%, #f3e6bd 100%);
+}
+#button-all {
+  background: linear-gradient(90deg, #d68a1f 0%, #f3e6bd 100%);
 }
 </style>

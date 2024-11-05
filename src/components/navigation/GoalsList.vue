@@ -5,12 +5,12 @@
     :class="{ setting: filteredData.length === 0 }"
   >
     <h2 id="timeDiv">
-      {{ timeDivId }}
+      {{ props.goalType !== "type" ? props.goalType : "All Goals" }}
     </h2>
     <section id="content">
       <div v-if="filteredData.length === 0" id="no-goals">
-        <h2 v-if="!isVisible">No goals yet!</h2>
-        <button @click="showNew" v-if="!isVisible" id="button-start">
+        <h2 v-if="!isAdding">No goals yet!</h2>
+        <button @click="showNew" id="button-start" v-if="!isAdding">
           Start planning
         </button>
       </div>
@@ -20,19 +20,19 @@
           <hr />
           <h2 class="desc">{{ el.desc }}</h2>
           <div class="time-id" :class="el.type"></div>
-
           <input
+            class="selector"
             type="checkbox"
             :key="el.id"
             :name="el.id"
             :value="el.id"
             v-model="selectedGoals"
-            class="selector"
+            v-if="canRem"
           />
         </li>
       </ul>
     </section>
-    <base-card v-if="isVisible" id="goalCard">
+    <base-card v-if="isAdding" id="goalCard">
       <template #title>
         <h2 id="goalLabel">Insert a new goal</h2>
         <input
@@ -51,114 +51,88 @@
           v-model="inputDesc"
         ></textarea>
       </template>
-      <template #options v-if="props.goalType === 'All Goals'">
+      <template #options>
         <label for="time-selection">Choose a Time:</label>
-        <select id="time-selection">
-          <option value="day">day</option>
+        <select id="time-selection" v-model="selType">
+          <option value="day" selected>day</option>
           <option value="week">week</option>
           <option value="month">month</option>
           <option value="year">year</option>
           <option value="decade">decade</option>
         </select>
       </template>
-
       <template #button>
         <button id="button-save" @click="addGoal">Save</button>
         <button id="button-close" @click="showNew">X</button>
       </template>
     </base-card>
-
-    <slot name="btn-remove"></slot>
-    <slot name="btn-add"></slot>
-
-    <button
-      id="button-add"
-      v-if="filteredData.length > 0 && isShowing"
-      @click="showAdd"
-    >
-      Add Goal
-    </button>
-    <button
-      id="button-rem"
-      v-if="filteredData.length > 0 && isShowing"
-      @click="remGoal"
-    >
-      Remove Goal
-    </button>
+    <div id="list-controls">
+      <button id="button-edit" @click="showRem">Edit List</button>
+      <button id="button-rem" @click="remGoal" v-if="canRem">Remove</button>
+      <button id="button-add" @click="showAdd">Add Goal</button>
+    </div>
   </section>
 </template>
 
 <script setup>
 import { useStore } from "vuex";
-import { watch, ref, defineProps, onBeforeMount } from "vue";
+import { ref, defineProps, computed } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
 const store = useStore();
 const props = defineProps(["goalType"]);
-const timeDivId = ref("All Goals");
 
-const userData = ref([]);
-const filteredData = ref([]);
+const userData = computed(
+  () =>
+    store.getters.users.find((user) => user.email === route.params.userId).goals
+);
+const filteredData = computed(() =>
+  userData.value.filter((goal) =>
+    props.goalType !== "type" ? goal.type === props.goalType : goal.type
+  )
+);
 
-function fetchData() {
-  userData.value = store.getters.users.find(
-    (user) => user.email === route.params.userId
-  ).goals;
-
-  if (props.goalType === "All Goals") filteredData.value = userData.value;
-  else {
-    filteredData.value = userData.value.filter(
-      (goal) => goal.type === props.goalType
-    );
-  }
-}
-
-onBeforeMount(() => fetchData());
-watch(props, () => fetchData());
-
+const selType = ref("");
 const inputTitle = ref("");
 const inputDesc = ref("");
-
-const isVisible = ref(false);
-const isShowing = ref(true);
+const isAdding = ref(false);
 
 function addGoal() {
   store.dispatch("setGoal", {
     userId: route.params.userId,
     newGoal: {
-      id: "g" + new Date().toISOString,
+      id: "g" + new Date().toISOString(),
       title: inputTitle.value,
       desc: inputDesc.value,
       date: "",
-      type: props.goalType,
+      type: selType.value,
     },
   });
-  fetchData();
   inputTitle.value = "";
   inputDesc.value = "";
-  isVisible.value = false;
-  isShowing.value = true;
+  isAdding.value = false;
 }
 const selectedGoals = ref([]);
-watch(selectedGoals, () => console.log(selectedGoals.value));
 
 function remGoal() {
   store.dispatch("remGoal", {
     userId: route.params.userId,
     goalsArr: selectedGoals.value,
   });
-  fetchData();
 }
 
 function showNew() {
-  isVisible.value = !isVisible.value;
-  isShowing.value = !isShowing.value;
+  isAdding.value = !isAdding.value;
 }
 
 function showAdd() {
-  isVisible.value = true;
-  isShowing.value = false;
+  isAdding.value = true;
+}
+const canRem = ref(false);
+
+function showRem() {
+  canRem.value = !canRem.value;
 }
 </script>
 
@@ -171,6 +145,7 @@ function showAdd() {
 }
 
 #goals {
+  border: solid;
   position: relative;
   height: 80vh;
   width: 40rem;
@@ -187,22 +162,24 @@ function showAdd() {
 .setting {
   background: linear-gradient(90deg, #fbffbe 0%, #fff67e 100%);
 }
+
 button:hover {
   cursor: pointer;
 }
 
 li {
   display: flex;
+  justify-content: space-between;
   border-radius: 10px;
   background: white;
   margin: 1rem 0;
+  height: 3rem;
 }
 
 h2,
 #button-start {
   font-size: 2.5rem;
   padding: 0.5rem 1.5rem;
-  /* line-height: 3rem; */
 }
 
 #button-start {
@@ -211,8 +188,6 @@ h2,
   font-weight: bold;
   color: #2c3e50;
   border-radius: 30px;
-
-  /* padding: 1rem; */
 }
 #button-start:hover {
   color: rgb(255, 255, 255);
@@ -221,39 +196,41 @@ h2,
 
 .title,
 .desc {
+  text-overflow: clip;
   font-size: 2rem;
-  flex: 3;
 }
-.selector,
 .time-id {
-  flex: 1;
+  width: 3rem;
 }
 
 .selector {
-  border: solid;
-  border-radius: 10px;
+  appearance: none;
+  cursor: pointer;
+  width: 3rem;
+  height: 100%;
+  min-height: 3rem;
+  border: 2px solid red;
+  border-radius: 15px;
+  position: relative;
 }
-.checked {
-  background: #827bff;
+.selector:checked {
+  border: 2px solid rgb(0, 0, 0);
+  background: rgb(255, 0, 0);
 }
+
 .day {
-  width: 1fr;
   background: rgb(47, 255, 137);
 }
 .week {
-  width: 3rem;
   background: rgb(255, 116, 47);
 }
 .month {
-  width: 3rem;
   background: rgb(47, 47, 255);
 }
 .year {
-  width: 3rem;
   background: rgb(255, 203, 47);
 }
 .decade {
-  width: 3rem;
   background: rgb(47, 210, 255);
 }
 
@@ -278,12 +255,6 @@ label {
   padding-left: 1rem;
 }
 
-input {
-  font-size: 2rem;
-  height: 3rem;
-  width: 30rem;
-  border: none;
-}
 a {
   padding: 0.5rem;
 }
@@ -319,13 +290,6 @@ textarea {
   text-orientation: upright;
   color: #2c3e50;
 }
-
-#button-save:active,
-#button-add:active,
-#button-rem:active {
-  background: rgb(219, 255, 214);
-}
-
 #button-close {
   width: 100%;
   flex: 1;
@@ -335,12 +299,29 @@ textarea {
   background: rgb(255, 151, 151);
 }
 
+#list-controls {
+  position: absolute;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 90%;
+}
+
+#button-save:active,
+#button-add:active,
+#button-rem:active,
+#button-edit {
+  background: rgb(219, 255, 214);
+}
+
+#button-edit,
 #button-add,
 #button-rem {
-  position: absolute;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #2c3e50;
+  width: max-content;
   height: 5rem;
   border-radius: 30px;
   border: none;
@@ -348,16 +329,18 @@ textarea {
   padding: 0 1rem;
 }
 
+#button-edit {
+  background: rgb(255, 241, 151);
+}
+
 #button-add {
-  bottom: 1rem;
-  right: 1rem;
-  height: 5rem;
-  background: rgb(248, 151, 255);
+  background: rgb(132, 235, 255);
 }
 
 #button-rem {
-  bottom: 1rem;
-  left: 1rem;
-  background: rgba(255, 165, 151, 0.995);
+  background: rgba(255, 33, 33, 0.995);
+  border-radius: 15px;
+  border: solid 3px rgb(80, 29, 29);
+  color: white;
 }
 </style>

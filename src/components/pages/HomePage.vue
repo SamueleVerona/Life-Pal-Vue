@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, computed, watch } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import CalendarNav from "../navigation/CalendarNav.vue";
@@ -19,18 +19,29 @@ defineComponent(CalendarNav);
 defineComponent(GoalsList);
 
 const store = useStore();
-const timeDivId = ref("");
+const timeDivId = ref("type");
 
 function passText(gottenText) {
   timeDivId.value = gottenText;
 }
-
 const route = useRoute();
 const userId = route.params.userId;
 
-const userData = ref(store.getters.users.find((user) => user.email === userId));
-const timeDivsArr = ref([]);
-timeDivsArr.value = new Set(userData.value.goals.map((goal) => goal.type));
+const userData = computed(() =>
+  store.getters.users.find((user) => user.email === userId)
+);
+
+watch(userData.value, () => {
+  if (
+    userData.value.goals.filter((goal) => goal.type === timeDivId.value)
+      .length === 0
+  )
+    timeDivId.value = "type";
+});
+
+const timeDivsArr = computed(
+  () => new Set(userData.value.goals.map((goal) => goal.type))
+);
 </script>
 
 <style scoped>
