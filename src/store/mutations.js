@@ -30,4 +30,9 @@ export default {
         .goals.filter((goal) => goal.id !== goalId);
     });
   },
+  setUser(state, payload) {
+    state.token = payload.token;
+    state.userToken = payload.userToken;
+    state.tokenExp = payload.tokenExp;
+  },
 };

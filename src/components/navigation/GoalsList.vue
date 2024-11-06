@@ -16,30 +16,39 @@
       </div>
       <ul v-else-if="filteredData.length > 0">
         <li v-for="el in filteredData" :key="el.id">
-          <h2 class="title">{{ el.title }}</h2>
-          <hr />
-          <h2 class="desc">{{ el.desc }}</h2>
-          <div class="time-id" :class="el.type"></div>
-          <input
-            class="selector"
-            type="checkbox"
-            :key="el.id"
-            :name="el.id"
-            :value="el.id"
-            v-model="selectedGoals"
-            v-if="canRem"
-          />
+          <div class="goal-info">
+            <h2 class="title">{{ el.title }}</h2>
+            <hr />
+            <h2 class="desc">{{ el.desc }}</h2>
+            <div class="time-id" :class="el.type"></div>
+            <input
+              class="selector"
+              type="checkbox"
+              :key="el.id"
+              :name="el.id"
+              :value="el.id"
+              v-model="selectedGoals"
+              v-if="canRem"
+            />
+          </div>
+          <div class="comp-bar">
+            <h3 class="comp-rate">
+              {{ compRate(el.started, el.compDate) }}
+            </h3>
+            <div :style="{ width: compRate(el.started, el.compDate) }"></div>
+          </div>
         </li>
       </ul>
     </section>
     <base-card v-if="isAdding" id="goalCard">
       <template #title>
-        <h2 id="goalLabel">Insert a new goal</h2>
+        <h2 id="goalLabel">New Goal</h2>
         <input
           type="text"
           name="goalTitle"
           placeholder="Choose a title"
           v-model="inputTitle"
+          required
         />
       </template>
       <template #description>
@@ -49,34 +58,53 @@
           placeholder="Describe your goal"
           rows="10"
           v-model="inputDesc"
+          required
+          minlength="5"
         ></textarea>
       </template>
       <template #options>
-        <label for="time-selection">Choose a Time:</label>
-        <select id="time-selection" v-model="selType">
-          <option value="day" selected>day</option>
-          <option value="week">week</option>
-          <option value="month">month</option>
-          <option value="year">year</option>
-          <option value="decade">decade</option>
-        </select>
+        <label for="time-selection" v-if="props.goalType === 'type'">
+          <span>Choose a time option:</span>
+          <select id="time-selection" v-model="selType">
+            <option value="day" selected>day</option>
+            <option value="week">week</option>
+            <option value="month">month</option>
+            <option value="year">year</option>
+            <option value="decade">decade</option>
+          </select>
+        </label>
+        <label for="completion">
+          <span>Set a completion for:</span>
+          <input
+            :type="defType()"
+            name="completion"
+            id="completion"
+            v-model="compDate"
+          />
+        </label>
       </template>
       <template #button>
-        <button id="button-save" @click="addGoal">Save</button>
-        <button id="button-close" @click="showNew">X</button>
+        <div class="list-controls" id="card-controls">
+          <button id="button-save" @click="addGoal">Save</button>
+          <button id="button-close" @click="showNew">Back</button>
+        </div>
       </template>
     </base-card>
-    <div id="list-controls">
-      <button id="button-edit" @click="showRem">Edit List</button>
+    <div class="list-controls">
+      <button id="button-edit" @click="showRem" v-if="!isAdding">
+        Edit List
+      </button>
       <button id="button-rem" @click="remGoal" v-if="canRem">Remove</button>
-      <button id="button-add" @click="showAdd">Add Goal</button>
+      <button id="button-add" @click="showAdd" v-if="!isAdding">
+        Add Goal
+      </button>
     </div>
   </section>
 </template>
 
 <script setup>
 import { useStore } from "vuex";
-import { ref, defineProps, computed } from "vue";
+import { ref, defineProps, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
@@ -88,30 +116,70 @@ const userData = computed(
     store.getters.users.find((user) => user.email === route.params.userId).goals
 );
 const filteredData = computed(() =>
-  userData.value.filter((goal) =>
-    props.goalType !== "type" ? goal.type === props.goalType : goal.type
-  )
+  userData.value.filter((goal) => {
+    if (props.goalType !== "type" && props.goalType !== "completed")
+      return goal.type === props.goalType && !goal.isCompleted;
+    if (props.goalType === "completed") return goal.isCompleted;
+    else {
+      return goal.type && !goal.isCompleted;
+    }
+  })
 );
 
-const selType = ref("");
+watch(filteredData, () =>
+  console.log(userData.value.filter((goal) => goal.isCompleted))
+);
+
+const selType = ref("day");
+
+function defType() {
+  if (props.goalType === "type") {
+    if (selType.value === "day") return "time";
+    if (selType.value === "week") return "week";
+    if (selType.value === "month") return "month";
+    if (selType.value === "year") return "date";
+  } else {
+    if (props.goalType === "day") return "time";
+    if (props.goalType === "week") return "week";
+    if (props.goalType === "month") return "month";
+    if (props.goalType === "year") return "date";
+  }
+}
+
+watch(selType, () => defType());
+
 const inputTitle = ref("");
 const inputDesc = ref("");
 const isAdding = ref(false);
+const compDate = ref();
 
 function addGoal() {
-  store.dispatch("setGoal", {
-    userId: route.params.userId,
-    newGoal: {
-      id: "g" + new Date().toISOString(),
-      title: inputTitle.value,
-      desc: inputDesc.value,
-      date: "",
-      type: selType.value,
-    },
+  console.log(new Date(compDate.value).getTime());
+  store.dispatch("sendData", {
+    id: "g" + new Date().toISOString(),
+    title: inputTitle.value,
+    desc: inputDesc.value,
+    type: props.goalType === "type" ? selType.value : props.goalType,
+    isCompleted: false,
+    started: Date.now(),
+    compDate: "",
   });
-  inputTitle.value = "";
-  inputDesc.value = "";
-  isAdding.value = false;
+
+  // store.dispatch("setGoal", {
+  //   userId: route.params.userId,
+  //   newGoal: {
+  //     id: "g" + new Date().toISOString(),
+  //     title: inputTitle.value,
+  //     desc: inputDesc.value,
+  //     type: props.goalType === "type" ? selType.value : props.goalType,
+  //     isCompleted: false,
+  //     started: Date.now(),
+  //     compDate: new Date(compDate.value).getTime(),
+  //   },
+  // });
+  // inputTitle.value = "";
+  // inputDesc.value = "";
+  // isAdding.value = false;
 }
 const selectedGoals = ref([]);
 
@@ -134,6 +202,17 @@ const canRem = ref(false);
 function showRem() {
   canRem.value = !canRem.value;
 }
+
+function compRate(start, comp) {
+  const totalTime = new Date(comp).getTime() - new Date(start).getTime();
+  const elapsedTime = Date.now() - new Date(start).getTime();
+
+  // const totalTime = comp - start;
+  // const elapsedTime = Date.now() - start;
+
+  const rate = (elapsedTime / totalTime) * 100;
+  return Math.min(rate, 100).toFixed(0) + "%";
+}
 </script>
 
 <style scoped>
@@ -145,7 +224,7 @@ function showRem() {
 }
 
 #goals {
-  border: solid;
+  /* border: solid; */
   position: relative;
   height: 80vh;
   width: 40rem;
@@ -169,11 +248,36 @@ button:hover {
 
 li {
   display: flex;
-  justify-content: space-between;
-  border-radius: 10px;
-  background: white;
+  flex-direction: column;
   margin: 1rem 0;
+  border-radius: 10px;
+}
+.goal-info {
+  display: flex;
+  justify-content: space-between;
+  background: white;
   height: 3rem;
+}
+.comp-bar {
+  position: relative;
+  height: 2rem;
+  border-top: solid 0.1rem;
+  background: rgba(255, 255, 255, 0.382);
+}
+.comp-bar > div {
+  background: rgb(243, 14, 14);
+  height: 100%;
+  width: 50%;
+  z-index: 100;
+}
+.comp-rate {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: rgb(255, 244, 244);
+  font-size: 2rem;
+  background: none;
 }
 
 h2,
@@ -242,64 +346,83 @@ h2,
 }
 
 #goalCard {
-  margin: 2rem auto;
-  height: 40%;
+  position: absolute;
+  left: 0;
+  top: 1rem;
+  height: 80vh;
   width: 100%;
+  border-radius: 30px;
+  box-shadow: 1rem 1rem 0.5rem rgba(128, 128, 128, 0.308);
+  /* border: solid; */
+  background: rgb(234, 255, 182);
 }
 
 #goalLabel {
-  background: rgb(151, 255, 226);
+  background: rgb(255, 83, 83);
   text-align: center;
-}
-label {
-  padding-left: 1rem;
+  border-radius: 15px;
+  color: white;
 }
 
-a {
+label,
+select,
+#completion {
   padding: 0.5rem;
+  margin: auto;
+  font-size: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  font-weight: 600;
 }
+span {
+  font-size: 2rem;
+  padding: 0.5rem;
+  font-weight: 600;
+}
+
 a:hover {
   background: rgb(255, 149, 149);
   border-radius: 20px;
   cursor: pointer;
 }
+input[type="text"],
+input[type="date"] {
+  height: 3rem;
+  font-size: 2.5rem;
+  border-radius: 20px;
+  caret-color: #ff580b;
+  padding-left: 1rem;
+}
 
 input::placeholder {
-  color: #9712b991;
+  color: #9712b948;
+  font-size: 2.5rem;
+  line-height: 2rem;
+  text-align: center;
+  text-justify: center;
 }
 textarea::placeholder {
-  color: #127e6a91;
+  color: #4f127e4e;
+  font-size: 3rem;
+  text-align: center;
 }
 textarea {
-  flex: 1;
-  font-size: 2rem;
-  border: none;
-}
-#time-selection {
-  flex: 1;
+  flex: 1fr;
+  font-size: 2.5rem;
+  border: solid;
+  border-radius: 20px;
+  padding-left: 1rem;
+  caret-color: #000000;
 }
 
 #button-save {
-  flex: 3;
-  width: 100%;
   background: rgb(161, 255, 151);
-  border: none;
-  font-size: 2rem;
-  font-weight: 800;
-  writing-mode: vertical-lr;
-  text-orientation: upright;
-  color: #2c3e50;
 }
 #button-close {
-  width: 100%;
-  flex: 1;
-  border: none;
-  font-size: 2rem;
-  font-weight: 600;
   background: rgb(255, 151, 151);
 }
 
-#list-controls {
+.list-controls {
   position: absolute;
   bottom: 1rem;
   display: flex;
@@ -307,17 +430,25 @@ textarea {
   justify-content: space-between;
   width: 90%;
 }
+#card-controls {
+  width: 100%;
+  bottom: 2rem;
+  padding: 0 2rem;
+}
 
 #button-save:active,
 #button-add:active,
 #button-rem:active,
-#button-edit {
-  background: rgb(219, 255, 214);
+#button-edit:active,
+#button-close:active {
+  background: rgb(61, 178, 46);
 }
 
 #button-edit,
 #button-add,
-#button-rem {
+#button-rem,
+#button-close,
+#button-save {
   font-size: 1.5rem;
   font-weight: 800;
   color: #2c3e50;

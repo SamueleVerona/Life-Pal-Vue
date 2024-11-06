@@ -66,9 +66,9 @@ function logIn() {
 }
 
 const mode = computed(function () {
-  if (isSignup.value && !isLogin.value) return "setNewUser";
+  if (isSignup.value && !isLogin.value) return "signUp";
   else {
-    return "userLogin";
+    return "signIn";
   }
 });
 
@@ -118,7 +118,7 @@ async function submit() {
 .sign-option {
   text-orientation: sideways;
   height: 100%;
-  width: 100%;
+  width: 20%;
   background: rgba(43, 226, 147, 0.879);
   border: none;
   font-size: 3rem;

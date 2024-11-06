@@ -11,6 +11,13 @@
       <li v-for="division in props.timeDivs" :key="division">
         <base-button :text-content="division" @get-text="getText"></base-button>
       </li>
+      <li>
+        <base-button
+          text-content="Completed"
+          @get-text="getText('completed')"
+          id="button-comp"
+        ></base-button>
+      </li>
     </ul>
   </nav>
 </template>
@@ -60,5 +67,8 @@ button {
 }
 #button-all {
   background: linear-gradient(90deg, #d68a1f 0%, #f3e6bd 100%);
+}
+#button-comp {
+  background: linear-gradient(90deg, #72fa53 0%, #ddf3bd 100%);
 }
 </style>
