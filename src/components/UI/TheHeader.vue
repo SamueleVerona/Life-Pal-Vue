@@ -2,15 +2,17 @@
   <header>
     <h1>Life Pal</h1>
     <router-link :to="toPath">{{ pathText }}</router-link>
-    <h2 id="user" v-if="route.params.isAuth">{{ route.params.userId }}</h2>
+    <h2 id="user" v-if="route.params.isAuth">{{ store.getters.userId }}</h2>
   </header>
 </template>
 
 <script setup>
 import { useRoute } from "vue-router";
+import { useStore } from "vuex";
 import { computed } from "vue";
 
 const route = useRoute();
+const store = useStore();
 const pathText = computed(() => (route.params.isAuth ? "Log Out" : "Sign In"));
 const toPath = computed(() => (route.params.isAuth ? "/landing" : "UserSign"));
 </script>

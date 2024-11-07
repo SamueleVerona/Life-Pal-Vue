@@ -34,5 +34,6 @@ export default {
     state.token = payload.token;
     state.userToken = payload.userToken;
     state.tokenExp = payload.tokenExp;
+    state.userId = payload.email;
   },
 };

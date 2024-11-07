@@ -12,7 +12,7 @@
 <script setup>
 import { defineComponent, ref, computed, watch } from "vue";
 import { useStore } from "vuex";
-import { useRoute } from "vue-router";
+// import { useRoute } from "vue-router";
 import CalendarNav from "../navigation/CalendarNav.vue";
 import GoalsList from "../navigation/GoalsList.vue";
 defineComponent(CalendarNav);
@@ -24,12 +24,21 @@ const timeDivId = ref("type");
 function passText(gottenText) {
   timeDivId.value = gottenText;
 }
-const route = useRoute();
-const userId = route.params.userId;
+// const route = useRoute();
+// const userId = route.params.userId;
+const userData = ref();
 
-const userData = computed(() =>
-  store.getters.users.find((user) => user.email === userId)
-);
+function data() {
+  userData.value = store.dispatch("getData");
+}
+
+data();
+// console.log(data());
+
+// const userData = computed(
+//   () => data()
+//   // store.getters.users.find((user) => user.email === userId)
+// );
 
 watch(userData.value, () => {
   if (

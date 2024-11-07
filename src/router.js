@@ -20,8 +20,8 @@ const router = createRouter({
       component: HomePage,
       props: true,
       beforeEnter(to, fom, next) {
-        if (store.getters.auth.userId) {
-          to.params.userId = store.getters.auth.userId;
+        if (store.getters.userToken) {
+          to.params.userId = store.getters.userToken;
           to.params.isAuth = true;
           to.params.goalType = "";
           next();

@@ -79,12 +79,11 @@ async function submit() {
       password: userPwd.value,
     });
 
-    if (store.getters.auth.userId)
-      router.push({
-        name: "user-home",
-        params: { userId: userName.value },
-        meta: { isAuth: true },
-      });
+    router.push({
+      name: "user-home",
+      params: { userId: userName.value },
+      meta: { isAuth: true },
+    });
   } catch (err) {
     gottenError.value = err.message;
   }

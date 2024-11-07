@@ -34,17 +34,21 @@ export default {
     context.commit("remGoal", goalsToRemove);
   },
 
-  async sendData(_, payload) {
-    console.log(payload);
+  async sendData(context, payload) {
     try {
+      // const newUser = payload.userToken;
+
+      const token = payload.token;
+
       const res = await fetch(
-        " https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users.json",
+        ` https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users.json?auth=` +
+          token,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ goals: [] }),
         }
       );
 
@@ -55,15 +59,25 @@ export default {
         throw error;
       }
 
-      console.log(res);
+      console.log(resData);
     } catch (err) {
       console.log(err.message);
     }
   },
-  getData() {
-    fetch(
-      "https://console.firebase.google.com/project/life-pal-89067/database/life-pal-89067-default-rtdb/data/~2F/users/test@test/goals.json"
+  async getData(context) {
+    // const userId = context.getters.userToken;
+    const token = context.getters.token;
+
+    const res = await fetch(
+      `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users.json?auth=` +
+        token
     );
+
+    const resData = res.json();
+
+    if (!res.ok) return "Failed fetching";
+
+    return resData;
   },
   async signUp(context, payload) {
     // key = AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk
@@ -86,13 +100,16 @@ export default {
         throw new Error(resData.message || "Failed to Sign Up");
       }
       context.commit("setUser", {
-        token: resData.idToken,
+        sessionToken: resData.idToken,
         userToken: resData.localId,
         tokenExp: resData.expiresIn,
+        email: resData.email,
       });
 
-      console.log(resData);
-
+      context.dispatch("sendData", {
+        token: resData.idToken,
+        userToken: resData.localId,
+      });
       throw new Error("Signed Up successfully");
     } catch (err) {
       throw err.message;
@@ -120,7 +137,13 @@ export default {
       if (!res.ok) {
         throw new Error(resData.message || "Failed to Log In");
       }
-      context.commit("userLogin", payload);
+
+      context.commit("setUser", {
+        sessionToken: resData.idToken,
+        userToken: resData.localId,
+        tokenExp: resData.expiresIn,
+        email: resData.email,
+      });
     } catch (err) {
       console.log(err);
       throw new Error("Could not Log In");

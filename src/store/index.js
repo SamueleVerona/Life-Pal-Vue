@@ -6,9 +6,11 @@ import mutations from "./mutations.js";
 const store = createStore({
   state() {
     return {
-      token: null,
+      sessionToken: null,
       userToken: null,
       tokenExp: null,
+      userId: null,
+
       auth: {
         userId: "",
         userPwd: "",

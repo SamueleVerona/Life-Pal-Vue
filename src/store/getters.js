@@ -8,4 +8,13 @@ export default {
   goals(state) {
     return state.goals;
   },
+  token(state) {
+    return state.sessionToken;
+  },
+  userToken(state) {
+    return state.userToken;
+  },
+  userId(state) {
+    return state.userId;
+  },
 };
