@@ -68,7 +68,7 @@ function logIn() {
 const mode = computed(function () {
   if (isSignup.value && !isLogin.value) return "signUp";
   else {
-    return "signIn";
+    return "logIn";
   }
 });
 

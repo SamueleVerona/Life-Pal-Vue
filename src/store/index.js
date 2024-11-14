@@ -10,6 +10,7 @@ const store = createStore({
       userToken: null,
       tokenExp: null,
       userId: null,
+      userGoals: [],
 
       auth: {
         userId: "",

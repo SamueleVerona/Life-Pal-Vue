@@ -1,138 +1,138 @@
 export default {
-  userLogin(context, userCred) {
-    const users = context.getters.users;
-
-    if (
-      users.some(
-        (user) =>
-          user.email === userCred.email && user.password === userCred.password
-      )
-    ) {
-      context.commit("userLogin", userCred);
-    } else {
-      throw new Error("This user doesn't exist! Sign up instead!");
-    }
-  },
-  setNewUser(context, userCred) {
-    const users = context.rootGetters.users;
-
-    if (users.some((user) => user.email === userCred.email)) {
-      throw new Error("User already exists! Log in insted");
-    } else if (!userCred.email) {
-      throw new Error("Fields must not be empty");
-    } else {
-      context.commit("setNewUser", userCred);
-    }
-  },
   logout(context) {
     context.commit("logout");
   },
   setGoal(context, newGoal) {
     context.commit("setGoal", newGoal);
   },
-  remGoal(context, goalsToRemove) {
-    context.commit("remGoal", goalsToRemove);
+  async deleteData(context, goalsToRemove) {
+    const sessionToken = context.getters.sessionToken;
+    const UID = context.getters.userToken;
+
+    const curGoals = context.getters.userGoals;
+
+    let updGoals = [];
+
+    goalsToRemove.goalsArr.forEach((id) =>
+      curGoals.forEach((goal) => {
+        if (goal.id !== id) updGoals.push(goal);
+        else {
+          updGoals = [];
+        }
+      })
+    );
+    context.state.userGoals = updGoals;
+
+    try {
+      const res = await fetch(
+        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}.json?auth=${sessionToken}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ goals: [...updGoals] }),
+        }
+      );
+
+      const resData = await res.json();
+      // console.log(res);
+      if (!res.ok) {
+        const error = new Error(resData.message || "Failed to fetch");
+        throw error;
+      }
+
+      // console.log(resData);
+      // context.dispatch("getData");
+    } catch (err) {
+      console.log(err.message);
+    }
   },
 
   async sendData(context, payload) {
     try {
-      // const newUser = payload.userToken;
-
-      const token = payload.token;
+      const sessionToken = context.getters.sessionToken;
+      const UID = context.getters.userToken;
+      const curGoals = context.getters.userGoals;
 
       const res = await fetch(
-        ` https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users.json?auth=` +
-          token,
+        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}.json?auth=${sessionToken}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ goals: [] }),
+          body: JSON.stringify({ goals: [...curGoals, payload.goal] }),
         }
       );
 
       const resData = await res.json();
       if (!res.ok) {
-        console.log(resData);
         const error = new Error(resData.message || "Failed to fetch");
         throw error;
       }
 
-      console.log(resData);
+      // console.log(resData);
+      context.dispatch("getData");
     } catch (err) {
       console.log(err.message);
     }
   },
   async getData(context) {
-    // const userId = context.getters.userToken;
-    const token = context.getters.token;
-
-    const res = await fetch(
-      `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users.json?auth=` +
-        token
-    );
-
-    const resData = res.json();
-
-    if (!res.ok) return "Failed fetching";
-
-    return resData;
-  },
-  async signUp(context, payload) {
-    // key = AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk
-
     try {
-      const res = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            email: payload.email,
-            password: payload.password,
-            returnSecureToken: true,
-          }),
-        }
-      );
-      const resData = await res.json();
-      if (!res.ok) {
-        console.log(resData);
-        throw new Error(resData.message || "Failed to Sign Up");
-      }
-      context.commit("setUser", {
-        sessionToken: resData.idToken,
-        userToken: resData.localId,
-        tokenExp: resData.expiresIn,
-        email: resData.email,
-      });
+      const UID = context.getters.userToken;
+      const token = context.getters.sessionToken;
 
-      context.dispatch("sendData", {
-        token: resData.idToken,
-        userToken: resData.localId,
-      });
-      throw new Error("Signed Up successfully");
+      const res = await fetch(
+        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals.json?auth=${token}`
+      );
+
+      const resData = await res.json();
+      // console.log(resData);
+      if (!res.ok) return "Failed fetching";
+
+      const goals = [];
+      resData.forEach((goal) => goals.push(goal));
+
+      context.commit("loadGoals", goals);
+      // return resData;
     } catch (err) {
-      throw err.message;
+      console.log(err);
     }
   },
-  async signIn(context, payload) {
-    // key = AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk
+  async signUp(context, payload) {
+    return context.dispatch("auth", {
+      ...payload,
+      mode: "signUp",
+    });
+  },
+  async logIn(context, payload) {
+    return context.dispatch("auth", {
+      ...payload,
+      mode: "logIn",
+    });
+  },
+  async auth(context, payload) {
+    let url =
+      "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk";
+
+    if (payload.mode === "signUp") {
+      url =
+        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk";
+    }
 
     try {
-      const res = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: payload.email,
-            password: payload.password,
-            returnSecureToken: true,
-          }),
-        }
-      );
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: payload.email,
+          password: payload.password,
+          returnSecureToken: true,
+        }),
+      });
       const resData = await res.json();
       if (!res.ok) {
         throw new Error(resData.message || "Failed to Log In");
@@ -144,6 +144,22 @@ export default {
         tokenExp: resData.expiresIn,
         email: resData.email,
       });
+
+      if (payload.mode === "logIn") context.dispatch("getData");
+
+      // if (payload.mode === "signUp")
+      //   context.dispatch("sendData", {
+      //     isFirstGoal: true,
+      //     goal: {
+      //       id: "g0",
+      //       title: "A goal",
+      //       desc: "goal's description",
+      //       type: "day",
+      //       isCompleted: false,
+      //       started: "",
+      //       compDate: "",
+      //     },
+      //   });
     } catch (err) {
       console.log(err);
       throw new Error("Could not Log In");

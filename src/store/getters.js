@@ -5,10 +5,10 @@ export default {
   users(state) {
     return state.users;
   },
-  goals(state) {
-    return state.goals;
+  userGoals(state) {
+    return state.userGoals;
   },
-  token(state) {
+  sessionToken(state) {
     return state.sessionToken;
   },
   userToken(state) {

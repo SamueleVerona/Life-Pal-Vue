@@ -5,14 +5,14 @@
       :timeDivs="timeDivsArr"
       @sendText="passText"
     ></calendar-nav>
-    <goals-list class="goals" :goalType="timeDivId"> </goals-list>
+    <goals-list class="goals" :goalType="timeDivId" :userData="userData">
+    </goals-list>
   </section>
 </template>
 
 <script setup>
 import { defineComponent, ref, computed, watch } from "vue";
 import { useStore } from "vuex";
-// import { useRoute } from "vue-router";
 import CalendarNav from "../navigation/CalendarNav.vue";
 import GoalsList from "../navigation/GoalsList.vue";
 defineComponent(CalendarNav);
@@ -24,32 +24,28 @@ const timeDivId = ref("type");
 function passText(gottenText) {
   timeDivId.value = gottenText;
 }
-// const route = useRoute();
-// const userId = route.params.userId;
-const userData = ref();
 
-function data() {
-  userData.value = store.dispatch("getData");
-}
+const userData = computed(() => store.getters.userGoals);
 
-data();
-// console.log(data());
+// async function data() {
+//   await store.dispatch("getData");
+// }
 
-// const userData = computed(
-//   () => data()
-//   // store.getters.users.find((user) => user.email === userId)
-// );
+// onBeforeMount(() => data());
+// data();
 
-watch(userData.value, () => {
+// const userData = computed(async () => await store.dispatch("getData"));
+// console.log(userData.value);
+
+watch(userData, () => {
   if (
-    userData.value.goals.filter((goal) => goal.type === timeDivId.value)
-      .length === 0
+    userData.value.filter((goal) => goal.type === timeDivId.value).length === 0
   )
     timeDivId.value = "type";
 });
 
 const timeDivsArr = computed(
-  () => new Set(userData.value.goals.map((goal) => goal.type))
+  () => new Set(userData.value.map((goal) => goal.type))
 );
 </script>
 

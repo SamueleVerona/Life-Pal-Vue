@@ -1,16 +1,9 @@
 export default {
-  userLogin(state, userCred) {
-    state.auth.userId = userCred.email;
-    state.auth.userPwd = userCred.password;
-  },
-  setNewUser(state, userCred) {
-    state.users.push(userCred);
-    state.auth.userId = userCred.email;
-    state.auth.userPwd = userCred.password;
-  },
   logout(state) {
-    state.auth.userId = "";
-    state.auth.userPwd = "";
+    state.sessionToken = null;
+    state.userToken = null;
+    state.tokenExp = null;
+    state.userId = null;
   },
 
   setGoal(state, newGoal) {
@@ -20,7 +13,7 @@ export default {
 
     console.log("someting");
   },
-  remGoal(state, goalsToRemove) {
+  deleteData(state, goalsToRemove) {
     const userId = goalsToRemove.userId;
     const goalsArr = goalsToRemove.goalsArr;
 
@@ -31,9 +24,12 @@ export default {
     });
   },
   setUser(state, payload) {
-    state.token = payload.token;
+    state.sessionToken = payload.sessionToken;
     state.userToken = payload.userToken;
     state.tokenExp = payload.tokenExp;
     state.userId = payload.email;
+  },
+  loadGoals(state, goals) {
+    state.userGoals = goals;
   },
 };

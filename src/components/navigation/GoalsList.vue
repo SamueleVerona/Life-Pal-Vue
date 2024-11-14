@@ -91,7 +91,11 @@
       </template>
     </base-card>
     <div class="list-controls">
-      <button id="button-edit" @click="showRem" v-if="!isAdding">
+      <button
+        id="button-edit"
+        @click="showRem"
+        v-if="!isAdding && props.userData.length > 0"
+      >
         Edit List
       </button>
       <button id="button-rem" @click="remGoal" v-if="canRem">Remove</button>
@@ -109,14 +113,10 @@ import { useRoute } from "vue-router";
 
 const route = useRoute();
 const store = useStore();
-const props = defineProps(["goalType"]);
+const props = defineProps(["goalType", "userData"]);
 
-const userData = computed(
-  () =>
-    store.getters.users.find((user) => user.email === route.params.userId).goals
-);
 const filteredData = computed(() =>
-  userData.value.filter((goal) => {
+  props.userData.filter((goal) => {
     if (props.goalType !== "type" && props.goalType !== "completed")
       return goal.type === props.goalType && !goal.isCompleted;
     if (props.goalType === "completed") return goal.isCompleted;
@@ -126,9 +126,9 @@ const filteredData = computed(() =>
   })
 );
 
-watch(filteredData, () =>
-  console.log(userData.value.filter((goal) => goal.isCompleted))
-);
+// watch(filteredData, () =>
+//   console.log(props.userData.filter((goal) => goal.isCompleted))
+// );
 
 const selType = ref("day");
 
@@ -154,40 +154,29 @@ const isAdding = ref(false);
 const compDate = ref();
 
 function addGoal() {
-  console.log(new Date(compDate.value).getTime());
+  console.log(compDate.value);
   store.dispatch("sendData", {
-    id: "g" + new Date().toISOString(),
-    title: inputTitle.value,
-    desc: inputDesc.value,
-    type: props.goalType === "type" ? selType.value : props.goalType,
-    isCompleted: false,
-    started: Date.now(),
-    compDate: "",
+    isFirstGoal: false,
+    goal: {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
+      title: inputTitle.value,
+      desc: inputDesc.value,
+      type: props.goalType === "type" ? selType.value : props.goalType,
+      isCompleted: false,
+      started: Date.now(),
+      compDate: new Date(compDate.value),
+    },
   });
-
-  // store.dispatch("setGoal", {
-  //   userId: route.params.userId,
-  //   newGoal: {
-  //     id: "g" + new Date().toISOString(),
-  //     title: inputTitle.value,
-  //     desc: inputDesc.value,
-  //     type: props.goalType === "type" ? selType.value : props.goalType,
-  //     isCompleted: false,
-  //     started: Date.now(),
-  //     compDate: new Date(compDate.value).getTime(),
-  //   },
-  // });
-  // inputTitle.value = "";
-  // inputDesc.value = "";
-  // isAdding.value = false;
+  isAdding.value = false;
 }
 const selectedGoals = ref([]);
 
 function remGoal() {
-  store.dispatch("remGoal", {
+  store.dispatch("deleteData", {
     userId: route.params.userId,
     goalsArr: selectedGoals.value,
   });
+  canRem.value = false;
 }
 
 function showNew() {
