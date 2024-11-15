@@ -27,16 +27,6 @@ function passText(gottenText) {
 
 const userData = computed(() => store.getters.userGoals);
 
-// async function data() {
-//   await store.dispatch("getData");
-// }
-
-// onBeforeMount(() => data());
-// data();
-
-// const userData = computed(async () => await store.dispatch("getData"));
-// console.log(userData.value);
-
 watch(userData, () => {
   if (
     userData.value.filter((goal) => goal.type === timeDivId.value).length === 0

@@ -108,12 +108,63 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { ref, defineProps, computed, watch } from "vue";
+import {
+  ref,
+  defineProps,
+  computed,
+  watch,
+  // onBeforeMount,
+  // onBeforeUpdate,
+  // onUpdated,
+  // onUnmounted,
+} from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
 const store = useStore();
 const props = defineProps(["goalType", "userData"]);
+
+function compRate(start, comp) {
+  const totalTime = new Date(comp).getTime() - new Date(start).getTime();
+  const elapsedTime = Date.now() - new Date(start).getTime();
+  const rate = (elapsedTime / totalTime) * 100;
+
+  if (new Date(comp).getTime() <= Date.now()) return "100%";
+  else {
+    return Math.min(rate, 100).toFixed(0) + "%";
+  }
+}
+
+// onBeforeMount(() =>
+//   props.userData.forEach(
+//     (goal) =>
+//       (goal.interval = setInterval(
+//         () => (goal.compPercent = compRate(goal.started, goal.compDate))
+//       ))
+//   )
+// );
+// onBeforeUpdate(() =>
+//   props.userData.forEach(
+//     (goal) =>
+//       (goal.interval = setInterval(
+//         () => (goal.compPercent = compRate(goal.started, goal.compDate))
+//       ))
+//   )
+// );
+
+// onUpdated(() =>
+//   props.userData.forEach((goal) => {
+//     if (goal.compPercent === "100%") clearInterval(goal.interval);
+//   })
+// );
+
+// onUnmounted(() =>
+//   props.userData.forEach((goal) => {
+//     clearInterval(goal.interval);
+//   })
+// );
+
+// watch(props, ()=> )
 
 const filteredData = computed(() =>
   props.userData.filter((goal) => {
@@ -126,20 +177,16 @@ const filteredData = computed(() =>
   })
 );
 
-// watch(filteredData, () =>
-//   console.log(props.userData.filter((goal) => goal.isCompleted))
-// );
-
 const selType = ref("day");
 
 function defType() {
   if (props.goalType === "type") {
-    if (selType.value === "day") return "time";
+    if (selType.value === "day") return "date";
     if (selType.value === "week") return "week";
     if (selType.value === "month") return "month";
     if (selType.value === "year") return "date";
   } else {
-    if (props.goalType === "day") return "time";
+    if (props.goalType === "day") return "date";
     if (props.goalType === "week") return "week";
     if (props.goalType === "month") return "month";
     if (props.goalType === "year") return "date";
@@ -152,9 +199,14 @@ const inputTitle = ref("");
 const inputDesc = ref("");
 const isAdding = ref(false);
 const compDate = ref();
+// const calcDate = computed(() => {
+//   const [ho, min] = compDate.value.split(":");
+//   return new Date().setHours(ho, min);
+// });
 
 function addGoal() {
-  console.log(compDate.value);
+  // console.log(filteredData.value);
+
   store.dispatch("sendData", {
     isFirstGoal: false,
     goal: {
@@ -164,7 +216,7 @@ function addGoal() {
       type: props.goalType === "type" ? selType.value : props.goalType,
       isCompleted: false,
       started: Date.now(),
-      compDate: new Date(compDate.value),
+      compDate: compDate.value,
     },
   });
   isAdding.value = false;
@@ -192,16 +244,9 @@ function showRem() {
   canRem.value = !canRem.value;
 }
 
-function compRate(start, comp) {
-  const totalTime = new Date(comp).getTime() - new Date(start).getTime();
-  const elapsedTime = Date.now() - new Date(start).getTime();
-
-  // const totalTime = comp - start;
-  // const elapsedTime = Date.now() - start;
-
-  const rate = (elapsedTime / totalTime) * 100;
-  return Math.min(rate, 100).toFixed(0) + "%";
-}
+// const compRate = computed((start, comp) => {
+//   return start + comp;
+// });
 </script>
 
 <style scoped>

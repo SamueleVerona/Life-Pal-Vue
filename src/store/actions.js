@@ -79,6 +79,17 @@ export default {
     }
   },
   async getData(context) {
+    function rateCalc(start, end) {
+      const totalTime = new Date(end).getTime() - new Date(start).getTime();
+      const elapsedTime = Date.now() - new Date(start).getTime();
+      const rate = (elapsedTime / totalTime) * 100;
+
+      if (new Date(end).getTime() <= Date.now()) return 100;
+      else {
+        return Math.min(rate, 100).toFixed(0);
+      }
+    }
+
     try {
       const UID = context.getters.userToken;
       const token = context.getters.sessionToken;
@@ -88,14 +99,29 @@ export default {
       );
 
       const resData = await res.json();
-      // console.log(resData);
       if (!res.ok) return "Failed fetching";
 
       const goals = [];
-      resData.forEach((goal) => goals.push(goal));
+
+      resData.forEach(async (goal) => {
+        if (rateCalc(goal.started, goal.compDate) === 100) {
+          goal.isCompleted = true;
+
+          const res = await fetch(
+            `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals.json?auth=${token}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({ goal }),
+            }
+          );
+
+          if (!res.ok) throw new Error("Patching Failed");
+          console.log(res.json());
+        }
+        goals.push(goal);
+      });
 
       context.commit("loadGoals", goals);
-      // return resData;
     } catch (err) {
       console.log(err);
     }

@@ -17,4 +17,7 @@ export default {
   userId(state) {
     return state.userId;
   },
+  tokenExp(state) {
+    return state.tokenExp;
+  },
 };
