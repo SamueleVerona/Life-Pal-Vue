@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LandingPage from "./components/pages/LandingPage.vue";
-import HomePage from "./components/pages/HomePage.vue";
+import UserHome from "./components/pages/UserHome.vue";
 import UserSign from "./components/pages/UserSign.vue";
 import store from "./store";
 
@@ -17,7 +17,7 @@ const router = createRouter({
     {
       name: "user-home",
       path: "/:userId",
-      component: HomePage,
+      component: UserHome,
       props: true,
       beforeEnter(to, fom, next) {
         if (store.getters.userToken) {

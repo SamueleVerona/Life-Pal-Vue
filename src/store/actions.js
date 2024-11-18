@@ -8,44 +8,36 @@ export default {
   async deleteData(context, goalsToRemove) {
     const sessionToken = context.getters.sessionToken;
     const UID = context.getters.userToken;
-
     const curGoals = context.getters.userGoals;
 
-    let updGoals = [];
-
-    goalsToRemove.goalsArr.forEach((id) =>
-      curGoals.forEach((goal) => {
-        if (goal.id !== id) updGoals.push(goal);
-        else {
-          updGoals = [];
-        }
-      })
-    );
-    context.state.userGoals = updGoals;
-
     try {
-      const res = await fetch(
-        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}.json?auth=${sessionToken}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ goals: [...updGoals] }),
+      const deletePromises = goalsToRemove.map((goalId) => {
+        const index = curGoals.findIndex(({ id }) => id === goalId);
+        console.log(index);
+
+        return fetch(
+          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals/${index}.json?auth=${sessionToken}`,
+          {
+            method: "DELETE",
+          }
+        );
+      });
+
+      const deleted = await Promise.allSettled(deletePromises);
+
+      deleted.forEach((res) => {
+        console.log(res.value);
+        console.log(res);
+        if (res.status === "rejected")
+          throw new Error("Failed to fetch, invalid URL ");
+        if (!res.value.ok) {
+          throw new Error("Deleting failed");
+        } else {
+          context.dispatch("getData");
         }
-      );
-
-      const resData = await res.json();
-      // console.log(res);
-      if (!res.ok) {
-        const error = new Error(resData.message || "Failed to fetch");
-        throw error;
-      }
-
-      // console.log(resData);
-      // context.dispatch("getData");
+      });
     } catch (err) {
-      console.log(err.message);
+      throw err.message;
     }
   },
 
@@ -79,6 +71,35 @@ export default {
     }
   },
   async getData(context) {
+    try {
+      const UID = context.getters.userToken;
+      const token = context.getters.sessionToken;
+
+      const res = await fetch(
+        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals.json?auth=${token}`
+      );
+
+      const resData = await res.json();
+
+      if (!res.ok) return "Failed fetching";
+
+      let goals = [];
+      let checkedGoals;
+
+      if (resData) {
+        checkedGoals = await context.dispatch("checkData", resData);
+        goals = checkedGoals;
+      }
+
+      context.commit("loadGoals", goals);
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async checkData(context, goalsToCheck) {
+    const UID = context.getters.userToken;
+    const sessionToken = context.getters.sessionToken;
+
     function rateCalc(start, end) {
       const totalTime = new Date(end).getTime() - new Date(start).getTime();
       const elapsedTime = Date.now() - new Date(start).getTime();
@@ -90,41 +111,43 @@ export default {
       }
     }
 
-    try {
-      const UID = context.getters.userToken;
-      const token = context.getters.sessionToken;
+    let goals = [];
+    let toBePatched = [];
 
-      const res = await fetch(
-        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals.json?auth=${token}`
-      );
-
-      const resData = await res.json();
-      if (!res.ok) return "Failed fetching";
-
-      const goals = [];
-
-      resData.forEach(async (goal) => {
-        if (rateCalc(goal.started, goal.compDate) === 100) {
-          goal.isCompleted = true;
-
-          const res = await fetch(
-            `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals.json?auth=${token}`,
-            {
-              method: "PATCH",
-              body: JSON.stringify({ goal }),
-            }
-          );
-
-          if (!res.ok) throw new Error("Patching Failed");
-          console.log(res.json());
-        }
+    Object.values(goalsToCheck).forEach((goal) => {
+      if (rateCalc(goal.started, goal.compDate) === 100) {
+        goal.isCompleted = true;
+        toBePatched.push(goal);
+      } else {
         goals.push(goal);
+      }
+    });
+
+    if (toBePatched.length > 0) {
+      const patchPromises = toBePatched.map((goal) => {
+        fetch(
+          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals.json?auth=${sessionToken}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ goal }),
+          }
+        );
       });
 
-      context.commit("loadGoals", goals);
-    } catch (err) {
-      console.log(err);
+      console.log(patchPromises);
+      const patched = await Promise.all(patchPromises);
+      patched.forEach((res) => {
+        console.log(res);
+
+        if (!res.ok) {
+          throw new Error(`Failed to patch goal `);
+        } else {
+          goals.push(res);
+        }
+      });
     }
+
+    return goals;
   },
   async signUp(context, payload) {
     return context.dispatch("auth", {
@@ -171,21 +194,7 @@ export default {
         email: resData.email,
       });
 
-      if (payload.mode === "logIn") context.dispatch("getData");
-
-      // if (payload.mode === "signUp")
-      //   context.dispatch("sendData", {
-      //     isFirstGoal: true,
-      //     goal: {
-      //       id: "g0",
-      //       title: "A goal",
-      //       desc: "goal's description",
-      //       type: "day",
-      //       isCompleted: false,
-      //       started: "",
-      //       compDate: "",
-      //     },
-      //   });
+      context.dispatch("getData");
     } catch (err) {
       console.log(err);
       throw new Error("Could not Log In");

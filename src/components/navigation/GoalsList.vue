@@ -118,9 +118,7 @@ import {
   // onUpdated,
   // onUnmounted,
 } from "vue";
-import { useRoute } from "vue-router";
 
-const route = useRoute();
 const store = useStore();
 const props = defineProps(["goalType", "userData"]);
 
@@ -134,37 +132,6 @@ function compRate(start, comp) {
     return Math.min(rate, 100).toFixed(0) + "%";
   }
 }
-
-// onBeforeMount(() =>
-//   props.userData.forEach(
-//     (goal) =>
-//       (goal.interval = setInterval(
-//         () => (goal.compPercent = compRate(goal.started, goal.compDate))
-//       ))
-//   )
-// );
-// onBeforeUpdate(() =>
-//   props.userData.forEach(
-//     (goal) =>
-//       (goal.interval = setInterval(
-//         () => (goal.compPercent = compRate(goal.started, goal.compDate))
-//       ))
-//   )
-// );
-
-// onUpdated(() =>
-//   props.userData.forEach((goal) => {
-//     if (goal.compPercent === "100%") clearInterval(goal.interval);
-//   })
-// );
-
-// onUnmounted(() =>
-//   props.userData.forEach((goal) => {
-//     clearInterval(goal.interval);
-//   })
-// );
-
-// watch(props, ()=> )
 
 const filteredData = computed(() =>
   props.userData.filter((goal) => {
@@ -223,12 +190,13 @@ function addGoal() {
 }
 const selectedGoals = ref([]);
 
-function remGoal() {
-  store.dispatch("deleteData", {
-    userId: route.params.userId,
-    goalsArr: selectedGoals.value,
-  });
-  canRem.value = false;
+async function remGoal() {
+  try {
+    await store.dispatch("deleteData", selectedGoals.value);
+    canRem.value = false;
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 function showNew() {
