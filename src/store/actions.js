@@ -11,28 +11,28 @@ export default {
     const curGoals = context.getters.userGoals;
 
     try {
+      const validNames = new Set(curGoals.map(({ name }) => name));
       const deletePromises = goalsToRemove.map((goalId) => {
-        const index = curGoals.findIndex(({ id }) => id === goalId);
-        console.log(index);
-
-        return fetch(
-          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals/${index}.json?auth=${sessionToken}`,
-          {
-            method: "DELETE",
-          }
-        );
+        if (validNames.has(goalId)) {
+          return fetch(
+            `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals/${goalId}.json?auth=${sessionToken}`,
+            {
+              method: "DELETE",
+            }
+          );
+        } else {
+          return new Promise((_, reject) =>
+            reject("Goal at index does not exist")
+          );
+        }
       });
 
       const deleted = await Promise.allSettled(deletePromises);
 
       deleted.forEach((res) => {
-        console.log(res.value);
-        console.log(res);
         if (res.status === "rejected")
-          throw new Error("Failed to fetch, invalid URL ");
-        if (!res.value.ok) {
-          throw new Error("Deleting failed");
-        } else {
+          throw new Error(res.reason || "Failed to fetch, invalid URL ");
+        else {
           context.dispatch("getData");
         }
       });
@@ -46,28 +46,41 @@ export default {
       const sessionToken = context.getters.sessionToken;
       const UID = context.getters.userToken;
       const curGoals = context.getters.userGoals;
+      let urlMod;
+      let method;
+      let body;
+
+      if (curGoals.length > 0) {
+        urlMod = UID + "/goals";
+        method = "POST";
+        body = JSON.stringify(payload);
+      } else {
+        const id = Date.now().toString(36);
+        urlMod = UID;
+        method = "PUT";
+        body = JSON.stringify({ goals: { [id]: payload } });
+      }
 
       const res = await fetch(
-        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}.json?auth=${sessionToken}`,
+        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${urlMod}.json?auth=${sessionToken}`,
         {
-          method: "PUT",
+          method,
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ goals: [...curGoals, payload.goal] }),
+          body,
         }
       );
 
       const resData = await res.json();
       if (!res.ok) {
-        const error = new Error(resData.message || "Failed to fetch");
+        const error = new Error(resData.message || "Failed to load new goal");
         throw error;
       }
 
-      // console.log(resData);
       context.dispatch("getData");
     } catch (err) {
-      console.log(err.message);
+      throw err.message;
     }
   },
   async getData(context) {
@@ -84,16 +97,15 @@ export default {
       if (!res.ok) return "Failed fetching";
 
       let goals = [];
-      let checkedGoals;
 
       if (resData) {
-        checkedGoals = await context.dispatch("checkData", resData);
+        const checkedGoals = await context.dispatch("checkData", resData);
         goals = checkedGoals;
       }
 
       context.commit("loadGoals", goals);
     } catch (err) {
-      console.log(err);
+      throw err.message;
     }
   },
   async checkData(context, goalsToCheck) {
@@ -114,12 +126,13 @@ export default {
     let goals = [];
     let toBePatched = [];
 
-    Object.values(goalsToCheck).forEach((goal) => {
-      if (rateCalc(goal.started, goal.compDate) === 100) {
-        goal.isCompleted = true;
-        toBePatched.push(goal);
+    Object.entries(goalsToCheck).forEach((goal) => {
+      goal[1].name = goal[0];
+      if (rateCalc(goal[1].started, goal[1].compDate) === 100) {
+        goal[1].isCompleted = true;
+        toBePatched.push(goal[1]);
       } else {
-        goals.push(goal);
+        goals.push(goal[1]);
       }
     });
 
@@ -134,11 +147,8 @@ export default {
         );
       });
 
-      console.log(patchPromises);
       const patched = await Promise.all(patchPromises);
       patched.forEach((res) => {
-        console.log(res);
-
         if (!res.ok) {
           throw new Error(`Failed to patch goal `);
         } else {
@@ -196,7 +206,6 @@ export default {
 
       context.dispatch("getData");
     } catch (err) {
-      console.log(err);
       throw new Error("Could not Log In");
     }
   },

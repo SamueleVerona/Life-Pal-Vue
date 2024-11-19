@@ -26,7 +26,7 @@
               type="checkbox"
               :key="el.id"
               :name="el.id"
-              :value="el.id"
+              :value="el.name"
               v-model="selectedGoals"
               v-if="canRem"
             />
@@ -175,16 +175,13 @@ function addGoal() {
   // console.log(filteredData.value);
 
   store.dispatch("sendData", {
-    isFirstGoal: false,
-    goal: {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
-      title: inputTitle.value,
-      desc: inputDesc.value,
-      type: props.goalType === "type" ? selType.value : props.goalType,
-      isCompleted: false,
-      started: Date.now(),
-      compDate: compDate.value,
-    },
+    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
+    title: inputTitle.value,
+    desc: inputDesc.value,
+    type: props.goalType === "type" ? selType.value : props.goalType,
+    isCompleted: false,
+    started: Date.now(),
+    compDate: compDate.value,
   });
   isAdding.value = false;
 }
@@ -194,6 +191,7 @@ async function remGoal() {
   try {
     await store.dispatch("deleteData", selectedGoals.value);
     canRem.value = false;
+    selectedGoals.value = [];
   } catch (err) {
     console.log(err);
   }
@@ -211,10 +209,6 @@ const canRem = ref(false);
 function showRem() {
   canRem.value = !canRem.value;
 }
-
-// const compRate = computed((start, comp) => {
-//   return start + comp;
-// });
 </script>
 
 <style scoped>
