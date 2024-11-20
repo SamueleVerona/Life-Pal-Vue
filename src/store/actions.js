@@ -2,18 +2,7 @@ export default {
   logout(context) {
     context.commit("logout");
   },
-  checkCompletion(_, goal) {
-    const totalTime =
-      new Date(goal.compDate).getTime() - new Date(goal.started).getTime();
-    const elapsedTime = Date.now() - new Date(goal.started).getTime();
-    const rate = (elapsedTime / totalTime) * 100;
 
-    if (rate === 100 || rate < 0) {
-      return true;
-    } else {
-      return false;
-    }
-  },
   async deleteData(context, goalsToRemove) {
     const sessionToken = context.getters.sessionToken;
     const UID = context.getters.userToken;
@@ -108,18 +97,34 @@ export default {
       let goals = [];
 
       if (resData) {
-        goals = Object.entries(resData).map((goal) => {
-          if (!goal[1].name) goal[1].name = goal[0];
-          context.dispatch("checkCompletion", goal[1]).then((res) => {
-            res ? (goal[1].isCompleted = true) : (goal[1].isCompleted = false);
-          });
-          return goal[1];
-        });
+        goals = await context.dispatch("checkData", resData);
       }
       context.commit("loadGoals", goals);
     } catch (err) {
       throw err.message;
     }
+  },
+  checkData(_, goalsToCheck) {
+    function checkCompletion(goal) {
+      const totalTime =
+        new Date(goal.compDate).getTime() - new Date(goal.started).getTime();
+      const elapsedTime = Date.now() - new Date(goal.started).getTime();
+      const rate = (elapsedTime / totalTime) * 100;
+      if (rate === 100 || rate < 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    const checked = Object.entries(goalsToCheck).map((goal) => {
+      if (!goal[1].name) goal[1].name = goal[0];
+      checkCompletion(goal[1]) === true
+        ? goal[1].isCompleted
+        : (goal[1].isCompleted = false);
+      return goal[1];
+    });
+
+    return checked;
   },
   async signUp(context, payload) {
     return context.dispatch("auth", {

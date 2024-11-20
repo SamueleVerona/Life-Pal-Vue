@@ -112,12 +112,7 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { ref, defineProps, computed, watch, onBeforeMount } from "vue";
-
-onBeforeMount(() => {
-  console.log(props.goalType);
-  console.log(props.userData);
-});
+import { ref, defineProps, computed, watch } from "vue";
 
 const store = useStore();
 const props = defineProps(["goalType", "userData"]);
@@ -143,11 +138,6 @@ const filteredData = computed(() => {
     );
   }
 });
-// watch(props, () => {
-//   console.log(props.userData);
-//   console.log(filteredData.value);
-//   // console.log(props.goalType);
-// });
 
 const selType = ref("day");
 
@@ -167,22 +157,27 @@ function defType() {
 
 watch(selType, () => defType());
 
-function weekToDate(dateInput) {
-  const selectedWeek = +dateInput.slice(-2);
-  const curYear = new Date().getFullYear();
-  const startOfYear = new Date(`${curYear}-01-01`);
-  const firstDayOfWeek = new Date(
-    startOfYear.getTime() + (selectedWeek - 1) * 7 * 24 * 60 * 60 * 1000
-  );
-
-  const dayOfWeek = firstDayOfWeek.getDay();
-  const mondayOfWeek = new Date(firstDayOfWeek);
-  if (dayOfWeek !== 1) {
-    mondayOfWeek.setDate(
-      mondayOfWeek.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)
+function dateCheck(dateInput) {
+  console.log(dateInput);
+  if (selType.value === "week" || props.goalType === "week") {
+    const selectedWeek = +dateInput.slice(-2);
+    const curYear = new Date().getFullYear();
+    const startOfYear = new Date(`${curYear}-01-01`);
+    const firstDayOfWeek = new Date(
+      startOfYear.getTime() + (selectedWeek - 1) * 7 * 24 * 60 * 60 * 1000
     );
+
+    const dayOfWeek = firstDayOfWeek.getDay();
+    const mondayOfWeek = new Date(firstDayOfWeek);
+    if (dayOfWeek !== 1) {
+      mondayOfWeek.setDate(
+        mondayOfWeek.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)
+      );
+    }
+    return new Date(mondayOfWeek).getTime();
+  } else {
+    return dateInput;
   }
-  return mondayOfWeek;
 }
 
 const inputTitle = ref("");
@@ -191,7 +186,6 @@ const isAdding = ref(false);
 const compDate = ref();
 
 async function addGoal() {
-  if (selType.value === "week") compDate.value = weekToDate(compDate.value);
   try {
     await store.dispatch("sendData", {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
@@ -200,7 +194,7 @@ async function addGoal() {
       type: props.goalType === "type" ? selType.value : props.goalType,
       isCompleted: true,
       started: Date.now(),
-      compDate: compDate.value,
+      compDate: dateCheck(compDate.value),
     });
     isAdding.value = false;
   } catch (err) {
