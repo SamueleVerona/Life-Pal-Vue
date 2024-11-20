@@ -2,13 +2,23 @@ export default {
   logout(context) {
     context.commit("logout");
   },
-  setGoal(context, newGoal) {
-    context.commit("setGoal", newGoal);
+  checkCompletion(_, goal) {
+    const totalTime =
+      new Date(goal.compDate).getTime() - new Date(goal.started).getTime();
+    const elapsedTime = Date.now() - new Date(goal.started).getTime();
+    const rate = (elapsedTime / totalTime) * 100;
+
+    if (rate === 100 || rate < 0) {
+      return true;
+    } else {
+      return false;
+    }
   },
   async deleteData(context, goalsToRemove) {
     const sessionToken = context.getters.sessionToken;
     const UID = context.getters.userToken;
     const curGoals = context.getters.userGoals;
+    console.log(goalsToRemove);
 
     try {
       const validNames = new Set(curGoals.map(({ name }) => name));
@@ -93,71 +103,23 @@ export default {
       );
 
       const resData = await res.json();
-
-      if (!res.ok) return "Failed fetching";
+      if (!res.ok) throw new Error("Failed fetching");
 
       let goals = [];
 
       if (resData) {
-        const checkedGoals = await context.dispatch("checkData", resData);
-        goals = checkedGoals;
+        goals = Object.entries(resData).map((goal) => {
+          if (!goal[1].name) goal[1].name = goal[0];
+          context.dispatch("checkCompletion", goal[1]).then((res) => {
+            res ? (goal[1].isCompleted = true) : (goal[1].isCompleted = false);
+          });
+          return goal[1];
+        });
       }
-
       context.commit("loadGoals", goals);
     } catch (err) {
       throw err.message;
     }
-  },
-  async checkData(context, goalsToCheck) {
-    const UID = context.getters.userToken;
-    const sessionToken = context.getters.sessionToken;
-
-    function rateCalc(start, end) {
-      const totalTime = new Date(end).getTime() - new Date(start).getTime();
-      const elapsedTime = Date.now() - new Date(start).getTime();
-      const rate = (elapsedTime / totalTime) * 100;
-
-      if (new Date(end).getTime() <= Date.now()) return 100;
-      else {
-        return Math.min(rate, 100).toFixed(0);
-      }
-    }
-
-    let goals = [];
-    let toBePatched = [];
-
-    Object.entries(goalsToCheck).forEach((goal) => {
-      goal[1].name = goal[0];
-      if (rateCalc(goal[1].started, goal[1].compDate) === 100) {
-        goal[1].isCompleted = true;
-        toBePatched.push(goal[1]);
-      } else {
-        goals.push(goal[1]);
-      }
-    });
-
-    if (toBePatched.length > 0) {
-      const patchPromises = toBePatched.map((goal) => {
-        fetch(
-          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals.json?auth=${sessionToken}`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({ goal }),
-          }
-        );
-      });
-
-      const patched = await Promise.all(patchPromises);
-      patched.forEach((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to patch goal `);
-        } else {
-          goals.push(res);
-        }
-      });
-    }
-
-    return goals;
   },
   async signUp(context, payload) {
     return context.dispatch("auth", {

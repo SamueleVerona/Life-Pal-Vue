@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { defineComponent, ref, computed, watch } from "vue";
+import { defineComponent, ref, computed } from "vue";
 import { useStore } from "vuex";
 import CalendarNav from "../navigation/CalendarNav.vue";
 import GoalsList from "../navigation/GoalsList.vue";
@@ -24,16 +24,14 @@ const timeDivId = ref("type");
 function passText(gottenText) {
   timeDivId.value = gottenText;
 }
-
 const userData = computed(() => store.getters.userGoals);
-
-watch(userData, () => {
-  if (
-    userData.value.filter((goal) => goal.type === timeDivId.value).length === 0
-  )
-    timeDivId.value = "type";
-});
-
+// watch(userData, () => {
+//   if (
+//     userData.value.filter((goal) => goal.type === timeDivId.value).length === 0
+//   )
+//     timeDivId.value = "type";
+// });
+// watch(userData, () => (timeDivId.value = "type"));
 const timeDivsArr = computed(
   () => new Set(userData.value.map((goal) => goal.type))
 );

@@ -5,14 +5,6 @@ export default {
     state.tokenExp = null;
     state.userId = null;
   },
-
-  setGoal(state, newGoal) {
-    const userId = newGoal.userId;
-    const goalToAdd = newGoal.newGoal;
-    state.users.find((user) => user.email === userId).goals.push(goalToAdd);
-
-    console.log("someting");
-  },
   deleteData(state, goalsToRemove) {
     const userId = goalsToRemove.userId;
     const goalsArr = goalsToRemove.goalsArr;

@@ -29,10 +29,7 @@ const props = defineProps(["timeDivs"]);
 const emits = defineEmits(["sendText"]);
 
 const getText = function (gottenText) {
-  // console.log(gottenText);
   emits("sendText", gottenText);
-
-  // console.log(route.params);
 };
 </script>
 

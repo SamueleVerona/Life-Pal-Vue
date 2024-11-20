@@ -8,7 +8,7 @@
       {{ props.goalType !== "type" ? props.goalType : "All Goals" }}
     </h2>
     <section id="content">
-      <div v-if="filteredData.length === 0" id="no-goals">
+      <div v-if="!filteredData.length" id="no-goals">
         <h2 v-if="!isAdding">No goals yet!</h2>
         <button @click="showNew" id="button-start" v-if="!isAdding">
           Start planning
@@ -94,12 +94,16 @@
       <button
         id="button-edit"
         @click="showRem"
-        v-if="!isAdding && props.userData.length > 0"
+        v-if="!isAdding && filteredData.length > 0"
       >
         Edit List
       </button>
       <button id="button-rem" @click="remGoal" v-if="canRem">Remove</button>
-      <button id="button-add" @click="showAdd" v-if="!isAdding">
+      <button
+        id="button-add"
+        @click="showAdd"
+        v-if="!isAdding && props.goalType !== 'completed'"
+      >
         Add Goal
       </button>
     </div>
@@ -108,16 +112,12 @@
 
 <script setup>
 import { useStore } from "vuex";
-import {
-  ref,
-  defineProps,
-  computed,
-  watch,
-  // onBeforeMount,
-  // onBeforeUpdate,
-  // onUpdated,
-  // onUnmounted,
-} from "vue";
+import { ref, defineProps, computed, watch, onBeforeMount } from "vue";
+
+onBeforeMount(() => {
+  console.log(props.goalType);
+  console.log(props.userData);
+});
 
 const store = useStore();
 const props = defineProps(["goalType", "userData"]);
@@ -126,23 +126,28 @@ function compRate(start, comp) {
   const totalTime = new Date(comp).getTime() - new Date(start).getTime();
   const elapsedTime = Date.now() - new Date(start).getTime();
   const rate = (elapsedTime / totalTime) * 100;
-
   if (new Date(comp).getTime() <= Date.now()) return "100%";
   else {
     return Math.min(rate, 100).toFixed(0) + "%";
   }
 }
 
-const filteredData = computed(() =>
-  props.userData.filter((goal) => {
-    if (props.goalType !== "type" && props.goalType !== "completed")
-      return goal.type === props.goalType && !goal.isCompleted;
-    if (props.goalType === "completed") return goal.isCompleted;
-    else {
-      return goal.type && !goal.isCompleted;
-    }
-  })
-);
+const filteredData = computed(() => {
+  if (props.goalType === "completed") {
+    return props.userData.filter((goal) => goal.isCompleted === true);
+  } else if (props.goalType === "type") {
+    return props.userData.filter((goal) => goal.isCompleted === false);
+  } else {
+    return props.userData.filter(
+      (goal) => goal.type === props.goalType && goal.isCompleted === false
+    );
+  }
+});
+// watch(props, () => {
+//   console.log(props.userData);
+//   console.log(filteredData.value);
+//   // console.log(props.goalType);
+// });
 
 const selType = ref("day");
 
@@ -162,29 +167,47 @@ function defType() {
 
 watch(selType, () => defType());
 
+function weekToDate(dateInput) {
+  const selectedWeek = +dateInput.slice(-2);
+  const curYear = new Date().getFullYear();
+  const startOfYear = new Date(`${curYear}-01-01`);
+  const firstDayOfWeek = new Date(
+    startOfYear.getTime() + (selectedWeek - 1) * 7 * 24 * 60 * 60 * 1000
+  );
+
+  const dayOfWeek = firstDayOfWeek.getDay();
+  const mondayOfWeek = new Date(firstDayOfWeek);
+  if (dayOfWeek !== 1) {
+    mondayOfWeek.setDate(
+      mondayOfWeek.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)
+    );
+  }
+  return mondayOfWeek;
+}
+
 const inputTitle = ref("");
 const inputDesc = ref("");
 const isAdding = ref(false);
 const compDate = ref();
-// const calcDate = computed(() => {
-//   const [ho, min] = compDate.value.split(":");
-//   return new Date().setHours(ho, min);
-// });
 
-function addGoal() {
-  // console.log(filteredData.value);
-
-  store.dispatch("sendData", {
-    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
-    title: inputTitle.value,
-    desc: inputDesc.value,
-    type: props.goalType === "type" ? selType.value : props.goalType,
-    isCompleted: false,
-    started: Date.now(),
-    compDate: compDate.value,
-  });
-  isAdding.value = false;
+async function addGoal() {
+  if (selType.value === "week") compDate.value = weekToDate(compDate.value);
+  try {
+    await store.dispatch("sendData", {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
+      title: inputTitle.value,
+      desc: inputDesc.value,
+      type: props.goalType === "type" ? selType.value : props.goalType,
+      isCompleted: true,
+      started: Date.now(),
+      compDate: compDate.value,
+    });
+    isAdding.value = false;
+  } catch (err) {
+    console.log(err);
+  }
 }
+
 const selectedGoals = ref([]);
 
 async function remGoal() {

@@ -23,7 +23,6 @@ const router = createRouter({
         if (store.getters.userToken) {
           to.params.userId = store.getters.userToken;
           to.params.isAuth = true;
-          to.params.goalType = "";
           next();
         } else {
           to.params.isAuth = false;
