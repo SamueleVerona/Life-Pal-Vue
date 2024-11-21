@@ -42,7 +42,7 @@ nav {
   /* height: 80vh; */
   text-align: center;
 
-  background: linear-gradient(90deg, #89f7fe 0%, #66a6ff 100%);
+  background: linear-gradient(90deg, #89f7fe 0%, #1362d0 100%);
   border-radius: 20px;
 
   box-shadow: 1rem 1rem 0.5rem rgba(128, 128, 128, 0.308);
@@ -60,10 +60,10 @@ button {
   border: none;
   margin: 0.2rem 0;
   font-size: 3rem;
-  background: linear-gradient(90deg, #ffc26d 0%, #f3e6bd 100%);
+  background: linear-gradient(90deg, #6dd6ff 0%, #fffbee 100%);
 }
 #button-all {
-  background: linear-gradient(90deg, #d68a1f 0%, #f3e6bd 100%);
+  background: linear-gradient(90deg, #ffe62a 0%, #f3e6bd 100%);
 }
 #button-comp {
   background: linear-gradient(90deg, #72fa53 0%, #ddf3bd 100%);

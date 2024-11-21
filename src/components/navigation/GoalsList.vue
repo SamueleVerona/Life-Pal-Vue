@@ -85,8 +85,8 @@
       </template>
       <template #button>
         <div class="list-controls" id="card-controls">
-          <button id="button-save" @click="addGoal">Save</button>
           <button id="button-close" @click="showNew">Back</button>
+          <button id="button-save" @click="addGoal">Save</button>
         </div>
       </template>
     </base-card>
@@ -115,7 +115,13 @@ import { useStore } from "vuex";
 import { ref, defineProps, computed, watch } from "vue";
 
 const store = useStore();
-const props = defineProps(["goalType", "userData"]);
+const props = defineProps(["goalType", "userData", "insertNewGoal"]);
+
+watch(props, () => {
+  compDate.value = props.insertNewGoal;
+
+  isAdding.value = true;
+});
 
 function compRate(start, comp) {
   const totalTime = new Date(comp).getTime() - new Date(start).getTime();
