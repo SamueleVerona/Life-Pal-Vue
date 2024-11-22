@@ -119,8 +119,7 @@ const props = defineProps(["goalType", "userData", "insertNewGoal"]);
 
 watch(props, () => {
   compDate.value = props.insertNewGoal;
-
-  isAdding.value = true;
+  // isAdding.value = true;
 });
 
 function compRate(start, comp) {
@@ -246,7 +245,7 @@ function showRem() {
   /* border: solid; */
   position: relative;
   height: 80vh;
-  width: 40rem;
+  /* width: 40rem; */
   padding: 0 2rem;
   margin: auto;
   display: flex;
