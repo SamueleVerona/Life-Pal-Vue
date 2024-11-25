@@ -24,7 +24,7 @@
 //     timeDivId.value = "type";
 // });
 // watch(userData, () => (timeDivId.value = "type"));
-import { defineComponent, ref, computed, watch } from "vue";
+import { defineComponent, ref, computed, watch, onBeforeUpdate } from "vue";
 import { useStore } from "vuex";
 import CalendarNav from "../navigation/CalendarNav.vue";
 import GoalsList from "../navigation/GoalsList.vue";
@@ -62,27 +62,88 @@ function parseData(goals) {
         start: new Date(goal.compDate).toISOString().slice(0, 10),
       })
   );
-  console.log(parsed);
+  // console.log(parsed);
   events.value = parsed;
 }
 
 watch(userData, () => parseData(userData.value));
 
+const tomorrow = ref(Date.now() + 86400000);
+const nextWeekDay = ref(Date.now() + 86400000 * 7);
+// const endOfMonth = ref(Date.now() + 86400000 * 24);
+
+function getThisSunday() {
+  let counter = 0;
+  let today = new Date().getDay();
+
+  while (today != 7) {
+    if (today < 7) {
+      counter++;
+      today++;
+    }
+    if (today > 7) {
+      counter--;
+      today--;
+    }
+  }
+  return new Date(Date.now() + 86400000 * counter);
+}
+
+// console.log(getThisSunday());
+
+const decadeViewElements = computed(() =>
+  document.querySelectorAll(".fc-multimonth-month")
+);
+
 const calendarOptions = ref({
   plugins: [dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin],
+  views: {
+    multiMonthYear: {
+      type: "list",
+      buttonText: "month",
+      dayHeaders: false,
+      weekends: false,
+    },
+    dayGridMonth: {
+      type: "dayGrid",
+      buttonText: "week",
+      validRange: {
+        start: new Date(nextWeekDay.value).toISOString(),
+      },
+      weekNumbers: true,
+      dayCellContent: () => "",
+      hiddenDays: [0, 2, 3, 4, 5, 6],
+      dayHeaders: false,
+    },
+    dayGridWeek: {
+      type: "dayGrid",
+      buttonText: "day",
+      validRange: {
+        start: new Date(tomorrow.value).toISOString(),
+        end: getThisSunday(),
+      },
+      visibleRange: {
+        start: new Date().toISOString(),
+        end: getThisSunday(),
+      },
+      duration: { weeks: 2 },
+    },
+  },
   headerToolbar: {
     left: "title",
     center: "today multiMonthYear,dayGridMonth,dayGridWeek prev,next",
     right: "",
   },
-  initialView: "dayGridWeek",
+
+  initialView: "multiMonthYear",
+  multiMonthMaxColumns: 3,
   editable: true,
   selectable: true,
   dayMaxEvents: true,
   weekends: true,
   showNonCurrentDates: false,
-  fixedWeekCount: true,
-  duration: { weeks: 1 },
+  fixedWeekCount: false,
+
   events,
   eventSources: true,
   datesSet: datesSelection,
@@ -91,31 +152,46 @@ const calendarOptions = ref({
 
 const trigger = ref();
 
+const currentView = ref();
+
 function datesSelection(info) {
   console.log(info);
+  currentView.value = info.view.type;
   if (info.view.type.startsWith("day"))
     timeDivId.value = info.view.type.slice(7).toLowerCase();
   else {
     timeDivId.value = info.view.type.slice(-4).toLowerCase();
   }
-  // console.log(info.view.type.slice(7).toLowerCase());
 }
 
 function handleDateClick(arg) {
   trigger.value = arg.dateStr;
 }
+
+onBeforeUpdate(() => {
+  if (currentView.value === "multiMonthYear") {
+    decadeViewElements.value[0].insertAdjacentHTML(
+      "beforebegin",
+      '<div class="fc-multimonth-month" id="yearly" role="grid" style="width: 100%"><div class="fc-multimonth-title">Yearly Goals</div></div>'
+    );
+  }
+});
 </script>
 
 <style scoped>
 :root {
   --fc-small-font-size: 1rem;
 }
+
 #content {
   display: flex;
   flex-direction: row;
   width: 100vw;
   height: 90vh;
   padding: 0 1rem;
+}
+#nav {
+  display: none;
 }
 #nav,
 #goals {
@@ -150,7 +226,8 @@ function handleDateClick(arg) {
   align-items: center;
 }
 
-:deep(.fc-toolbar-chunk:first-child) {
+:deep(.fc-toolbar-chunk:first-child),
+:deep(.fc-multimonth-title) {
   font-size: 3rem;
 }
 
@@ -186,8 +263,40 @@ function handleDateClick(arg) {
   color: rgb(0, 234, 255);
   border: solid black 1px;
   border-radius: 12px;
+  height: 5rem;
+  /* color:rgb(255, 220, 40) */
 }
 :deep(.fc-event-title-container) {
   font-size: 10rem;
+}
+
+:deep(.fc-multimonth-month) {
+  border: solid;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+:deep(.fc-multimonth-daygrid-table),
+:deep(thead) {
+  display: none;
+}
+
+:deep(.fc-multimonth-month:first-child::after) {
+  background: red;
+}
+:deep(.fc-daygrid-day.fc-day-today) {
+  background: rgba(247, 82, 82, 0.537);
+  border-radius: 10px;
+  /* color: aqua; */
+}
+
+:deep(#yearly) {
+  border: rgb(90, 211, 255) 3px solid;
+  border-radius: 10px;
+  color: rgb(255, 128, 0);
+}
+:deep(.fc-daygrid-week-number) {
+  background: none;
+  /* border: red; */
 }
 </style>
