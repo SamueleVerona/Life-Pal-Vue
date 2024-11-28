@@ -14,6 +14,9 @@ export default {
 </script>
 
 <style>
+:root {
+  --fc-neutral-bg-color: rgba(200, 177, 246, 0.526);
+}
 #app {
   font-family: "Poppins", sans-serif;
   -webkit-font-smoothing: antialiased;
