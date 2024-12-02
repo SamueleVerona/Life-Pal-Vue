@@ -1,16 +1,21 @@
 <template>
   <section
-    id="goals"
-    class="hasContent"
-    :class="{ setting: filteredData.length === 0 }"
+    id="dash-card"
+    class="card has-content"
+    :class="{ 'no-content': filteredData.length === 0 }"
   >
-    <h2 id="timeDiv">
+    <h2 id="timeSelection">
       {{ props.goalType !== "type" ? props.goalType : "All Goals" }}
     </h2>
-    <section id="content">
+    <section id="dash-content">
       <div v-if="!filteredData.length" id="no-goals">
         <h2 v-if="!isAdding">No goals yet!</h2>
-        <button @click="showNew" id="button-start" v-if="!isAdding">
+        <button
+          type="button"
+          @click="showNew"
+          id="button-start"
+          v-if="!isAdding"
+        >
           Start planning
         </button>
       </div>
@@ -40,7 +45,7 @@
         </li>
       </ul>
     </section>
-    <base-card v-if="isAdding" id="goalCard">
+    <base-card v-if="isAdding" id="new-goal-card" class="card">
       <template #title>
         <h2 id="goalLabel">New Goal</h2>
         <input
@@ -84,14 +89,15 @@
         </label>
       </template>
       <template #button>
-        <div class="list-controls" id="card-controls">
-          <button id="button-close" @click="showNew">Back</button>
-          <button id="button-save" @click="addGoal">Save</button>
+        <div class="list-controls" id="new-goal-controls">
+          <button type="button" id="button-close" @click="showNew">Back</button>
+          <button type="button" id="button-save" @click="addGoal">Save</button>
         </div>
       </template>
     </base-card>
     <div class="list-controls">
       <button
+        type="button"
         id="button-edit"
         @click="showRem"
         v-if="!isAdding && filteredData.length > 0"
@@ -100,6 +106,7 @@
       </button>
       <button id="button-rem" @click="remGoal" v-if="canRem">Remove</button>
       <button
+        type="button"
         id="button-add"
         @click="showAdd"
         v-if="!isAdding && props.goalType !== 'completed'"
@@ -150,12 +157,12 @@ function defType() {
   if (props.goalType === "type") {
     if (selType.value === "day") return "date";
     if (selType.value === "week") return "week";
-    if (selType.value === "month") return "month";
+    if (selType.value === "month") return "date";
     if (selType.value === "year") return "date";
   } else {
     if (props.goalType === "day") return "date";
     if (props.goalType === "week") return "week";
-    if (props.goalType === "month") return "month";
+    if (props.goalType === "month") return "date";
     if (props.goalType === "year") return "date";
   }
 }
@@ -237,31 +244,34 @@ function showRem() {
 * {
   font-family: "Poppins", sans-serif;
 }
-#content {
-  padding-top: 3rem;
-}
 
-#goals {
-  /* border: solid; */
+.card {
   position: relative;
-  height: 80vh;
-  /* width: 40rem; */
-  padding: 0 2rem;
   margin: auto;
   display: flex;
   flex-direction: column;
   border-radius: 30px;
-  box-shadow: 1rem 1rem 0.5rem rgba(128, 128, 128, 0.308);
+  box-shadow: 0rem 0.5rem 0rem #62a3ff;
 }
-.hasContent {
-  background: linear-gradient(90deg, #827bff 0%, #ff7eb3 100%);
+/*
+#dash-card {
+  position: relative;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 30px;
+  box-shadow: 0rem 0.5rem 0rem #62a3ff;
+} */
+#dash-content,
+.list-controls {
+  padding: 0rem 1rem;
 }
-.setting {
-  background: linear-gradient(90deg, #fbffbe 0%, #fff67e 100%);
+.has-content {
+  background: linear-gradient(70deg, #7bd7ff 20%, #a77eff 100%);
 }
-
-button:hover {
-  cursor: pointer;
+.no-content {
+  background: linear-gradient(180deg, #beffe7 20%, #c0bcff 100%);
+  box-shadow: 0rem 0.5rem 0rem #7bffe5;
 }
 
 li {
@@ -298,6 +308,11 @@ li {
   background: none;
 }
 
+button:hover {
+  cursor: pointer;
+  background: #7ea7ff;
+}
+
 h2,
 #button-start {
   font-size: 2.5rem;
@@ -305,15 +320,14 @@ h2,
 }
 
 #button-start {
-  background: rgb(169, 247, 207);
+  background: none;
   border: none;
   font-weight: bold;
-  color: #2c3e50;
+  color: rgb(0, 149, 255);
   border-radius: 30px;
 }
 #button-start:hover {
-  color: rgb(255, 255, 255);
-  background: #7ea7ff;
+  color: rgb(157, 0, 255);
 }
 
 .title,
@@ -356,30 +370,27 @@ h2,
   background: rgb(47, 210, 255);
 }
 
-#timeDiv {
+#timeSelection {
   background: rgb(249, 255, 220);
   border-radius: 30px;
   text-align: center;
   border-top: solid;
 }
 
-#goalCard {
+#new-goal-card {
   position: absolute;
-  left: 0;
-  top: 1rem;
-  height: 80vh;
+  height: 100%;
   width: 100%;
-  border-radius: 30px;
+  padding: 0rem 1rem;
   box-shadow: 1rem 1rem 0.5rem rgba(128, 128, 128, 0.308);
-  /* border: solid; */
-  background: rgb(234, 255, 182);
+  background: rgb(249, 182, 255);
 }
 
 #goalLabel {
-  background: rgb(255, 83, 83);
+  background: rgb(121, 81, 255);
   text-align: center;
-  border-radius: 15px;
-  color: white;
+  border-radius: 20px;
+  color: rgb(251, 251, 251);
 }
 
 label,
@@ -407,7 +418,7 @@ input[type="text"],
 input[type="date"] {
   height: 3rem;
   font-size: 2.5rem;
-  border-radius: 20px;
+  border-radius: 10px;
   caret-color: #ff580b;
   padding-left: 1rem;
 }
@@ -428,30 +439,26 @@ textarea {
   flex: 1fr;
   font-size: 2.5rem;
   border: solid;
-  border-radius: 20px;
+  border-radius: 10px;
   padding-left: 1rem;
   caret-color: #000000;
-}
-
-#button-save {
-  background: rgb(161, 255, 151);
-}
-#button-close {
-  background: rgb(255, 151, 151);
 }
 
 .list-controls {
   position: absolute;
   bottom: 1rem;
+  left: 0;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  width: 90%;
-}
-#card-controls {
   width: 100%;
-  bottom: 2rem;
-  padding: 0 2rem;
+}
+#new-goal-controls {
+  width: 100%;
+  /* bottom: 2rem; */
+  /* padding: 0rem 2rem; */
+  margin: auto;
+  /* border: solid red; */
 }
 
 #button-save:active,
@@ -459,7 +466,8 @@ textarea {
 #button-rem:active,
 #button-edit:active,
 #button-close:active {
-  background: rgb(61, 178, 46);
+  border: solid 1px white;
+  background: rgba(255, 255, 255, 0.819);
 }
 
 #button-edit,
@@ -472,10 +480,18 @@ textarea {
   color: #2c3e50;
   width: max-content;
   height: 5rem;
-  border-radius: 30px;
+  border-radius: 25px;
   border: none;
   cursor: pointer;
   padding: 0 1rem;
+}
+#button-save {
+  background: rgb(151, 250, 255);
+}
+#button-close {
+  color: rgba(255, 255, 255, 0.753);
+  background: rgb(255, 98, 98);
+  border: solid 2px rgb(248, 98, 98);
 }
 
 #button-edit {

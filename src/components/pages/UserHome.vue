@@ -1,71 +1,50 @@
 <template>
   <section id="content">
-    <calendar-nav
-      id="nav"
-      :timeDivs="timeDivsArr"
-      @sendText="passText"
-    ></calendar-nav>
-    <full-calendar
-      ref="calendar"
-      :options="calendarOptions"
-      @mousedown="handleMousedown"
-    ></full-calendar>
-    <goals-list
-      id="goals"
-      :goalType="timeDivId"
-      :userData="userData"
-      :insertNewGoal="trigger"
-    >
-    </goals-list>
+    <user-nav id="nav" @mousedown="handleNavigation"></user-nav>
+    <section id="user-profile">
+      <full-calendar
+        v-if="toggleCal"
+        ref="calendar"
+        :options="calendarOptions"
+        @mousedown="handleMousedown"
+      ></full-calendar>
+      <user-dash
+        v-if="toggleDash"
+        id="dash-card"
+        :goalType="timeDivId"
+        :userData="userData"
+        :insertNewGoal="trigger"
+      >
+      </user-dash>
+    </section>
   </section>
 </template>
 
 <script setup>
-// watch(userData, () => {
-//   if (
-//     userData.value.filter((goal) => goal.type === timeDivId.value).length === 0
-//   )
-//     timeDivId.value = "type";
-// });
-// watch(userData, () => (timeDivId.value = "type"));
-import {
-  defineComponent,
-  ref,
-  computed,
-  watch,
-  // onMounted,
-  // onBeforeUpdate,
-} from "vue";
+import { defineComponent, ref, computed, watch } from "vue";
 import { useStore } from "vuex";
-import CalendarNav from "../navigation/CalendarNav.vue";
-import GoalsList from "../navigation/GoalsList.vue";
+import UserNav from "../navigation/UserNav.vue";
+import UserDash from "../navigation/UserDash.vue";
 
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import interactionPlugin from "@fullcalendar/interaction";
 
-defineComponent(CalendarNav);
-defineComponent(GoalsList);
+defineComponent(UserNav);
+defineComponent(UserDash);
 defineComponent(FullCalendar);
 
 const store = useStore();
 const timeDivId = ref("type");
-function passText(gottenText) {
-  timeDivId.value = gottenText;
-}
+
 const userData = computed(() => store.getters.userGoals);
-
-const timeDivsArr = computed(
-  () => new Set(userData.value.map((goal) => goal.type))
-);
-
 const calendar = ref();
 const viewInfo = ref();
 
 const today = ref(new Date());
 const tomorrow = ref(new Date(today.value.getTime() + 86400000));
-const nextWeekDay = ref(new Date(today.value.getTime() + 86400000 * 7));
+// const nextWeekDay = ref(new Date(today.value.getTime() + 86400000 * 7));
 
 function setEvents(goals) {
   const parsed = goals.map((goal) => {
@@ -73,14 +52,20 @@ function setEvents(goals) {
       id: goal.id,
       title: goal.title,
       start: new Date(goal.compDate).toISOString().slice(0, 10),
+      type: goal.type,
     };
   });
+
   calendarOptions.value.events = parsed;
 }
 
-watch(userData, () => setEvents(userData.value));
+watch(userData, () => {
+  setEvents(userData.value);
+});
 
 function getThisWeekDay(dayOfWeek) {
+  const MS_PER_DAY = 86400000;
+
   let counter = 0;
   let todayDay = today.value.getDay();
 
@@ -94,7 +79,7 @@ function getThisWeekDay(dayOfWeek) {
       todayDay--;
     }
   }
-  return new Date(today.value.getTime() + 86400000 * counter);
+  return new Date(today.value.getTime() + MS_PER_DAY * counter);
 }
 
 function setMonthLimits() {
@@ -118,8 +103,10 @@ const calendarOptions = ref({
   plugins: [dayGridPlugin, multiMonthPlugin, interactionPlugin],
   customButtons: {
     yearly: {
-      text: "set yearly",
-      click: () => console.log("clicked"),
+      text: "",
+      click: () => {
+        handleYearly();
+      },
     },
   },
   views: {
@@ -143,7 +130,7 @@ const calendarOptions = ref({
       dateAlignment: "month",
       validRange: () => setMonthLimits(),
     },
-    dailyGridDay: {
+    dayGridDay: {
       type: "dayGrid",
       buttonText: "day",
       visibleRange: {
@@ -163,10 +150,10 @@ const calendarOptions = ref({
   },
   headerToolbar: {
     left: "title",
-    center: `today multiMonthYear,dayGridMonth,dailyGridDay prev,next yearly`,
+    center: `today multiMonthYear,dayGridMonth,dayGridDay prev,next yearly`,
     right: "",
   },
-  initialView: "dayGridMonth",
+  initialView: "multiMonthYear",
   multiMonthMaxColumns: 1,
   editable: true,
   selectable: true,
@@ -176,14 +163,22 @@ const calendarOptions = ref({
   eventSources: true,
   datesSet: datesSelection,
   dateClick: handleDateClick,
+  eventsSet: () => {
+    setYearly();
+    if (isYearView.value) {
+      setMonthly(viewInfo.value);
+    }
+  },
   viewDidMount: (info) => {
     viewInfo.value = info;
     currentView.value = info.view.type;
+    calendar.value.calendar.gotoDate("2025-01");
   },
 });
 
 const trigger = ref();
 const currentView = ref();
+const yerviewYear = ref();
 const lastTarget = ref(null);
 
 function handleMousedown(e) {
@@ -205,8 +200,8 @@ function handleMousedown(e) {
 }
 
 function datesSelection(info) {
+  yerviewYear.value = info.startStr.slice(0, 4);
   currentView.value = info.view.type;
-  setValid(viewInfo.value);
   timeDivId.value = calendarOptions.value.views[currentView.value].buttonText;
 }
 
@@ -214,64 +209,145 @@ function handleDateClick(arg) {
   trigger.value = arg.dateStr;
 }
 
-const validMonth = computed(() => {
-  if (currentView.value === "dailyGridDay") return today.value.getMonth() + 1;
-  else if (currentView.value === "dayGridMonth")
-    return +nextWeekDay.value.getMonth() + 1;
-  else return +today.value.getMonth() + 2;
-});
+function handleYearly() {
+  timeDivId.value = "year";
+}
 
-function setValid(info) {
+function perTimeIdEvents(timeIdString, dateString) {
+  return userData.value.reduce((idx, goal) => {
+    if (goal.type === timeIdString && goal.compDate === dateString) idx++;
+    return idx;
+  }, 0);
+}
+
+const isYearView = computed(() => currentView.value === "multiMonthYear");
+// const isDaygridView = computed(() => currentView.value.includes("dayGrid"));
+
+function setMonthly(info) {
+  const firstValidYear = +today.value.getFullYear() + 1;
   let elementsArray = info.el.childNodes;
-
-  if (info.view.type.includes("dayGrid"))
-    elementsArray = info.el.querySelectorAll("[role='gridcell']");
-
   elementsArray.forEach((el) => {
-    if (info.view.type === "multiMonthYear") {
-      const monthName = el.firstElementChild.firstElementChild.textContent;
-      el.textContent = monthName;
-    }
     el.setAttribute("style", "");
-
-    const isValidMonth = el.dataset.date?.includes(
-      `${new Date().getFullYear()}-${validMonth.value}`
+    const fullDate = el.dataset.date + "-01";
+    const monthString = new Date(el.dataset.date).toUTCString().slice(8, 11);
+    const perMonthEvents = perTimeIdEvents("month", fullDate);
+    let eventsIndex = "";
+    perMonthEvents ? (eventsIndex = "+" + perMonthEvents) : (eventsIndex = "");
+    el.textContent = monthString;
+    el.insertAdjacentHTML(
+      "beforeend",
+      ` <sup class='month-has-events'>${eventsIndex}</sup>`
     );
-    if (isValidMonth) {
-      el.setAttribute("isValid", true);
-    }
+
+    const isValidMonth = +el.dataset.date.slice(0, 4) >= firstValidYear;
+    if (isValidMonth) el.setAttribute("isValid", true);
   });
+}
+
+function setYearly() {
+  const currYear = yerviewYear.value + "-01" + "-01";
+  const actualTitleValue = viewInfo.value.view.title;
+
+  const yearviewTitle = document.querySelector(".fc-toolbar-title");
+  const perYearEvents = perTimeIdEvents("year", currYear);
+  let eventsIndex = "";
+  perYearEvents ? (eventsIndex = "+" + perYearEvents) : (eventsIndex = "");
+  const eventIndexElement = document.querySelector("sup");
+
+  if (isYearView.value) {
+    eventIndexElement
+      ? (eventIndexElement.textContent = eventsIndex)
+      : yearviewTitle.insertAdjacentHTML(
+          "beforeend",
+          `<sup class='month-has-events'>${eventsIndex}</sup>`
+        );
+  } else {
+    eventIndexElement
+      ? eventIndexElement.remove()
+      : (yearviewTitle.textContent = actualTitleValue);
+  }
+
+  displayYearly();
+}
+
+function displayYearly() {
+  const yearlyButtonEl = document.querySelector(".fc-yearly-button");
+  const currYear = yerviewYear.value + "-01" + "-01";
+
+  const perYearEvents = perTimeIdEvents("year", currYear);
+
+  if (yerviewYear.value < +today.value.getFullYear() + 1) {
+    yearlyButtonEl.classList.add("is-hidden");
+  } else {
+    yearlyButtonEl.classList.remove("is-hidden");
+  }
+
+  if (isYearView.value) {
+    perYearEvents
+      ? (yearlyButtonEl.textContent = "show")
+      : (yearlyButtonEl.textContent = "set yearly");
+  } else {
+    yearlyButtonEl.textContent = "";
+  }
+}
+
+const toggleCal = ref(true);
+const toggleDash = ref(false);
+
+function handleNavigation(e) {
+  if (e.target.id === "button-dash") {
+    toggleDash.value = true;
+    toggleCal.value = false;
+  }
+  if (e.target.id === "button-calendar") {
+    toggleDash.value = false;
+    toggleCal.value = true;
+  }
 }
 </script>
 
 <style scoped>
 #content {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: 100vw;
   height: 90vh;
   padding: 0 1rem;
 }
 #nav {
-  display: none;
+  margin: 1rem auto;
+  padding: 0.8rem;
+  border: solid 1px rgba(128, 128, 128, 0.308);
+  border-radius: 40px;
+  box-shadow: 0rem 0.5rem 0rem rgba(128, 128, 128, 0.308);
+  height: 12vh;
 }
-#nav,
-#goals {
-  height: 90%;
-  flex: 1;
+
+#user-profile {
+  display: flex;
+  flex-direction: row;
+  padding: 1rem 0rem;
+  height: 88vh;
+}
+
+#dash-card {
+  width: 50%;
+}
+#dash-card,
+:deep(.fc) {
+  height: 100%;
 }
 
 :deep(.fc) {
   display: flex;
-  height: 90%;
-  margin: auto 1rem;
+  margin: 0rem 1rem;
   padding: 1rem;
   font-size: 5rem;
   font-family: "Roboto", sans-serif;
   flex: 2;
   border-radius: 30px;
-  border: solid 1px rgba(128, 128, 128, 0.308);
-  box-shadow: 1rem 1rem 0.5rem rgba(128, 128, 128, 0.308);
+  border: solid 2px rgba(128, 128, 128, 0.308);
+  box-shadow: 0rem 0.5rem 0rem rgba(128, 128, 128, 0.308);
   backdrop-filter: sepia;
 }
 
@@ -281,8 +357,6 @@ function setValid(info) {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
-  /* border: solid; */
-  /* padding: 0 1rem; */
 }
 
 :deep(.fc-toolbar-chunk) {
@@ -300,6 +374,10 @@ function setValid(info) {
   font-size: 3rem;
 }
 
+:deep(.fc-multiMonthYear-view) {
+  border: none;
+}
+
 :deep(.fc-button) {
   font-size: 1.8rem;
   line-height: 3rem;
@@ -312,18 +390,18 @@ function setValid(info) {
   display: none;
 }
 :deep(.fc-yearly-button) {
-  color: rgb(255, 128, 0);
+  color: rgb(0, 149, 255);
   background: none;
   font-size: inherit;
   font-weight: bolder;
   border-radius: 10px;
 
-  border: rgb(90, 211, 255) 3px solid;
+  border: rgb(221, 1, 255) 3px solid;
 }
 :deep(.fc-yearly-button:hover) {
   background: none;
-  color: rgb(172, 29, 255);
-  border-color: rgb(33, 238, 190);
+  color: rgb(0, 149, 255);
+  border-color: rgb(0, 242, 255);
 }
 
 :deep(table) {
@@ -340,15 +418,8 @@ function setValid(info) {
 }
 :deep(.fc-daygrid-day) {
   border-radius: 10px;
-  /* width: 10rem;
-  height: 10%; */
 }
 
-/* :deep(.fc-scrollgrid-sync-inner) {
-  font-weight: bolder;
-  border: solid rgb(144, 207, 218) 1px;
-  border-radius: 10px;
-} */
 :deep(.fc-daygrid-day-frame) {
   font-weight: bolder;
   border: solid 2px #510094;
@@ -356,6 +427,7 @@ function setValid(info) {
   height: 5rem;
   color: #2c3e50;
 }
+
 :deep(.fc-event-title-container) {
   font-size: 10rem;
 }
@@ -378,11 +450,6 @@ function setValid(info) {
 :deep(.fc .fc-multimonth-multicol .fc-multimonth-month) {
   padding: 0;
 }
-/* :deep(td > div) {
-  border-radius: 10px;
-  cursor: pointer;
-  background: none;
-} */
 
 :deep(.fc-multimonth-month[isValid]),
 :deep(td[isValid] > div) {
@@ -412,5 +479,21 @@ function setValid(info) {
 }
 :deep(.fc-multimonth-month[isSelected="true"]) {
   background-color: var(--fc-highlight-color);
+  position: relative;
+}
+
+:deep(.month-has-events) {
+  color: rgb(0, 149, 255);
+  z-index: 100;
+}
+:deep(sup) {
+  cursor: pointer;
+}
+:deep(sup:hover) {
+  color: rgb(255, 128, 0);
+}
+
+:deep(.is-hidden) {
+  display: none;
 }
 </style>
