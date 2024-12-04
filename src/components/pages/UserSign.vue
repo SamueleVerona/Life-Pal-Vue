@@ -7,7 +7,7 @@
           <label for="email">Type in your email</label>
           <input type="email" name="email" id="email" v-model="userName" />
         </template>
-        <template #description>
+        <template #content>
           <label for="password">Type in your password</label>
           <input type="text" name="password" id="password" v-model="userPwd" />
           <button id="submit-button" @click="submit">Confirm</button>

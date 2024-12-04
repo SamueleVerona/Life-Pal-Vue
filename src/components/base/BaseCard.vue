@@ -4,10 +4,10 @@
       <slot name="title" class="title">
         <h2>Titolo</h2>
       </slot>
-      <slot name="description" class="description">
+      <slot name="content" class="content">
         <p>Ipse dixit descritione</p>
       </slot>
-      <slot name="options" class="description"> </slot>
+      <slot name="options" class="content"></slot>
     </section>
     <slot name="button">
       <button>Press me</button>
@@ -19,11 +19,11 @@
 export default {};
 </script>
 <style scoped>
-.container {
+/* .container {
   box-shadow: 1rem 1rem 3rem grey;
   border-radius: 20px;
   font-size: 3rem;
-}
+} */
 
 .card-content {
   display: flex;

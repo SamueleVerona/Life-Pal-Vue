@@ -2,7 +2,6 @@ export default {
   logout(context) {
     context.commit("logout");
   },
-
   async deleteData(context, goalsToRemove) {
     const sessionToken = context.getters.sessionToken;
     const UID = context.getters.userToken;
@@ -39,7 +38,6 @@ export default {
       throw err.message;
     }
   },
-
   async sendData(context, payload) {
     try {
       const sessionToken = context.getters.sessionToken;

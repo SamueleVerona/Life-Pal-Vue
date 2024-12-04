@@ -1,21 +1,38 @@
 <template>
   <section id="content">
-    <user-nav id="nav" @mousedown="handleNavigation"></user-nav>
+    <user-nav
+      id="nav"
+      @mousedown="handleNavigation"
+      :triggers="navToggles"
+    ></user-nav>
     <section id="user-profile">
       <full-calendar
-        v-if="toggleCal"
+        v-if="navToggles[0]"
         ref="calendar"
         :options="calendarOptions"
         @mousedown="handleMousedown"
       ></full-calendar>
       <user-dash
-        v-if="toggleDash"
+        v-if="navToggles[1]"
         id="dash-card"
         :goalType="timeDivId"
         :userData="userData"
-        :insertNewGoal="trigger"
+        :newDate="dateInfo"
+        @start-adding="
+          (info) => {
+            toggleDash = !info;
+            toggleAdd = info;
+          }
+        "
       >
       </user-dash>
+      <goal-card
+        v-if="navToggles[2]"
+        :dateInfo="dateInfo"
+        :goalType="timeDivId"
+        id="goal-card"
+        @goal-saved="resetCal"
+      ></goal-card>
     </section>
   </section>
 </template>
@@ -25,6 +42,7 @@ import { defineComponent, ref, computed, watch } from "vue";
 import { useStore } from "vuex";
 import UserNav from "../navigation/UserNav.vue";
 import UserDash from "../navigation/UserDash.vue";
+import GoalCard from "../navigation/GoalCard.vue";
 
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -33,10 +51,12 @@ import interactionPlugin from "@fullcalendar/interaction";
 
 defineComponent(UserNav);
 defineComponent(UserDash);
+defineComponent(GoalCard);
 defineComponent(FullCalendar);
 
 const store = useStore();
 const timeDivId = ref("type");
+const dateInfo = ref();
 
 const userData = computed(() => store.getters.userGoals);
 const calendar = ref();
@@ -44,6 +64,8 @@ const viewInfo = ref();
 
 const today = ref(new Date());
 const tomorrow = ref(new Date(today.value.getTime() + 86400000));
+
+viewInfo.value = today.value;
 // const nextWeekDay = ref(new Date(today.value.getTime() + 86400000 * 7));
 
 function setEvents(goals) {
@@ -153,7 +175,7 @@ const calendarOptions = ref({
     center: `today multiMonthYear,dayGridMonth,dayGridDay prev,next yearly`,
     right: "",
   },
-  initialView: "multiMonthYear",
+  initialView: "dayGridDay",
   multiMonthMaxColumns: 1,
   editable: true,
   selectable: true,
@@ -170,13 +192,14 @@ const calendarOptions = ref({
     }
   },
   viewDidMount: (info) => {
+    setEvents(userData.value);
+
     viewInfo.value = info;
     currentView.value = info.view.type;
     calendar.value.calendar.gotoDate("2025-01");
   },
 });
 
-const trigger = ref();
 const currentView = ref();
 const yerviewYear = ref();
 const lastTarget = ref(null);
@@ -206,11 +229,13 @@ function datesSelection(info) {
 }
 
 function handleDateClick(arg) {
-  trigger.value = arg.dateStr;
+  dateInfo.value = arg.dateStr;
 }
 
 function handleYearly() {
   timeDivId.value = "year";
+  navToggles.value[0] = false;
+  navToggles.value[1] = true;
 }
 
 function perTimeIdEvents(timeIdString, dateString) {
@@ -291,18 +316,29 @@ function displayYearly() {
   }
 }
 
-const toggleCal = ref(true);
-const toggleDash = ref(false);
+const navToggles = ref([true, false, false, false, false]);
 
 function handleNavigation(e) {
-  if (e.target.id === "button-dash") {
-    toggleDash.value = true;
-    toggleCal.value = false;
+  const btnIndex = e.target.dataset.index ? +e.target.dataset.index : null;
+  if (btnIndex === null) return;
+  navToggles.value.forEach((_, i, arr) => {
+    i === btnIndex ? (arr[i] = true) : (arr[i] = false);
+  });
+
+  if (btnIndex === 3) {
+    navToggles.value[1] = true;
+    timeDivId.value = "completed";
+  } else if (btnIndex === 4) {
+    navToggles.value[1] = true;
+    timeDivId.value = "failed";
+  } else {
+    timeDivId.value = calendarOptions.value.views[currentView.value].buttonText;
   }
-  if (e.target.id === "button-calendar") {
-    toggleDash.value = false;
-    toggleCal.value = true;
-  }
+}
+
+function resetCal(set) {
+  navToggles.value[0] = set;
+  navToggles.value[2] = false;
 }
 </script>
 
@@ -325,13 +361,21 @@ function handleNavigation(e) {
 
 #user-profile {
   display: flex;
-  flex-direction: row;
   padding: 1rem 0rem;
   height: 88vh;
 }
 
-#dash-card {
+#goal-card {
+  padding: 0rem 1rem;
+  box-shadow: 0rem 0.5rem 0rem rgba(115, 64, 255, 0.782);
+  background: rgb(186, 146, 255);
+  border-radius: 30px;
+}
+
+#dash-card,
+#goal-card {
   width: 50%;
+  margin: auto;
 }
 #dash-card,
 :deep(.fc) {
@@ -348,7 +392,6 @@ function handleNavigation(e) {
   border-radius: 30px;
   border: solid 2px rgba(128, 128, 128, 0.308);
   box-shadow: 0rem 0.5rem 0rem rgba(128, 128, 128, 0.308);
-  backdrop-filter: sepia;
 }
 
 :deep(.fc .fc-toolbar.fc-header-toolbar) {
