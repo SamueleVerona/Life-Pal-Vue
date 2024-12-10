@@ -1,39 +1,65 @@
 <template>
   <section id="content">
     <user-nav
+      v-if="!hasSomeExpired"
       id="nav"
       @mousedown="handleNavigation"
       :triggers="navToggles"
     ></user-nav>
     <section id="user-profile">
       <full-calendar
-        v-if="navToggles[0]"
+        v-if="navToggles[0] && !hasSomeExpired"
         ref="calendar"
         :options="calendarOptions"
         @mousedown="handleMousedown"
       ></full-calendar>
       <user-dash
-        v-if="navToggles[1]"
+        v-if="navToggles[1] && !hasSomeExpired"
         id="dash-card"
         :goalType="timeDivId"
         :userData="userData"
         :newDate="dateInfo"
         @start-adding="
           (info) => {
-            toggleDash = !info;
-            toggleAdd = info;
+            navToggles[1] = !info;
+            navToggles[2] = info;
           }
         "
       >
       </user-dash>
       <goal-card
-        v-if="navToggles[2]"
+        v-if="navToggles[2] && !hasSomeExpired"
         :dateInfo="dateInfo"
         :goalType="timeDivId"
         id="goal-card"
         @goal-saved="resetCal"
       ></goal-card>
     </section>
+    <base-dialog
+      :show="hasSomeExpired"
+      :userActive="hasSomeExpired"
+      :message="'Some goals need confirmation'"
+    >
+      <template #title>
+        <goal-item
+          v-for="goal in expiredGoals"
+          :key="goal.id"
+          :goal="goal"
+          :hasExp="hasSomeExpired"
+        >
+          <!-- <template #selector>
+            <input
+              class="remove-checkbox"
+              type="checkbox"
+              :key="goal.id"
+              :name="goal.id"
+              :value="goal.databaseId"
+              v-model="selectedGoals"
+            />
+          </template> -->
+        </goal-item>
+      </template>
+    </base-dialog>
   </section>
 </template>
 
@@ -59,6 +85,11 @@ const timeDivId = ref("type");
 const dateInfo = ref();
 
 const userData = computed(() => store.getters.userGoals);
+const expiredGoals = computed(() => store.getters.expiredGoals);
+const hasSomeExpired = computed(() =>
+  expiredGoals.value.length > 0 ? true : false
+);
+// const selectedGoals = ref([]);
 const calendar = ref();
 const viewInfo = ref();
 
@@ -370,6 +401,9 @@ function resetCal(set) {
   box-shadow: 0rem 0.5rem 0rem rgba(115, 64, 255, 0.782);
   background: rgb(186, 146, 255);
   border-radius: 30px;
+}
+goal-item {
+  height: 100%;
 }
 
 #dash-card,

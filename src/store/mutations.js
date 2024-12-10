@@ -24,4 +24,7 @@ export default {
   loadGoals(state, goals) {
     state.userGoals = goals;
   },
+  setExpiredGoals(state, expGoals) {
+    state.expiredGoals = expGoals;
+  },
 };

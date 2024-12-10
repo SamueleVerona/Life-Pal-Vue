@@ -1,14 +1,26 @@
 <template>
   <div>
     <teleport to="body">
-      <dialog open v-if="show">
-        <slot name="title">
-          <h2>{{ props.message }}</h2>
-        </slot>
+      <dialog
+        open
+        v-if="show"
+        class="dialog-wrapper"
+        :class="{ 'user-active': props.userActive }"
+      >
+        <div
+          class="dialog-content-container"
+          :class="{ 'user-active': props.userActive }"
+        >
+          <slot name="title">
+            <h2 class="dialog-message">{{ props.message }}</h2>
+          </slot>
+        </div>
         <slot name="description"> </slot>
-        <button @click="closeDialog">Close</button>
+        <button @click="closeDialog" class="dialog-button">
+          {{ props.message }}
+        </button>
       </dialog>
-      <div class="underlay" @click="closeDialog" v-if="show"></div>
+      <div class="dialog-underlay" @click="closeDialog" v-if="show"></div>
     </teleport>
   </div>
 </template>
@@ -16,7 +28,7 @@
 <script setup>
 import { defineProps, defineEmits } from "vue";
 
-const props = defineProps(["message", "show"]);
+const props = defineProps(["message", "show", "userActive"]);
 const emits = defineEmits(["close"]);
 
 const closeDialog = () => {
@@ -24,11 +36,11 @@ const closeDialog = () => {
 };
 </script>
 
-<style scoped>
+<style>
 * {
   font-family: "Poppins", sans-serif;
 }
-.underlay {
+.dialog-underlay {
   position: fixed;
   top: 10vh;
   left: 0;
@@ -41,7 +53,7 @@ const closeDialog = () => {
   width: 100%;
 }
 
-dialog {
+.dialog-wrapper {
   display: flex;
   flex-direction: column;
   background-color: rgb(140, 81, 249);
@@ -52,23 +64,39 @@ dialog {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  height: 20vh;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
 }
 
-h2,
-p {
+.dialog-message {
   font-size: 3rem;
   padding: 4rem 3rem;
   width: max-content;
   color: white;
 }
 
-button {
+.dialog-button {
   font-size: 3rem;
+  padding: 1rem 0rem;
   width: 100%;
-  height: 100%;
+  min-height: max-content;
   background: white;
   border: none;
+}
+
+.dialog-content-container.user-active {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
+  overflow-y: auto;
+}
+
+.dialog-wrapper.user-active {
+  height: 500px;
+  width: 50%;
+
+  background: transparent;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
+  overflow-y: auto;
 }
 </style>

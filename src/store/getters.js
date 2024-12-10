@@ -20,4 +20,7 @@ export default {
   tokenExp(state) {
     return state.tokenExp;
   },
+  expiredGoals(state) {
+    return state.expiredGoals;
+  },
 };

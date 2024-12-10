@@ -73,7 +73,7 @@ async function addGoal() {
       title: inputTitle.value,
       desc: inputDesc.value,
       type: selType.value,
-      isCompleted: true,
+      isCompleted: false,
       started: Date.now(),
       compDate: compDate.value,
     });

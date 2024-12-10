@@ -11,6 +11,7 @@ const store = createStore({
       tokenExp: null,
       userId: null,
       userGoals: [],
+      expiredGoals: [],
     };
   },
   actions,

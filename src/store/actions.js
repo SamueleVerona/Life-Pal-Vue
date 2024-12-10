@@ -6,10 +6,10 @@ export default {
     const sessionToken = context.getters.sessionToken;
     const UID = context.getters.userToken;
     const curGoals = context.getters.userGoals;
-    console.log(goalsToRemove);
 
     try {
-      const validNames = new Set(curGoals.map(({ name }) => name));
+      const validNames = new Set(curGoals.map(({ databaseId }) => databaseId));
+
       const deletePromises = goalsToRemove.map((goalId) => {
         if (validNames.has(goalId)) {
           return fetch(
@@ -102,27 +102,47 @@ export default {
       throw err.message;
     }
   },
-  checkData(_, goalsToCheck) {
-    function checkCompletion(goal) {
-      const totalTime =
-        new Date(goal.compDate).getTime() - new Date(goal.started).getTime();
-      const elapsedTime = Date.now() - new Date(goal.started).getTime();
-      const rate = (elapsedTime / totalTime) * 100;
-      if (rate === 100 || rate < 0) {
-        return true;
-      } else {
-        return false;
-      }
+  checkData(context, goalsToCheck) {
+    const TODAY_MS = Date.now();
+    // function checkCompletion(goal) {
+    //   const totalTime =
+    //     new Date(goal.compDate).getTime() - new Date(goal.started).getTime();
+    //   const elapsedTime = Date.now() - new Date(goal.started).getTime();
+    //   const rate = (elapsedTime / totalTime) * 100;
+    //   if (rate === 100 || rate < 0) {
+    //     return true;
+    //   } else {
+    //     return false;
+    //   }
+    // }
+
+    function checkforCompletion(goal) {
+      const completionTime =
+        typeof goal.compDate === "number"
+          ? goal.compDate
+          : new Date(goal.compDate).getTime();
+      if (TODAY_MS >= completionTime) return true;
+      else false;
     }
-    const checked = Object.entries(goalsToCheck).map((goal) => {
-      if (!goal[1].name) goal[1].name = goal[0];
-      checkCompletion(goal[1]) === true
-        ? goal[1].isCompleted
-        : (goal[1].isCompleted = false);
+
+    const expired = [];
+
+    const checkedGoals = Object.entries(goalsToCheck).map((goal) => {
+      if (!goal[1].databaseId) goal[1].databaseId = goal[0];
+
+      const isExpired = checkforCompletion(goal[1]);
+
+      if (isExpired) {
+        expired.push(goal[1]);
+      }
+
       return goal[1];
     });
+    context.commit("setExpiredGoals", expired);
 
-    return checked;
+    console.log(context.getters.expiredGoals);
+
+    return checkedGoals;
   },
   async signUp(context, payload) {
     return context.dispatch("auth", {
@@ -174,4 +194,17 @@ export default {
       throw new Error("Could not Log In");
     }
   },
+
+  //pseudoFunction(){
+  //get goals from database
+  // check if there's no remaining time for every goal,
+  // if time is zero display modal for goals that need confirmation,
+  // get goal's id,
+  //add a "MARK AS COMPLETED" or "MARK AS FAILED" button,
+  //change the corresponding property to true or false,
+  //send data back to database and to local copy,
+  //resume normal funcioning
+  // once every
+
+  // }
 };
