@@ -38,25 +38,17 @@
     <base-dialog
       :show="hasSomeExpired"
       :userActive="hasSomeExpired"
-      :message="'Some goals need confirmation'"
+      :message="dialogText"
+      @close="confirmMarkedGoals"
     >
       <template #title>
         <goal-item
           v-for="goal in expiredGoals"
-          :key="goal.id"
           :goal="goal"
           :hasExp="hasSomeExpired"
+          :key="goal.id"
+          @sendMarkedGoal="handleMarkedGoals"
         >
-          <!-- <template #selector>
-            <input
-              class="remove-checkbox"
-              type="checkbox"
-              :key="goal.id"
-              :name="goal.id"
-              :value="goal.databaseId"
-              v-model="selectedGoals"
-            />
-          </template> -->
         </goal-item>
       </template>
     </base-dialog>
@@ -89,6 +81,28 @@ const expiredGoals = computed(() => store.getters.expiredGoals);
 const hasSomeExpired = computed(() =>
   expiredGoals.value.length > 0 ? true : false
 );
+
+const markedGoals = ref({});
+const dialogText = ref("Time to be honest");
+
+const allConfirmed = computed(
+  () => Object.keys(markedGoals.value).length === expiredGoals.value.length
+);
+
+function handleMarkedGoals(goalObj) {
+  const goalId = goalObj.goalId;
+  markedGoals.value[goalId] = goalObj;
+
+  if (allConfirmed.value) dialogText.value = "Confirm when you're ready";
+  console.log(allConfirmed.value);
+}
+function confirmMarkedGoals() {
+  console.log("confirmed");
+
+  //NEXT UP: CREATE METHOD BELOW
+  // store.dispatch("confirmExpired", markedGoals);
+}
+
 // const selectedGoals = ref([]);
 const calendar = ref();
 const viewInfo = ref();

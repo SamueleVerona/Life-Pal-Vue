@@ -13,7 +13,34 @@
           }}
         </h3>
       </div>
-      <div class="progress-bar">
+      <div
+        class="goal-toggle"
+        :class="{ comp: completed, fail: failed }"
+        v-if="hasExp"
+      >
+        <h3 class="goal-toggle-text">{{ goalToggleText }}</h3>
+        <div class="button-wrapper">
+          <button
+            type="button"
+            class="button-comp"
+            :class="{ selected: completed }"
+            @click="markAs"
+            :data-goal_id="props.goal.databaseId"
+          >
+            ✔
+          </button>
+          <button
+            type="button"
+            class="button-fail"
+            :class="{ selected: failed }"
+            @click="markAs"
+            :data-goal_id="props.goal.databaseId"
+          >
+            ✖
+          </button>
+        </div>
+      </div>
+      <div class="progress-bar" v-if="!hasExp">
         <h3 class="progress-bar-text">
           <!-- time left:
                     {{ compRate(goal.started, goal.compDate) }} -->
@@ -30,9 +57,10 @@
 </template>
 
 <script setup>
-import { defineProps, computed } from "vue";
+import { defineProps, computed, ref, defineEmits } from "vue";
 
 const props = defineProps(["goal", "hasExp"]);
+const emits = defineEmits(["sendMarkedGoal"]);
 const classes = computed(() => {
   return {
     day: props.goal.type === "day",
@@ -52,6 +80,42 @@ function compRate(start, comp) {
     return Math.min(rate, 100).toFixed(0) + "%";
   }
 }
+
+const goalToggleText = ref("mark it");
+
+const completed = ref(false);
+const failed = ref(false);
+
+function markAs(e) {
+  const isButtonComp = e.target.classList.contains("button-comp");
+  const goalId = e.target.dataset.goal_id;
+
+  if (isButtonComp) {
+    completed.value = true;
+    failed.value = false;
+    goalToggleText.value = "completed";
+
+    const markedGoal = {
+      goalId,
+      isCompleted: completed.value,
+      isFailed: failed.value,
+    };
+
+    emits("sendMarkedGoal", markedGoal);
+  } else {
+    completed.value = false;
+    failed.value = true;
+    goalToggleText.value = "failed";
+
+    const markedGoal = {
+      goalId,
+      isCompleted: completed.value,
+      isFailed: failed.value,
+    };
+
+    emits("sendMarkedGoal", markedGoal);
+  }
+}
 </script>
 
 <style scoped>
@@ -63,7 +127,6 @@ function compRate(start, comp) {
 }
 .goal-content.exploded {
   height: 20rem;
-
   border-radius: 40px;
 }
 
@@ -89,7 +152,6 @@ function compRate(start, comp) {
 .goal-info {
   display: flex;
   flex-direction: column;
-  /* justify-content: center; */
   padding-top: 1rem;
   text-overflow: clip;
   font-size: 3rem;
@@ -129,6 +191,63 @@ function compRate(start, comp) {
   font-size: 1.5rem;
   font-weight: bold;
 }
+.goal-toggle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+
+  width: 50%;
+  border-radius: 18px;
+  border: solid 2px;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  padding: 0.5rem 0.8rem;
+}
+.goal-toggle-text {
+  flex: 2;
+  font-size: 1.5rem;
+  font-weight: bold;
+  justify-self: flex-start;
+}
+
+.button-wrapper {
+  display: flex;
+  flex: 1;
+
+  justify-content: center;
+  align-items: center;
+  /* align-self: flex-end; */
+  border-radius: 18px;
+}
+
+.button-wrapper button {
+  border: none;
+  border-radius: 30px;
+  /* margin: 0rem 0.5rem; */
+  padding: 0rem 0.5rem;
+  font-size: 1.5rem;
+}
+.goal-toggle.comp {
+  border-color: rgb(4, 208, 109);
+}
+
+.button-wrapper .button-comp.selected {
+  color: rgb(6, 255, 135);
+}
+.goal-toggle.fail {
+  border-color: rgb(255, 6, 102);
+}
+.button-wrapper .button-fail.selected {
+  color: rgb(255, 6, 6);
+}
+
 .progress-bar {
   position: absolute;
   bottom: 0;
