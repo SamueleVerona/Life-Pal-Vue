@@ -12,15 +12,20 @@
           :class="{ 'user-active': props.userActive }"
         >
           <slot name="title">
-            <h2 class="dialog-message">{{ props.message }}</h2>
+            <h2 class="dialog-message">{{ props.errorMessage }}</h2>
           </slot>
         </div>
         <slot name="description"> </slot>
-        <button @click="closeDialog" class="dialog-button">
-          {{ props.message }}
+        <button
+          @click="submit"
+          class="dialog-button"
+          :disabled="!props.allConfirmed"
+        >
+          {{ props.submitText || "click outside" }}
         </button>
       </dialog>
-      <div class="dialog-underlay" @click="closeDialog" v-if="show"></div>
+
+      <div class="dialog-underlay" v-if="show" @click="closeDialog"></div>
     </teleport>
   </div>
 </template>
@@ -28,11 +33,22 @@
 <script setup>
 import { defineProps, defineEmits } from "vue";
 
-const props = defineProps(["message", "show", "userActive"]);
-const emits = defineEmits(["close"]);
+const props = defineProps([
+  "errorMessage",
+  "submitText",
+  "show",
+  "userActive",
+  "allConfirmed",
+]);
+const emits = defineEmits(["confirmAction", "close"]);
 
+// const openFlag = ref(true);
+
+const submit = () => {
+  emits("confirmAction");
+};
 const closeDialog = () => {
-  emits("close");
+  if (props.errorMessage) emits("close");
 };
 </script>
 
@@ -47,8 +63,8 @@ const closeDialog = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(169, 181, 202, 0.171);
-  backdrop-filter: blur(3px);
+  background: rgba(190, 196, 208, 0.295);
+  backdrop-filter: blur(10px);
   height: 100vh;
   width: 100%;
 }
@@ -79,11 +95,12 @@ const closeDialog = () => {
   padding: 1rem 0rem;
   width: 100%;
   min-height: max-content;
-  background: white;
+  background: rgb(160, 255, 200);
   border: none;
 }
 
 .dialog-content-container.user-active {
+  background: white;
   scrollbar-width: thin;
   scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
   overflow-y: auto;

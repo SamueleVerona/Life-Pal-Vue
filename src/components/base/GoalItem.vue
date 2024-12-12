@@ -16,7 +16,7 @@
       <div
         class="goal-toggle"
         :class="{ comp: completed, fail: failed }"
-        v-if="hasExp"
+        v-if="hasExpired"
       >
         <h3 class="goal-toggle-text">{{ goalToggleText }}</h3>
         <div class="button-wrapper">
@@ -40,7 +40,7 @@
           </button>
         </div>
       </div>
-      <div class="progress-bar" v-if="!hasExp">
+      <div class="progress-bar" v-if="!hasExpired">
         <h3 class="progress-bar-text">
           <!-- time left:
                     {{ compRate(goal.started, goal.compDate) }} -->
@@ -59,7 +59,7 @@
 <script setup>
 import { defineProps, computed, ref, defineEmits } from "vue";
 
-const props = defineProps(["goal", "hasExp"]);
+const props = defineProps(["goal", "hasExpired"]);
 const emits = defineEmits(["sendMarkedGoal"]);
 const classes = computed(() => {
   return {
@@ -67,7 +67,7 @@ const classes = computed(() => {
     week: props.goal.type === "week",
     month: props.goal.type === "month",
     year: props.goal.type === "year",
-    dialog: props.hasExp,
+    dialog: props.hasExpired,
   };
 });
 
@@ -289,16 +289,44 @@ function markAs(e) {
 }
 
 .goal-content.day {
-  border: solid 2px rgb(94, 156, 255);
-  border-bottom: solid 10px rgb(94, 156, 255);
+  border: solid 3px rgb(94, 156, 255);
+  border-bottom: solid 10px rgba(94, 156, 255, 0.978);
+  border-bottom: solid 10px rgba(85, 150, 255, 0.978);
+  border: solid 1px rgba(94, 156, 255, 0.389);
+
+  background: radial-gradient(
+    ellipse at bottom right,
+    rgba(60, 209, 255, 0.742) 1%,
+    rgba(169, 255, 219, 0.659) 35%,
+    rgba(209, 244, 231, 0.345) 18%,
+    rgba(224, 234, 230, 0.345) 20%,
+    transparent 95%
+  );
 }
 .goal-content.week {
-  border: solid 2px rgb(255, 116, 47);
-  border-bottom: solid 10px rgb(255, 116, 47);
+  border: solid 1px rgb(255, 116, 47, 0.389);
+  /* border-bottom: solid 10px rgb(255, 116, 47); */
+  background: radial-gradient(
+    ellipse at bottom right,
+    rgba(255, 73, 60, 0.742) 1%,
+    rgba(236, 169, 255, 0.348) 35%,
+    rgba(209, 244, 231, 0.345) 18%,
+    rgba(224, 234, 230, 0.345) 20%,
+    transparent 25%
+  );
 }
 .goal-content.month {
-  border: solid 2px rgb(47, 47, 255);
-  border-bottom: solid 10px rgb(47, 47, 255);
+  border: solid 1px rgba(255, 161, 47, 0.389);
+  /* border-bottom: solid 10px rgb(210, 255, 47); */
+
+  background: radial-gradient(
+    ellipse at bottom right,
+    rgba(235, 60, 255, 0.742) 1%,
+    rgba(255, 199, 169, 0.348) 35%,
+    rgba(209, 244, 231, 0.345) 18%,
+    rgba(224, 234, 230, 0.345) 20%,
+    transparent 25%
+  );
 }
 .goal-content.year {
   border: solid 2px rgb(255, 203, 47);

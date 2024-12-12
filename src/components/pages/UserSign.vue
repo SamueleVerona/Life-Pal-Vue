@@ -32,7 +32,7 @@
     </form>
   </section>
   <base-dialog
-    :message="gottenError"
+    :errorMessage="gottenError"
     :show="!!gottenError"
     @close="closeDialog"
   ></base-dialog>

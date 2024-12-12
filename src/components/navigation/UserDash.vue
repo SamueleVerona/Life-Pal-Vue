@@ -24,7 +24,7 @@
       <ul v-else-if="filteredData.length > 0">
         <li v-for="el in filteredData" :key="el.id">
           <goal-item :goal="el">
-            <template #default>
+            <template #selector>
               <input
                 class="remove-checkbox"
                 type="checkbox"
@@ -64,22 +64,32 @@ const props = defineProps(["goalType", "userData", "insertNewGoal", "newDate"]);
 const emits = defineEmits(["startAdding"]);
 
 const filteredData = computed(() => {
-  if (props.goalType === "completed") {
-    return props.userData.filter((goal) => goal.isCompleted === true);
-  } else if (props.goalType === "type") {
-    return props.userData.filter((goal) => goal.isCompleted === false);
-  } else {
-    return props.userData.filter(
-      (goal) => goal.type === props.goalType && goal.isCompleted === false
-    );
+  let filtered;
+  switch (props.goalType) {
+    case "completed":
+      filtered = props.userData.filter((goal) => goal.isCompleted === true);
+      break;
+    case "failed":
+      filtered = props.userData.filter((goal) => goal.isFailed === true);
+      break;
+    default:
+      filtered = props.userData.filter(
+        (goal) =>
+          goal.type === props.goalType &&
+          goal.isCompleted === false &&
+          goal.isFailed === false
+      );
+      break;
   }
+
+  return filtered;
 });
 
 const isAdding = ref(false);
 const userIsEditing = ref(false);
 const selectedGoals = ref([]);
 
-watch(selectedGoals, () => console.log(selectedGoals.value));
+watch(props, () => console.log(props.goalType));
 
 async function remGoal() {
   try {
@@ -139,7 +149,7 @@ function toggleAdd() {
   /* box-shadow: 0rem 0.5rem 0rem #6299ff; */
 }
 .has-goals {
-  background: linear-gradient(70deg, #d2f1ff07 20%, #e7dfff83 100%);
+  background: linear-gradient(70deg, #d9eef81b 40%, #e7dfffdb 100%);
 }
 .no-goals {
   background: linear-gradient(180deg, #beffe7 20%, #c0bcff 100%);

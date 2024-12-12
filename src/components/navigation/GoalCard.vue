@@ -74,6 +74,7 @@ async function addGoal() {
       desc: inputDesc.value,
       type: selType.value,
       isCompleted: false,
+      isFailed: false,
       started: Date.now(),
       compDate: compDate.value,
     });

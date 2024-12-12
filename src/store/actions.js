@@ -27,13 +27,13 @@ export default {
 
       const deleted = await Promise.allSettled(deletePromises);
 
-      deleted.forEach((res) => {
-        if (res.status === "rejected")
-          throw new Error(res.reason || "Failed to fetch, invalid URL ");
-        else {
-          context.dispatch("getData");
-        }
-      });
+      const someRejected = deleted.some((res) => res.status === "rejected");
+      if (someRejected) {
+        throw new Error("Deleting failed, invalid URL ");
+      } else {
+        context.dispatch("getData");
+        context.commit("setExpiredGoals", []);
+      }
     } catch (err) {
       throw err.message;
     }
@@ -121,7 +121,9 @@ export default {
         typeof goal.compDate === "number"
           ? goal.compDate
           : new Date(goal.compDate).getTime();
-      if (TODAY_MS >= completionTime) return true;
+
+      if (TODAY_MS >= completionTime && !goal.isCompleted && !goal.isFailed)
+        return true;
       else false;
     }
 
@@ -192,6 +194,44 @@ export default {
       context.dispatch("getData");
     } catch (err) {
       throw new Error("Could not Log In");
+    }
+  },
+  async confirmExpired(context, goalsToPatch) {
+    const sessionToken = context.getters.sessionToken;
+    const UID = context.getters.userToken;
+
+    const goalsToArray = Object.values(goalsToPatch);
+
+    try {
+      const deletePromises = goalsToArray.map((goal) => {
+        return fetch(
+          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals/${goal.goalId}.json?auth=${sessionToken}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              isCompleted: goal.isCompleted,
+              isFailed: goal.isFailed,
+            }),
+          }
+        );
+      });
+
+      const patched = await Promise.allSettled(deletePromises);
+
+      const someRejected = patched.some((res) => res.status === "rejected");
+      if (someRejected) {
+        throw new Error("Patching failed");
+      } else {
+        context.dispatch("getData");
+      }
+
+      //QUESTION:
+      //WOULD PATCHING THE LOCAL COPY DIRECTLY ALSO BE FASTER THAN REFETCHING?
+    } catch (err) {
+      throw err.message;
     }
   },
 

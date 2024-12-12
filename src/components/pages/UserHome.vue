@@ -38,20 +38,26 @@
     <base-dialog
       :show="hasSomeExpired"
       :userActive="hasSomeExpired"
-      :message="dialogText"
-      @close="confirmMarkedGoals"
+      :submitText="dialogText"
+      :allConfirmed="allConfirmed"
+      @confirmAction="confirmMarkedGoals"
     >
       <template #title>
         <goal-item
           v-for="goal in expiredGoals"
           :goal="goal"
-          :hasExp="hasSomeExpired"
+          :hasExpired="hasSomeExpired"
           :key="goal.id"
           @sendMarkedGoal="handleMarkedGoals"
         >
         </goal-item>
       </template>
     </base-dialog>
+    <base-dialog
+      :errorMessage="gottenError"
+      :show="!!gottenError"
+      @close="closeDialog"
+    ></base-dialog>
   </section>
 </template>
 
@@ -96,11 +102,22 @@ function handleMarkedGoals(goalObj) {
   if (allConfirmed.value) dialogText.value = "Confirm when you're ready";
   console.log(allConfirmed.value);
 }
-function confirmMarkedGoals() {
+
+const gottenError = ref(null);
+
+async function confirmMarkedGoals() {
   console.log("confirmed");
 
   //NEXT UP: CREATE METHOD BELOW
-  // store.dispatch("confirmExpired", markedGoals);
+  try {
+    await store.dispatch("confirmExpired", markedGoals.value);
+  } catch (err) {
+    gottenError.value = err;
+  }
+}
+
+function closeDialog() {
+  gottenError.value = false;
 }
 
 // const selectedGoals = ref([]);
