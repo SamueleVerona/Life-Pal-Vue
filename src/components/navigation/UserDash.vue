@@ -1,9 +1,21 @@
 <template>
   <section
-    id="dash-card"
+    id="dash-element"
     class="has-goals"
-    :class="{ 'no-goals': filteredData.length === 0 }"
+    :class="{
+      'no-goals': filteredData.length === 0,
+      completed: props.goalType === 'completed',
+      failed: props.goalType === 'failed',
+    }"
   >
+    <label for="goal-filter" id="goal-filter-label">
+      <select id="goal-filter" v-model="option" required>
+        <option value="all" selected>All</option>
+        <option v-for="el in filterOptions" :value="el" :key="el">
+          {{ el }}
+        </option>
+      </select>
+    </label>
     <h2 id="time-selection">
       {{
         props.goalType !== "type" ? props.goalType.toUpperCase() : "All Goals"
@@ -22,7 +34,7 @@
         </button>
       </div>
       <ul v-else-if="filteredData.length > 0">
-        <li v-for="el in filteredData" :key="el.id">
+        <li v-for="el in dataPostFilter" :key="el.id">
           <goal-item :goal="el">
             <template #selector>
               <input
@@ -57,11 +69,13 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { ref, defineProps, defineEmits, computed, watch } from "vue";
+import { ref, defineProps, defineEmits, computed } from "vue";
 
 const store = useStore();
 const props = defineProps(["goalType", "userData", "insertNewGoal", "newDate"]);
 const emits = defineEmits(["startAdding"]);
+
+// const filter = ref();
 
 const filteredData = computed(() => {
   let filtered;
@@ -85,11 +99,34 @@ const filteredData = computed(() => {
   return filtered;
 });
 
+function setOptions(goalsArray) {
+  return goalsArray
+    .map((goal) => goal.dateLabel)
+    .reduce((accum, curr) => {
+      if (!accum.includes(curr)) accum.push(curr);
+      return accum;
+    }, []);
+}
+
+const filterOptions = computed(() => setOptions(filteredData.value));
+
+const option = ref("all");
+
+const dataPostFilter = computed(() =>
+  filteredData.value.filter((goal) => {
+    if (option.value === "all") {
+      return goal;
+    } else {
+      return goal.dateLabel === option.value;
+    }
+  })
+);
+
 const isAdding = ref(false);
 const userIsEditing = ref(false);
 const selectedGoals = ref([]);
 
-watch(props, () => console.log(props.goalType));
+// watch(props, () => console.log(props.goalType, filterOptions.value));
 
 async function remGoal() {
   try {
@@ -106,8 +143,12 @@ function showRem() {
 }
 
 function toggleAdd() {
-  emits("startAdding", true);
+  emits("startAdding");
 }
+
+// function filterSelection(){
+
+// }
 
 // function weekCheck(dateInput) {
 //   console.log(dateInput);
@@ -135,16 +176,16 @@ function toggleAdd() {
 
 <style scoped>
 * {
-  font-family: "Concert-one", sans-serif;
+  font-family: "Afacad Flux", Sans-serif;
 }
 
-#dash-card {
+#dash-element {
   position: relative;
   display: flex;
   flex-direction: column;
   border-radius: 35px;
-  border: solid 2px rgba(63, 19, 182, 0.704);
-  border-bottom: solid 10px rgba(63, 19, 182, 0.704);
+  border: solid 2px rgba(35, 212, 243, 0.704);
+  border-bottom: solid 10px rgba(23, 177, 204, 0.704);
 
   /* box-shadow: 0rem 0.5rem 0rem #6299ff; */
 }
@@ -152,15 +193,34 @@ function toggleAdd() {
   background: linear-gradient(70deg, #d9eef81b 40%, #e7dfffdb 100%);
 }
 .no-goals {
-  background: linear-gradient(180deg, #beffe7 20%, #c0bcff 100%);
-  box-shadow: 0rem 0.5rem 0rem #7bffe5;
+  background: linear-gradient(180deg, #faffe3 20%, #ffdfbc 100%);
+  /* box-shadow: 0rem 0.5rem 0rem #7bffe5; */
+}
+
+#dash-element.completed {
+  border: solid 2px rgba(31, 252, 116, 0.781);
+  border-bottom: solid 10px rgba(31, 252, 116, 0.781);
+}
+
+#dash-element.failed {
+  border: solid 2px rgba(252, 31, 64, 0.704);
+  border-bottom: solid 10px rgb(215, 44, 90);
+}
+
+/* #goal-filter-label, */
+#goal-filter {
+  position: absolute;
+  font-size: 2rem;
+  right: 1rem;
+  top: 1rem;
 }
 
 #time-selection {
   position: relative;
   background: rgba(174, 255, 227, 0);
-  border: solid 1px #6f6f6f;
-  border-bottom: solid 4px #8d8d8d;
+  border: none;
+  /* border: solid 1px #6f6f6f;
+  border-bottom: solid 4px #8d8d8d; */
   text-align: center;
   width: max-content;
   align-self: center;
@@ -172,9 +232,9 @@ function toggleAdd() {
   padding: 0rem 1rem;
   max-height: 80%;
   scrollbar-width: thin;
-  scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
+  scrollbar-color: rgb(98, 37, 253) rgba(3, 3, 255, 0);
+
   overflow-y: auto;
-  /* border: solid; */
 }
 
 #list-controls {
@@ -189,8 +249,11 @@ function toggleAdd() {
 
 #button-rem:hover,
 #button-edit:hover {
-  background: rgba(255, 255, 255, 0.819);
+  /* background: rgba(255, 253, 250, 0.819); */
   color: #2c3e50;
+  /* border: solid 1px rgb(1, 217, 229); */
+  box-shadow: 0rem 0.3rem 0rem rgb(0, 242, 255);
+  color: rgb(10, 214, 221);
 }
 
 #button-edit,
@@ -206,8 +269,8 @@ function toggleAdd() {
   padding: 0rem 1.5rem;
 }
 #button-edit {
-  background: rgb(255, 241, 151);
-  box-shadow: 0rem 0.3rem 0rem #d2d177;
+  background: rgb(255, 229, 203);
+  box-shadow: 0rem 0.3rem 0rem #d2a977;
 }
 
 #button-rem {
@@ -248,10 +311,10 @@ h2,
   background: none;
   border: none;
   font-weight: bold;
-  color: rgb(157, 0, 255);
+  color: rgb(255, 0, 85);
 }
 #button-start:hover {
-  color: rgb(255, 98, 0);
+  color: rgb(21, 203, 167);
 }
 
 .remove-checkbox {

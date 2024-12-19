@@ -18,7 +18,7 @@ export default {
   --fc-neutral-bg-color: rgba(200, 177, 246, 0.526);
 }
 #app {
-  font-family: "Poppins", sans-serif;
+  font-family: "Afacad Flux", Sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;

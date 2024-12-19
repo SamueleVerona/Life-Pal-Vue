@@ -1,50 +1,42 @@
 <template>
-  <section id="new-goal-card">
-    <base-card class="card">
+  <section id="goal-card-element">
+    <base-card class="card" id="goal-card">
       <template #title>
-        <h2 id="goalLabel">New Goal</h2>
-        <input
-          type="text"
-          name="goalTitle"
-          placeholder="Choose a title"
-          v-model="inputTitle"
-          required
-        />
+        <h2 id="goal-card-label">NEW GOAL</h2>
       </template>
+
       <template #content>
-        <textarea
-          name="goalDesc"
-          id="goaldesc"
-          placeholder="Describe your goal"
-          rows="10"
-          v-model="inputDesc"
-          required
-          minlength="5"
-        ></textarea>
+        <div class="card-section">
+          <input
+            id="goal-title"
+            type="text"
+            name="goalTitle"
+            placeholder="Choose a title"
+            v-model="inputTitle"
+            maxlength="16"
+            required
+          />
+          <textarea
+            name="goalDesc"
+            id="goal-description"
+            placeholder="Describe your goal"
+            rows="5"
+            cols="1"
+            v-model="inputDesc"
+            required
+            minlength="5"
+          ></textarea>
+        </div>
       </template>
       <template #options>
-        <label for="time-selection">
-          <span>Choose a time option:</span>
-          <select id="time-selection" v-model="selType">
-            <option value="day" selected>day</option>
-            <option value="week">week</option>
-            <option value="month">month</option>
-            <option value="year">year</option>
-            <option value="decade">decade</option>
-          </select>
-        </label>
-        <label for="completion">
-          <span>Set a completion for:</span>
-          <input
-            type="date"
-            name="completion"
-            id="completion"
-            v-model="compDate"
-          />
-        </label>
+        <div class="card-section" id="goal-info">
+          <span>Goal for a {{ props.goalType }}</span>
+          <span>Set a completion for</span>
+          <span>{{ props.dateLabel }}</span>
+        </div>
       </template>
       <template #button>
-        <div id="list-controls">
+        <div id="goal-card-controls" class="card-section">
           <button type="button" id="button-save" @click="addGoal">save</button>
         </div>
       </template>
@@ -57,10 +49,9 @@ import { useStore } from "vuex";
 import { ref, defineProps, defineEmits, onBeforeMount } from "vue";
 
 const store = useStore();
-const props = defineProps(["dateInfo", "goalType"]);
+const props = defineProps(["dateInfo", "dateLabel", "goalType"]);
 const emits = defineEmits(["goalSaved"]);
 
-const selType = ref("day");
 const inputTitle = ref("");
 const inputDesc = ref("");
 const compDate = ref();
@@ -72,11 +63,12 @@ async function addGoal() {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
       title: inputTitle.value,
       desc: inputDesc.value,
-      type: selType.value,
+      type: props.goalType,
       isCompleted: false,
       isFailed: false,
       started: Date.now(),
       compDate: compDate.value,
+      dateLabel: props.dateLabel,
     });
     emits("goalSaved", true);
   } catch (err) {
@@ -89,20 +81,96 @@ async function addGoal() {
 * {
   font-family: "Poppins", sans-serif;
 }
-#goalLabel {
-  font-size: 2.5rem;
-  background: rgb(121, 81, 255);
-  text-align: center;
+#goal-card-element {
   border-radius: 30px;
-  color: rgb(251, 251, 251);
+  border: solid 2px rgba(252, 175, 31, 0.781);
+  border-bottom: solid 10px rgba(252, 178, 31, 0.781);
 }
 
-#list-controls {
+#goal-card {
+  height: 100%;
+  position: relative;
   padding: 1rem 1rem;
+  background: linear-gradient(10deg, #d9eef81b 40%, #e7dfffdb 100%);
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-section {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+}
+
+#goal-card-label {
+  font-size: 2.8rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: rgb(190, 100, 36);
+}
+
+#goal-title {
+  height: max-content;
+  font-size: 3rem;
+  border: none;
+  background: transparent;
+  border-bottom: solid 1px rgba(50, 40, 63, 0.162);
+  box-shadow: 0rem 0.1rem 0rem 0rem rgba(200, 198, 203, 0.563);
+  text-align: center;
+  color: #401700;
+}
+#goal-title::placeholder {
+  color: rgba(50, 40, 63, 0.563);
+  font-size: 3rem;
+  text-align: center;
+  text-justify: center;
+}
+
+#goal-description {
+  font-size: 2.5rem;
+  padding: 0.5rem 0.5rem;
   width: 100%;
+  border: none;
+  resize: none;
+  caret-color: #000000;
+  background: transparent;
+  text-align: left;
+  color: #401700;
+}
+#goal-description::placeholder {
+  color: rgba(50, 40, 63, 0.563);
+  font-size: 3rem;
+  text-align: center;
+}
+
+span {
+  font-size: 2rem;
+  padding: 0.5rem;
+  font-weight: 600;
+  color: rgba(50, 40, 63, 0.563);
+  border-bottom: solid 1px rgba(50, 40, 63, 0.162);
+}
+
+span:nth-child(1) {
+  margin-top: 1rem;
+  color: rgb(77, 146, 146);
+}
+
+span:nth-child(2) {
+  border: none;
+  padding: 0.5rem 0rem 0rem 0rem;
+}
+
+span:last-of-type {
+  color: rgb(190, 100, 36);
+}
+
+#goal-card-controls {
+  width: 100%;
+  padding: 1rem 1rem;
+  height: 1fr;
 }
 
 button {
@@ -110,76 +178,22 @@ button {
   font-weight: 800;
   color: #2c3e50;
   width: max-content;
-  height: 5rem;
   border-radius: 25px;
   border: none;
   cursor: pointer;
-  padding: 0 2rem;
+  padding: 1rem 2rem;
 }
 
 #button-save {
-  border: solid 2px rgb(255, 60, 60);
-  border-bottom: solid 3px rgb(255, 58, 36);
-  background: rgb(255, 190, 190);
+  border: solid 2px rgb(7, 216, 175);
+  border-bottom: solid 3px rgb(16, 201, 177);
+  background: rgb(190, 255, 241);
   color: #2c3e50;
 }
 #button-save:hover {
-  color: #7f24ff;
-  background: rgb(237, 236, 255);
-  border: solid 2px rgb(59, 255, 79);
-  border-bottom: solid 3px rgb(36, 255, 102);
-}
-
-.title,
-.desc {
-  text-overflow: clip;
-  font-size: 2rem;
-}
-
-label,
-select,
-#completion {
-  padding: 0.5rem;
-  margin: auto;
-  font-size: 2rem;
-  border-radius: 15px;
-  text-align: center;
-  font-weight: 600;
-}
-
-span {
-  font-size: 2rem;
-  padding: 0.5rem;
-  font-weight: 600;
-}
-
-input[type="text"],
-input[type="date"] {
-  height: 3rem;
-  font-size: 2.5rem;
-  border-radius: 10px;
-  caret-color: #ff580b;
-  padding-left: 1rem;
-}
-
-input::placeholder {
-  color: #9712b948;
-  font-size: 2.5rem;
-  line-height: 2rem;
-  text-align: center;
-  text-justify: center;
-}
-textarea::placeholder {
-  color: #4f127e4e;
-  font-size: 3rem;
-  text-align: center;
-}
-textarea {
-  flex: 1fr;
-  font-size: 2.5rem;
-  border: solid;
-  border-radius: 10px;
-  padding-left: 1rem;
-  caret-color: #000000;
+  color: rgb(255, 36, 94);
+  background: transparent;
+  border: solid 2px rgb(255, 59, 69);
+  border-bottom: solid 3px rgb(255, 36, 94);
 }
 </style>

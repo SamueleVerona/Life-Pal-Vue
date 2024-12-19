@@ -136,17 +136,14 @@ function markAs(e) {
   margin: 0.5rem auto;
 }
 .goal-title {
-  text-align: center;
-  padding: 0.5rem 0.8rem 1rem 1rem;
-  margin: 0.5rem 0rem;
-  border-radius: 30px;
-  border: solid 1px rgb(81, 138, 243);
-  border-bottom: solid 3px rgba(81, 138, 243);
   width: max-content;
-  align-self: center;
-  font-size: 2.5rem;
   padding: 0.5rem 1.5rem;
-  /* border-bottom: solid 1px; */
+  margin: 0.5rem 0rem;
+  align-self: center;
+  border-radius: 30px;
+  border: none;
+  font-size: 2.2rem;
+  text-align: center;
 }
 
 .goal-info {
