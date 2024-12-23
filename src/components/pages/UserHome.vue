@@ -6,7 +6,7 @@
       @mousedown="handleNavigation"
       :triggers="navButtonClicked"
     ></user-nav>
-    <section id="user-profile">
+    <section id="user-home-element">
       <user-calendar
         id="calendar-element"
         v-if="navButtonClicked === 'calendar' && !hasSomeExpired"
@@ -89,7 +89,7 @@ defineComponent(GoalCard);
 defineComponent(UserCalendar);
 
 const store = useStore();
-const timeDivId = ref("type");
+const timeDivId = ref();
 const dashboardBackup = ref();
 const dateInfo = ref();
 const dateLabel = ref();
@@ -138,7 +138,6 @@ function handleNavigation(e) {
   if (!e.target.id.includes("button")) return;
 
   const targetButton = e.target.dataset.buttonId;
-  console.log(targetButton);
 
   if (targetButton === "completed" || targetButton === "failed") {
     timeDivId.value = targetButton;
@@ -163,14 +162,17 @@ function resetCal() {
   padding: 0 1rem;
 }
 #nav {
-  margin: 1rem auto;
-  padding: 0.8rem;
+  margin: auto;
+  margin-top: 1rem;
+  width: max-content;
+  padding: 0.5rem 1rem;
   border: solid 1px rgba(128, 128, 128, 0.308);
-  border-radius: 40px;
-  height: 12vh;
+  border-radius: 60px;
+  height: 15vh;
+  /* border: solid; */
 }
 
-#user-profile {
+#user-home-element {
   display: flex;
   padding: 1rem 0rem;
   height: 88vh;
@@ -180,7 +182,9 @@ goal-item {
   height: 100%;
 }
 
-#dash-element,
+#dash-element {
+  width: 100%;
+}
 #goal-card-element {
   width: 50%;
   margin: 0rem auto;

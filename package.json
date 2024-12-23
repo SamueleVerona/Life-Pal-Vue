@@ -15,10 +15,12 @@
     "@fullcalendar/scrollgrid": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
     "@fullcalendar/vue3": "^6.1.15",
+    "choices.js": "^11.0.2",
     "core-js": "^3.8.3",
     "vue": "^3.5.12",
     "vue-router": "^4.4.5",
-    "vuex": "^4.1.0"
+    "vuex": "^4.1.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

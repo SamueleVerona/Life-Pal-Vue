@@ -25,15 +25,16 @@ const toPath = computed(() => (route.params.isAuth ? "/landing" : "UserSign"));
 header {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-evenly;
   align-items: center;
-  padding: 1rem 5rem;
+  padding: 1rem 1rem;
   height: 10vh;
   background: linear-gradient(90deg, #b7f8db 0%, #50a7c2 100%);
 }
 
 h1 {
   font-size: 5rem;
+  text-wrap: nowrap;
 }
 
 #user {
@@ -42,7 +43,7 @@ h1 {
   color: #2c3e50;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.816);
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 10px;
 }
 
@@ -53,6 +54,7 @@ h1 {
   font-weight: 600;
   padding: 1rem;
   border: none;
+  text-wrap: nowrap;
 }
 
 a:active {

@@ -2,15 +2,15 @@
   <div class="goal-content exploded" :class="classes">
     <h2 class="goal-title">{{ props.goal.title }}</h2>
     <div class="goal-info">
-      <p class="goal-description">{{ props.goal.desc }}</p>
+      <p class="goal-description">
+        {{ props.goal.desc }}
+      </p>
       <div class="goal-stats">
         <h3 class="goal-date">
           Set for:
-          {{
-            typeof props.goal.compDate === "number"
-              ? new Date(props.goal.compDate).toISOString().slice(0, 10)
-              : props.goal.compDate
-          }}
+          <span>
+            {{ props.goal.dateLabel }}
+          </span>
         </h3>
       </div>
       <div
@@ -40,7 +40,7 @@
           </button>
         </div>
       </div>
-      <div class="progress-bar" v-if="!hasExpired">
+      <div class="progress-bar" v-if="isProgressVisible">
         <h3 class="progress-bar-text">
           <!-- time left:
                     {{ compRate(goal.started, goal.compDate) }} -->
@@ -58,6 +58,10 @@
 
 <script setup>
 import { defineProps, computed, ref, defineEmits } from "vue";
+
+const isProgressVisible = computed(
+  () => !props.hasExpired && !props.goal.isCompleted && !props.goal.isFailed
+);
 
 const props = defineProps(["goal", "hasExpired"]);
 const emits = defineEmits(["sendMarkedGoal"]);
@@ -126,7 +130,7 @@ function markAs(e) {
   margin: 0.8rem 0rem;
 }
 .goal-content.exploded {
-  height: 20rem;
+  min-height: max-content;
   border-radius: 40px;
 }
 
@@ -136,14 +140,20 @@ function markAs(e) {
   margin: 0.5rem auto;
 }
 .goal-title {
+  min-height: max-content;
   width: max-content;
+
   padding: 0.5rem 1.5rem;
   margin: 0.5rem 0rem;
   align-self: center;
-  border-radius: 30px;
   border: none;
-  font-size: 2.2rem;
+
+  font-size: 3rem;
+  line-height: 3rem;
   text-align: center;
+  font-weight: bolder;
+  font-style: italic;
+  color: brown;
 }
 
 .goal-info {
@@ -152,21 +162,24 @@ function markAs(e) {
   padding-top: 1rem;
   text-overflow: clip;
   font-size: 3rem;
-  height: 100%;
+  min-height: 10rem;
 }
 .goal-description {
-  height: max-content;
+  min-height: 3rem;
   width: 90%;
   padding: 0.5rem 1.5rem 0.5rem 0.8rem;
-  border-radius: 10px;
-  border: solid 1px rgb(166, 93, 255);
-  border-bottom: solid 2px rgb(166, 93, 255);
+  border: none;
+  border-bottom: solid 2px rgba(92, 88, 97, 0.352);
+  /* background: linear-gradient(
+    to bottom,
+    #d9eef800 0%,
+    #e7dfffdb 90%,
+    #e7dfff 100%
+  ); */
 
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.185);
   align-self: center;
 
-  font-weight: bold;
+  /* font-weight: bold; */
   text-align: center;
 }
 .goal-stats {
@@ -178,16 +191,19 @@ function markAs(e) {
   text-align: center;
 
   background: rgba(248, 255, 253, 0.164);
-  border-radius: 12px;
-  border: solid 1px rgb(42, 223, 157);
-  border-bottom: solid 2px rgb(42, 223, 157);
+  /* border-bottom: solid 2px rgb(181, 189, 186); */
 
   align-self: center;
 }
-.goal-date {
+.goal-date,
+.goal-date span {
   font-size: 1.5rem;
   font-weight: bold;
 }
+.goal-date span {
+  color: brown;
+}
+
 .goal-toggle {
   position: absolute;
   bottom: 0;
@@ -246,19 +262,16 @@ function markAs(e) {
 }
 
 .progress-bar {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-
   height: 2rem;
-  width: 60%;
+  width: 50%;
   margin-bottom: 0.3rem;
   border: solid 2px rgb(6, 82, 148);
   border-bottom: solid 3px rgb(6, 82, 148);
 
   border-radius: 30px;
   background: rgb(255, 255, 255);
+
+  align-self: center;
 }
 .progress-bar > div {
   background: rgb(84, 162, 247);
@@ -314,8 +327,6 @@ function markAs(e) {
 }
 .goal-content.month {
   border: solid 1px rgba(255, 161, 47, 0.389);
-  /* border-bottom: solid 10px rgb(210, 255, 47); */
-
   background: radial-gradient(
     ellipse at bottom right,
     rgba(235, 60, 255, 0.742) 1%,
@@ -325,12 +336,12 @@ function markAs(e) {
     transparent 25%
   );
 }
-.goal-content.year {
+/* .goal-content.year {
   border: solid 2px rgb(255, 203, 47);
   border-bottom: solid 10px rgb(255, 203, 47);
 }
 .goal-content.decade {
   border: solid 2px rgb(47, 210, 255);
   border-bottom: solid 10px rgb(47, 210, 255);
-}
+} */
 </style>

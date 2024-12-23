@@ -61,8 +61,8 @@ async function addGoal() {
   try {
     await store.dispatch("sendData", {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
-      title: inputTitle.value,
-      desc: inputDesc.value,
+      title: inputTitle.value.toUpperCase(),
+      desc: inputDesc.value[0].toUpperCase() + inputDesc.value.slice(1),
       type: props.goalType,
       isCompleted: false,
       isFailed: false,
@@ -80,6 +80,7 @@ async function addGoal() {
 <style scoped>
 * {
   font-family: "Poppins", sans-serif;
+  font-style: oblique;
 }
 #goal-card-element {
   border-radius: 30px;
@@ -137,6 +138,7 @@ async function addGoal() {
   caret-color: #000000;
   background: transparent;
   text-align: left;
+
   color: #401700;
 }
 #goal-description::placeholder {

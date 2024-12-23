@@ -24,6 +24,7 @@ h2 {
 h3 {
   font-size: 6rem;
   color: #67a9ba;
+  text-align: center;
 }
 h4 {
   font-size: 4.5rem;
