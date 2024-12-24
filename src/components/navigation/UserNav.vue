@@ -28,7 +28,6 @@ ul {
   align-items: center;
   list-style: none;
   background: transparent;
-  /* border: solid; */
 }
 
 button {

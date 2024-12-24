@@ -6,6 +6,7 @@
         v-if="show"
         class="dialog-wrapper"
         :class="{ 'user-active': props.userActive }"
+        :style="{ background: props.wrapperBackground }"
       >
         <div
           class="dialog-content-container"
@@ -17,15 +18,18 @@
         </div>
         <slot name="description"> </slot>
         <button
-          @click="submit"
+          @mousedown="submit"
           class="dialog-button"
+          :class="{ 'user-active': props.userActive }"
+          :style="{ background: props.buttonBackground }"
           :disabled="!props.allConfirmed"
         >
           {{ props.submitText || "click outside" }}
         </button>
       </dialog>
-
-      <div class="dialog-underlay" v-if="show" @click="closeDialog"></div>
+      <div class="dialog-underlay" v-if="show" @mousedown="closeDialog">
+        <span class="dialog-underlay-text" v-if="!props.userActive">back</span>
+      </div>
     </teleport>
   </div>
 </template>
@@ -39,10 +43,10 @@ const props = defineProps([
   "show",
   "userActive",
   "allConfirmed",
+  "buttonBackground",
+  "wrapperBackground",
 ]);
 const emits = defineEmits(["confirmAction", "close"]);
-
-// const openFlag = ref(true);
 
 const submit = () => {
   emits("confirmAction");
@@ -56,6 +60,29 @@ const closeDialog = () => {
 * {
   font-family: "Poppins", sans-serif;
 }
+
+:root {
+  --dialog-button-color-default: rgb(160, 255, 200);
+  --dialog-button-color-delete: rgb(243, 243, 243);
+  --dialog-button-color-delete-darker: rgb(255, 58, 58);
+
+  --dialog-wrapper-color-default: rgb(140, 81, 249);
+  --dialog-wrapper-color-delete: rgb(249, 81, 109);
+}
+
+.dialog-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  transform: translate(-50%, -50%);
+  background-color: var(--dialog-wrapper-color-default);
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+  z-index: 200;
+}
 .dialog-underlay {
   position: fixed;
   top: 10vh;
@@ -65,22 +92,21 @@ const closeDialog = () => {
   align-items: center;
   background: rgba(190, 196, 208, 0.295);
   backdrop-filter: blur(10px);
-  height: 100vh;
+  height: 90vh;
   width: 100%;
+  font-size: 4rem;
+  color: rgb(128, 128, 128);
+  z-index: 100;
 }
 
-.dialog-wrapper {
-  display: flex;
-  flex-direction: column;
-  background-color: rgb(140, 81, 249);
-  border-radius: 20px;
-  border: none;
-  z-index: 1;
+.dialog-underlay:hover {
+  color: rgb(0, 0, 0);
+  font-weight: 500;
+}
+.dialog-underlay-text {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+  bottom: 10rem;
+  font-size: 3.5rem;
 }
 
 .dialog-message {
@@ -95,11 +121,22 @@ const closeDialog = () => {
   padding: 1rem 0rem;
   width: 100%;
   min-height: max-content;
-  background: rgb(160, 255, 200);
+  background: var(--dialog-button-color-default);
   border: none;
 }
 
+.dialog-button.user-active:enabled:hover {
+  font-weight: 500;
+}
+
+.dialog-button:not(.user-active):enabled:hover {
+  color: rgb(255, 0, 0);
+  background: var(--dialog-button-color-delete-darker);
+  font-weight: 500;
+}
+
 .dialog-content-container.user-active {
+  padding: 1rem 0rem;
   background: white;
   scrollbar-width: thin;
   scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
@@ -107,7 +144,7 @@ const closeDialog = () => {
 }
 
 .dialog-wrapper.user-active {
-  height: 500px;
+  height: max-content;
   width: 50%;
 
   background: transparent;

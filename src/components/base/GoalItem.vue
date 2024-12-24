@@ -131,7 +131,9 @@ function markAs(e) {
 }
 .goal-content.exploded {
   min-height: max-content;
+  width: 80%;
   border-radius: 40px;
+  align-self: center;
 }
 
 .goal-content.exploded.dialog {
@@ -170,16 +172,7 @@ function markAs(e) {
   padding: 0.5rem 1.5rem 0.5rem 0.8rem;
   border: none;
   border-bottom: solid 2px rgba(92, 88, 97, 0.352);
-  /* background: linear-gradient(
-    to bottom,
-    #d9eef800 0%,
-    #e7dfffdb 90%,
-    #e7dfff 100%
-  ); */
-
   align-self: center;
-
-  /* font-weight: bold; */
   text-align: center;
 }
 .goal-stats {
@@ -191,8 +184,6 @@ function markAs(e) {
   text-align: center;
 
   background: rgba(248, 255, 253, 0.164);
-  /* border-bottom: solid 2px rgb(181, 189, 186); */
-
   align-self: center;
 }
 .goal-date,
@@ -205,14 +196,10 @@ function markAs(e) {
 }
 
 .goal-toggle {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-
   display: flex;
   align-items: center;
   justify-content: space-evenly;
+  align-self: center;
 
   width: 50%;
   border-radius: 18px;
@@ -236,14 +223,12 @@ function markAs(e) {
 
   justify-content: center;
   align-items: center;
-  /* align-self: flex-end; */
   border-radius: 18px;
 }
 
 .button-wrapper button {
   border: none;
   border-radius: 30px;
-  /* margin: 0rem 0.5rem; */
   padding: 0rem 0.5rem;
   font-size: 1.5rem;
 }
@@ -278,7 +263,6 @@ function markAs(e) {
   border-radius: 30px;
   border-right: solid 4px rgb(67, 199, 251);
 
-  /* border: solid; */
   height: 100%;
   z-index: 100;
 }
@@ -315,7 +299,6 @@ function markAs(e) {
 }
 .goal-content.week {
   border: solid 1px rgb(255, 116, 47, 0.389);
-  /* border-bottom: solid 10px rgb(255, 116, 47); */
   background: radial-gradient(
     ellipse at bottom right,
     rgba(255, 73, 60, 0.742) 1%,

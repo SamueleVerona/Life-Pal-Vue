@@ -62,12 +62,18 @@ a:active {
 }
 
 a {
-  color: #ba9e67;
+  color: #bc6060;
+
   text-decoration: none;
   font-size: 3rem;
   background: rgba(255, 255, 255, 0.816);
   padding: 1rem 1.5rem;
   border-radius: 30px;
   font-weight: 600;
+}
+
+a:hover {
+  color: #60bcb3;
+  cursor: pointer;
 }
 </style>

@@ -108,17 +108,30 @@
           </li>
         </ul>
       </section>
-      <div id="list-controls">
+      <div id="dash-footer" @mousedown="handleListEdit">
         <button
           type="button"
           id="button-edit"
-          @click="showRem"
+          class="button-dash-secondary"
           v-if="!isAdding && filteredData.length > 0"
         >
           Edit
         </button>
-        <button id="button-rem" @click="remGoal" v-if="userIsEditing">
+        <button
+          type="button"
+          id="button-rem"
+          class="button-dash-secondary"
+          v-if="userIsEditing"
+        >
           delete
+        </button>
+        <button
+          type="button"
+          id="button-select-all"
+          class="button-dash-secondary"
+          v-if="userIsEditing"
+        >
+          select all
         </button>
       </div>
     </section>
@@ -181,6 +194,26 @@
         </div>
       </section>
     </section>
+    <base-dialog
+      class="dialog-dash"
+      :show="userIsDeleting"
+      :errorMessage="
+        selectedGoals.length > 1
+          ? `Once they're gone, they're gone`
+          : `Once it's gone, it's gone`
+      "
+      :submitText="`delete`"
+      :allConfirmed="selectedGoals.length > 0"
+      :buttonBackground="`var(--dialog-button-color-delete)`"
+      :wrapperBackground="`var(--dialog-wrapper-color-delete)`"
+      @confirm-action="remGoal"
+      @close="
+        () => {
+          userIsDeleting = false;
+        }
+      "
+    >
+    </base-dialog>
   </section>
 </template>
 
@@ -249,6 +282,15 @@ const userIsEditing = ref(false);
 const selectedGoals = ref([]);
 const goalFilter = ref();
 
+watch(selectedGoals, () => {
+  const currGoalsTotal = dataPostFilter.value.length;
+  const currSelectedGoals = selectedGoals.value.length;
+
+  currSelectedGoals < currGoalsTotal
+    ? (allSelectedFlag.value = false)
+    : (allSelectedFlag.value = true);
+});
+
 onMounted(() => {
   goalFilter.value = props.goalType;
 });
@@ -261,6 +303,8 @@ async function remGoal() {
   try {
     await store.dispatch("deleteData", selectedGoals.value);
     userIsEditing.value = false;
+    userIsDeleting.value = false;
+
     selectedGoals.value = [];
   } catch (err) {
     console.log(err);
@@ -300,6 +344,8 @@ function toggleDropdown(e) {
   }
 }
 function selectFilterOption(e) {
+  userIsEditing.value = false;
+  selectedGoals.value = [];
   const target = e.target;
   const isTimeOption = e.target.classList.contains("selector-time-option");
   const optionText = target.textContent.trim();
@@ -344,8 +390,10 @@ const userStats = computed(() => {
     (goal) => goal.isFailed === true
   ).length;
 
-  const successRate = ((totalCompleted / totalGoals) * 100).toFixed(1) + "%";
-  const failRate = ((totalFailed / totalGoals) * 100).toFixed(1) + "%";
+  const successRate =
+    ((totalCompleted / (totalCompleted + totalFailed)) * 100).toFixed(1) + "%";
+  const failRate =
+    ((totalFailed / (totalCompleted + totalFailed)) * 100).toFixed(1) + "%";
 
   const ongoingRate = (totalOngoing / totalGoals) * 100 + "%";
 
@@ -356,6 +404,38 @@ const userStats = computed(() => {
     failRate,
   };
 });
+
+const allSelectedFlag = ref(false);
+function selectAll() {
+  const allSelected = dataPostFilter.value.map((goal) => goal.databaseId);
+
+  if (!allSelectedFlag.value && selectedGoals.value.length === 0) {
+    selectedGoals.value = allSelected;
+    allSelectedFlag.value = true;
+  } else {
+    selectedGoals.value = [];
+    allSelectedFlag.value = false;
+  }
+}
+
+const userIsDeleting = ref(false);
+function handleListEdit(e) {
+  const targetButton = e.target.id.slice(7);
+
+  switch (targetButton) {
+    case "edit":
+      showRem();
+      break;
+    case "rem":
+      userIsDeleting.value = true;
+      break;
+    case "select-all":
+      selectAll();
+      break;
+    default:
+      return;
+  }
+}
 </script>
 
 <style scoped>
@@ -404,6 +484,7 @@ header {
   text-align: center;
   align-items: center;
   justify-content: space-between;
+  z-index: 1;
 }
 
 #wrapper-dash-filter {
@@ -412,7 +493,6 @@ header {
   overflow: visible;
   min-width: 45%;
   justify-content: space-between;
-  /* border: solid; */
 }
 
 .selector,
@@ -433,7 +513,6 @@ header {
   font-size: 2rem;
   text-align: center;
   cursor: pointer;
-  z-index: 100;
 }
 
 .selector {
@@ -530,12 +609,10 @@ header {
   scrollbar-width: thin;
   scrollbar-color: rgb(98, 37, 253) rgba(3, 3, 255, 0);
   overflow-y: auto;
-  /* overflow: visible; */
+  z-index: 0;
 }
 
-#list-controls {
-  /* position: absolute;
-  bottom: 1rem; */
+#dash-footer {
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -543,40 +620,33 @@ header {
   width: 100%;
   padding: 1rem 1rem;
   justify-self: bottom;
-  /* z-index: -1; */
 }
 
-#button-rem:hover,
-#button-edit:hover,
-#button-dash-stats:hover {
-  /* color: #2c3e50; */
+.button-dash-secondary:hover {
   color: rgb(10, 214, 221);
 }
 
-#button-edit,
-#button-rem {
-  margin: 0rem 0.5rem;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #2c3e50;
-  width: max-content;
-  height: 5rem;
-  border-radius: 25px;
-  border: none;
-  cursor: pointer;
-  padding: 0rem 1.5rem;
-}
 #button-edit {
   background: rgb(255, 229, 203);
-  box-shadow: 0rem 0.3rem 0rem #d2a977;
+  border: none;
+  border-bottom: solid 4px #d2a977;
 }
 
 #button-rem {
-  background: rgba(255, 69, 69, 0.995);
-  box-shadow: 0rem 0.3rem 0rem #a34343;
-
-  border-radius: 25px;
+  background: rgba(255, 125, 125, 0.995);
+  border: none;
+  border-bottom: solid 4px #a34343;
   color: white;
+}
+#button-rem:hover {
+  color: rgb(117, 250, 255);
+  background: rgba(255, 77, 77, 0.995);
+}
+
+#button-select-all {
+  background: rgba(230, 230, 230, 0.995);
+  border: none;
+  border-bottom: solid 4px #8b8b8b;
 }
 
 li {
@@ -615,7 +685,6 @@ h2,
   cursor: pointer;
   width: 2.3rem;
   height: 2.3rem;
-  /* min-height: 3rem; */
   border: 2px solid rgb(0, 0, 0);
   border-bottom: 3px solid rgba(0, 0, 0, 0.986);
 
@@ -633,23 +702,19 @@ h2,
 #section-stats {
   display: flex;
   flex-direction: column;
-  /* border: solid; */
   padding: 1rem 0rem;
   min-height: 3rem;
-  /* position: absolute; */
 }
 
 #section-stats-content {
   display: flex;
   flex-direction: column;
-  /* width: 100%; */
   height: 100%;
   border: none;
   border-left: solid 1px #1dffa8e3;
   padding: 0rem 0.5rem;
   margin: 0rem 1rem;
 
-  /* border-radius: 20px; */
   justify-content: center;
   align-items: center;
 }
@@ -700,5 +765,13 @@ h2,
 }
 .progress-bar-inner.failed {
   background: rgb(154, 47, 255);
+}
+
+.dialog-dash {
+  z-index: 200;
+}
+
+.dialog-button {
+  color: white;
 }
 </style>

@@ -146,23 +146,23 @@ export default {
 
     return checkedGoals;
   },
-  async signUp(context, payload) {
+  async signup(context, payload) {
     return context.dispatch("auth", {
       ...payload,
-      mode: "signUp",
+      mode: "signup",
     });
   },
-  async logIn(context, payload) {
+  async login(context, payload) {
     return context.dispatch("auth", {
       ...payload,
-      mode: "logIn",
+      mode: "login",
     });
   },
   async auth(context, payload) {
     let url =
       "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk";
 
-    if (payload.mode === "signUp") {
+    if (payload.mode === "signup") {
       url =
         "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk";
     }

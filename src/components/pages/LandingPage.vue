@@ -3,7 +3,7 @@
   <section>
     <h2>Life Pal</h2>
     <h3>Set goals for your future!</h3>
-    <h4>Sign up to start</h4>
+    <router-link :to="'/userSign'">Sign up to start</router-link>
   </section>
 </template>
 
@@ -26,9 +26,15 @@ h3 {
   color: #67a9ba;
   text-align: center;
 }
-h4 {
+a {
   font-size: 4.5rem;
-  color: #ba9e67;
+  color: #bc6060;
   padding-top: 3rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+a:hover {
+  color: #60bcb3;
+  cursor: pointer;
 }
 </style>
