@@ -3,73 +3,65 @@
     id="dash-element"
     class="has-goals"
     :class="{
-      'no-goals': filteredData.length === 0,
-      completed: goalFilter === 'completed',
-      failed: goalFilter === 'failed',
+      'no-goals': userData.length === 0,
+      completed: primaryOptionSelected === 'completed',
+      failed: primaryOptionSelected === 'failed',
     }"
   >
-    <section id="section-goals">
-      <header id="dash-header" @mousedown="toggleDropdown">
-        <div id="wrapper-dash-filter">
-          <div id="selector-time-filter" class="selector">
+    <section id="section-items-display">
+      <header id="header-items-display" @mousedown="handleMousedown">
+        <div id="container-filters">
+          <div id="selector-primary-filter" class="selector">
             <div
-              id="selector-time-list"
+              id="selector-primary-list"
               class="selector-list is-hidden"
               @mousedown="selectFilterOption"
             >
-              <div class="selector-time-option selector-option">all goals</div>
-              <div class="selector-time-option selector-option">day</div>
-              <div class="selector-time-option selector-option">week</div>
-              <div class="selector-time-option selector-option">month</div>
+              <div
+                v-for="option in primaryFilterOptions"
+                :key="option"
+                class="option selector-option"
+              >
+                {{ option }}
+              </div>
             </div>
-            <span class="selector-option selected" inert>{{ goalFilter }}</span>
+            <span class="selector-option selected" inert>{{
+              primaryOptionSelected
+            }}</span>
           </div>
-          <div id="wrapper-dash-buttons" @mousedown="showExpired">
-            <button
-              id="button-comp"
-              data-button-id="completed"
-              class="button-dash-secondary"
-              active
-            >
-              ✔
-            </button>
 
-            <button
-              id="button-fail"
-              data-button-id="failed"
-              class="button-dash-secondary"
-            >
-              ✖
-            </button>
-          </div>
-        </div>
-        <div
-          id="selector-date-filter"
-          class="selector"
-          v-if="filterOptions.length > 1"
-        >
           <div
-            id="selector-date-list"
-            class="selector-list is-hidden"
-            @mousedown="selectFilterOption"
+            id="selector-secondary-filter"
+            class="selector"
+            v-if="secondaryFilterOptions.length > 1"
           >
-            <div class="selector-date-option selector-option">all</div>
             <div
-              v-for="el in filterOptions"
-              :value="el"
-              :key="el"
-              class="selector-date-option selector-option"
+              id="selector-secondary-list"
+              class="selector-list is-hidden"
+              @mousedown="selectFilterOption"
             >
-              {{ el }}
+              <div class="selector-secondary-option selector-option">all</div>
+              <div
+                v-for="el in secondaryFilterOptions"
+                :value="el"
+                :key="el"
+                class="selector-secondary-option selector-option"
+              >
+                {{ el }}
+              </div>
             </div>
+            <span class="selector-option selected" inert>{{
+              secondaryOptionSelected
+            }}</span>
           </div>
-          <span
-            id="selected-date-option"
-            class="selector-option selected"
-            inert
-            >{{ option }}</span
-          >
         </div>
+        <button
+          id="button-new"
+          class="button-dash-secondary"
+          @mousedown="() => emits('startAdding')"
+        >
+          add
+        </button>
         <button
           id="button-dash-stats"
           class="button-dash-secondary"
@@ -79,28 +71,32 @@
         </button>
       </header>
       <section id="goals-container">
-        <div v-if="!filteredData.length" id="no-goals">
+        <div v-if="!itemsArray.length" class="empty-list">
           <h2 v-if="!isAdding">No goals yet!</h2>
           <button
             type="button"
-            @click="toggleAdd"
-            id="button-start"
+            @click="showNewGoal"
+            class="button-start"
             v-if="!isAdding"
           >
             Start planning
           </button>
         </div>
-        <ul v-else-if="filteredData.length > 0">
-          <li v-for="el in dataPostFilter" :key="el.id">
-            <goal-item :goal="el">
+        <ul v-else-if="itemsArray.length > 0">
+          <li v-for="item in itemsArray" :key="item.id">
+            <goal-item
+              :item="item"
+              :isRequest="props.toggleProfile || props.isAdmin"
+              @sendMarkedGoal="handleMarkedItems"
+            >
               <template #selector>
                 <input
                   class="remove-checkbox"
                   type="checkbox"
-                  :key="el.id"
-                  :name="el.id"
-                  :value="el.databaseId"
-                  v-model="selectedGoals"
+                  :key="item.id"
+                  :name="item.id"
+                  :value="item.databaseId"
+                  v-model="selectedItems"
                   v-if="userIsEditing"
                 />
               </template>
@@ -113,7 +109,7 @@
           type="button"
           id="button-edit"
           class="button-dash-secondary"
-          v-if="!isAdding && filteredData.length > 0"
+          v-if="!isAdding && itemsArray.length > 0"
         >
           Edit
         </button>
@@ -133,21 +129,22 @@
         >
           select all
         </button>
+        <button
+          type="button"
+          id="button-save-change"
+          class="button-dash-secondary"
+          v-if="userIsEditing"
+        >
+          save changes
+        </button>
       </div>
     </section>
-    <section id="section-stats">
-      <!-- <header id="dash-header-stats">
-        <div id="wrapper-dash-stats">
-          <button id="button-dash-stats" class="button-dash-secondary">
-            stats
-          </button>
-        </div>
-      </header> -->
+    <section id="section-stats" v-if="!props.toggleRequests && !isAdmin">
       <section id="section-stats-content" v-if="isStatsVisible">
         <div class="stat">
           <h3 class="progress-bar-text">
             All time goals:
-            {{ props.userData.length }}
+            {{ props.allGoals.length }}
           </h3>
         </div>
         <div class="stat">
@@ -194,19 +191,20 @@
         </div>
       </section>
     </section>
+
     <base-dialog
       class="dialog-dash"
       :show="userIsDeleting"
       :errorMessage="
-        selectedGoals.length > 1
+        selectedItems.length > 1
           ? `Once they're gone, they're gone`
           : `Once it's gone, it's gone`
       "
       :submitText="`delete`"
-      :allConfirmed="selectedGoals.length > 0"
+      :allConfirmed="selectedItems.length > 0"
       :buttonBackground="`var(--dialog-button-color-delete)`"
       :wrapperBackground="`var(--dialog-wrapper-color-delete)`"
-      @confirm-action="remGoal"
+      @confirm-action="deleteGoals"
       @close="
         () => {
           userIsDeleting = false;
@@ -222,33 +220,36 @@ import { useStore } from "vuex";
 import { ref, defineProps, defineEmits, computed, onMounted, watch } from "vue";
 
 const store = useStore();
-const props = defineProps(["goalType", "userData", "insertNewGoal", "newDate"]);
+const props = defineProps([
+  "goalType",
+  "allGoals",
+  "finished",
+  "unfinished",
+  "insertNewGoal",
+  "newDate",
+  "toggleProfile",
+  "userRequests",
+  "isAdmin",
+]);
 const emits = defineEmits(["startAdding"]);
 
-const filteredData = computed(() => {
+const userData = computed(() => {
   let filtered;
-  switch (goalFilter.value) {
+  switch (primaryOptionSelected.value) {
     case "completed":
-      filtered = props.userData.filter((goal) => goal.isCompleted === true);
+      filtered = props.finished.filter((goal) => goal.isCompleted);
       break;
     case "failed":
-      filtered = props.userData.filter((goal) => goal.isFailed === true);
+      filtered = props.finished.filter((goal) => goal.isFailed);
       break;
     case "all goals":
       {
-        filtered = props.userData.filter(
-          (goal) => goal.isCompleted === false && goal.isFailed === false
-        );
+        filtered = props.unfinished;
       }
-
       break;
-
     default:
-      filtered = props.userData.filter(
-        (goal) =>
-          goal.type === goalFilter.value &&
-          goal.isCompleted === false &&
-          goal.isFailed === false
+      filtered = props.unfinished.filter(
+        (goal) => goal.type === primaryOptionSelected.value
       );
       break;
   }
@@ -256,73 +257,95 @@ const filteredData = computed(() => {
   return filtered;
 });
 
-function setOptions(goalsArray) {
-  return goalsArray
-    .map((goal) => goal.dateLabel)
+function setOptions(itemsArr) {
+  return itemsArr
+    .map((item) => item.itemLabel)
     .reduce((accum, curr) => {
       if (!accum.includes(curr)) accum.push(curr);
       return accum;
     }, []);
 }
 
-const filterOptions = computed(() => setOptions(filteredData.value));
+const goalsFilterOptions = [
+  "all goals",
+  "month",
+  "week",
+  "day",
+  "completed",
+  "failed",
+];
 
-const option = ref("all");
+const requestsFilterOptions = ["pending", "accepted", "rejected"];
 
-const dataPostFilter = computed(() => {
-  if (option.value === "all") {
-    return filteredData.value;
+const primaryFilterOptions = computed(() =>
+  props.toggleProfile || props.isAdmin
+    ? requestsFilterOptions
+    : goalsFilterOptions
+);
+const secondaryFilterOptions = computed(() => setOptions(userData.value));
+const secondaryOptionSelected = ref("all");
+
+const filteredGoals = computed(() => {
+  if (secondaryOptionSelected.value === "all") {
+    return userData.value;
   } else {
-    return filteredData.value.filter((goal) => goal.dateLabel === option.value);
+    return userData.value.filter(
+      (goal) => goal.itemLabel === secondaryOptionSelected.value
+    );
   }
 });
 
+const itemsArray = computed(() =>
+  props.toggleProfile || props.isAdmin
+    ? filteredRequests.value
+    : filteredGoals.value
+);
+
 const isAdding = ref(false);
 const userIsEditing = ref(false);
-const selectedGoals = ref([]);
-const goalFilter = ref();
+const selectedItems = ref([]);
+const primaryOptionSelected = ref();
 
-watch(selectedGoals, () => {
-  const currGoalsTotal = dataPostFilter.value.length;
-  const currSelectedGoals = selectedGoals.value.length;
+watch(selectedItems, () => {
+  const currGoalsTotal = filteredGoals.value.length;
+  const currSelectedGoals = selectedItems.value.length;
 
   currSelectedGoals < currGoalsTotal
     ? (allSelectedFlag.value = false)
     : (allSelectedFlag.value = true);
 });
 
-onMounted(() => {
-  goalFilter.value = props.goalType;
-});
-
 watch(props, () => {
-  goalFilter.value = props.goalType;
+  props.toggleProfile || props.isAdmin
+    ? (primaryOptionSelected.value = "pending")
+    : (primaryOptionSelected.value = props.goalType);
 });
 
-async function remGoal() {
+async function deleteGoals() {
   try {
-    await store.dispatch("deleteData", selectedGoals.value);
+    await store.dispatch("deleteData", selectedItems.value);
     userIsEditing.value = false;
     userIsDeleting.value = false;
 
-    selectedGoals.value = [];
+    selectedItems.value = [];
   } catch (err) {
     console.log(err);
   }
 }
 
-function showRem() {
+function toggleDeleteBtn() {
   userIsEditing.value = !userIsEditing.value;
 }
 
-function toggleAdd() {
+function showNewGoal() {
   emits("startAdding");
 }
 
-function toggleDropdown(e) {
+function handleMousedown(e) {
   const target = e.target;
   const isSelector = target.classList.contains("selector");
   const isFilteroption = target.classList.contains("selector-option");
+  const isRequestBtn = target.id.includes("request");
 
   if (isSelector) {
     target.classList.toggle("open");
@@ -333,6 +356,8 @@ function toggleDropdown(e) {
     document
       .querySelectorAll(".selector")
       .forEach((el) => el.classList.remove("open"));
+  } else if (isRequestBtn) {
+    showNewGoal();
   } else {
     document
       .querySelectorAll(".selector")
@@ -345,28 +370,19 @@ function toggleDropdown(e) {
 }
 function selectFilterOption(e) {
   userIsEditing.value = false;
-  selectedGoals.value = [];
+  selectedItems.value = [];
   const target = e.target;
-  const isTimeOption = e.target.classList.contains("selector-time-option");
+  const isFilterOption = e.target.classList.contains("option");
   const optionText = target.textContent.trim();
 
-  if (isTimeOption) {
-    goalFilter.value = optionText;
-    option.value = "all";
+  if (props.toggleProfile || props.isAdmin) {
+    primaryOptionSelected.value = optionText;
+  } else if (isFilterOption) {
+    primaryOptionSelected.value = optionText;
+    secondaryOptionSelected.value = "all";
   } else {
-    option.value = optionText;
+    secondaryOptionSelected.value = optionText;
   }
-}
-
-function showExpired(e) {
-  const target = e.target;
-
-  const isValidTarget = target.id.startsWith("button");
-  if (!isValidTarget) return;
-
-  const buttonText = target.dataset.buttonId;
-  goalFilter.value = buttonText;
-  option.value = "all";
 }
 
 const isStatsVisible = ref(false);
@@ -377,25 +393,29 @@ function toggleStats() {
 }
 
 const userStats = computed(() => {
-  const totalGoals = props.userData.length;
-  const totalOngoing = props.userData.filter(
+  const totalGoals = props.allGoals.length;
+  const totalOngoing = props.allGoals.filter(
     (goal) => goal.isCompleted === false && goal.isFailed === false
   ).length;
 
-  const totalCompleted = props.userData.filter(
+  const totalCompleted = props.allGoals.filter(
     (goal) => goal.isCompleted === true
   ).length;
 
-  const totalFailed = props.userData.filter(
+  const totalFailed = props.allGoals.filter(
     (goal) => goal.isFailed === true
   ).length;
 
-  const successRate =
-    ((totalCompleted / (totalCompleted + totalFailed)) * 100).toFixed(1) + "%";
-  const failRate =
-    ((totalFailed / (totalCompleted + totalFailed)) * 100).toFixed(1) + "%";
+  const totalExpired = totalCompleted + totalFailed;
 
-  const ongoingRate = (totalOngoing / totalGoals) * 100 + "%";
+  const successRate =
+    ((totalCompleted * 100) / (totalExpired ? totalExpired : 1)).toFixed(1) +
+    "%";
+  const failRate =
+    ((totalFailed * 100) / (totalExpired ? totalExpired : 1)).toFixed(1) + "%";
+
+  const ongoingRate =
+    (totalOngoing * 100) / (totalGoals ? totalGoals : 1) + "%";
 
   return {
     string: `${totalOngoing}/${totalGoals}`,
@@ -407,13 +427,13 @@ const userStats = computed(() => {
 
 const allSelectedFlag = ref(false);
 function selectAll() {
-  const allSelected = dataPostFilter.value.map((goal) => goal.databaseId);
+  const allSelected = filteredGoals.value.map((goal) => goal.databaseId);
 
-  if (!allSelectedFlag.value && selectedGoals.value.length === 0) {
-    selectedGoals.value = allSelected;
+  if (!allSelectedFlag.value && selectedItems.value.length === 0) {
+    selectedItems.value = allSelected;
     allSelectedFlag.value = true;
   } else {
-    selectedGoals.value = [];
+    selectedItems.value = [];
     allSelectedFlag.value = false;
   }
 }
@@ -424,7 +444,7 @@ function handleListEdit(e) {
 
   switch (targetButton) {
     case "edit":
-      showRem();
+      toggleDeleteBtn();
       break;
     case "rem":
       userIsDeleting.value = true;
@@ -436,6 +456,27 @@ function handleListEdit(e) {
       return;
   }
 }
+
+const filteredRequests = computed(() =>
+  props.userRequests.filter(
+    (req) => req.itemLabel === primaryOptionSelected.value
+  )
+);
+
+function handleMarkedItems(item) {
+  const id = item.itemId;
+  const itemIndex = selectedItems.value.findIndex((itm) => itm.itemId === id);
+
+  itemIndex >= 0
+    ? (selectedItems.value[itemIndex] = item)
+    : selectedItems.value.push(item);
+}
+
+onMounted(() => {
+  props.toggleProfile || props.isAdmin
+    ? (primaryOptionSelected.value = "pending")
+    : (primaryOptionSelected.value = props.goalType);
+});
 </script>
 
 <style scoped>
@@ -448,8 +489,11 @@ function handleListEdit(e) {
   display: flex;
   flex-direction: row;
   border-radius: 35px;
-  border: solid 2px rgba(35, 212, 243, 0.704);
-  border-bottom: solid 10px rgba(23, 177, 204, 0.704);
+
+  border: solid 2px rgb(218, 218, 218);
+  border-bottom: solid 3px rgb(218, 218, 218);
+  /* border: solid 2px rgba(35, 212, 243, 0.704);
+  border-bottom: solid 10px rgba(23, 177, 204, 0.704); */
 }
 .has-goals {
   background: linear-gradient(70deg, #d9eef81b 40%, #e7dfffdb 100%);
@@ -460,15 +504,15 @@ function handleListEdit(e) {
 
 #dash-element.completed {
   border: solid 2px rgba(31, 252, 116, 0.781);
-  border-bottom: solid 10px rgba(31, 252, 116, 0.781);
+  border-bottom: solid 3px rgba(31, 252, 116, 0.781);
 }
 
 #dash-element.failed {
   border: solid 2px rgb(156, 81, 255);
-  border-bottom: solid 10px rgb(152, 41, 255);
+  border-bottom: solid 3px rgb(152, 41, 255);
 }
 
-#section-goals {
+#section-items-display {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -483,16 +527,17 @@ header {
   overflow: visible;
   text-align: center;
   align-items: center;
-  justify-content: space-between;
+  justify-content: start;
   z-index: 1;
+  /* border: solid; */
 }
 
-#wrapper-dash-filter {
+#container-filters {
   display: flex;
   flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
   overflow: visible;
-  min-width: 45%;
-  justify-content: space-between;
 }
 
 .selector,
@@ -524,15 +569,14 @@ header {
   box-shadow: none;
 }
 
-#selector-time-filter {
+#selector-primary-filter {
   border-color: rgb(0, 213, 206);
   border-bottom-color: rgb(0, 172, 178);
 }
-#selector-date-filter {
+#selector-secondary-filter {
   border-color: rgb(236, 162, 34);
   border-bottom-color: rgb(183, 125, 26);
   height: 4rem;
-  margin-right: 10rem;
 }
 .selector-list {
   position: absolute;
@@ -545,10 +589,10 @@ header {
   border-radius: 20px;
 }
 
-#selector-time-list {
+#selector-primary-list {
   border-color: rgb(0, 213, 206);
 }
-#selector-date-list {
+#selector-secondary-list {
   border-color: rgb(236, 162, 34);
   top: 4rem;
 }
@@ -567,11 +611,6 @@ header {
   font-weight: 600;
 }
 
-#selected-date-option {
-  font-size: 2rem;
-  font-weight: 300;
-}
-
 .selector-option:hover {
   color: #13acd7;
 }
@@ -581,6 +620,7 @@ header {
 }
 
 .button-dash-secondary {
+  height: 4rem;
   margin: 0rem 0.3rem;
   min-width: 6rem;
   font-weight: bold;
@@ -620,6 +660,7 @@ header {
   width: 100%;
   padding: 1rem 1rem;
   justify-self: bottom;
+  overflow: visible;
 }
 
 .button-dash-secondary:hover {
@@ -644,9 +685,8 @@ header {
 }
 
 #button-select-all {
-  background: rgba(230, 230, 230, 0.995);
-  border: none;
-  border-bottom: solid 4px #8b8b8b;
+  border: solid 1px rgba(35, 212, 243, 0.704);
+  border-bottom: solid 4px rgba(35, 212, 243, 0.704);
 }
 
 li {
@@ -656,8 +696,7 @@ li {
   border-radius: 10px;
 }
 
-#no-goals {
-  padding-top: 15rem;
+.empty-list {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -665,19 +704,20 @@ li {
 }
 
 h2,
-#button-start {
-  font-size: 2.5rem;
+.button-start {
+  font-size: 3rem;
   padding: 0.5rem 1.5rem;
 }
 
-#button-start {
+.button-start {
   background: none;
   border: none;
   font-weight: bold;
   color: rgb(255, 0, 85);
 }
-#button-start:hover {
+.button-start:hover {
   color: rgb(21, 203, 167);
+  cursor: pointer;
 }
 
 .remove-checkbox {

@@ -81,6 +81,8 @@ function setEvents(goals) {
       title: goal.title,
       start: new Date(goal.compDate).toISOString().slice(0, 10),
       type: goal.type,
+      borderColor: "white",
+      backgroundColor: "transparent",
     };
   });
 
@@ -138,9 +140,7 @@ const calendarOptions = ref({
     // },
     add: {
       text: "add goal",
-      click: () => {
-        emits("sendNavOptions", "goal");
-      },
+      click: () => navigateTo("goal"),
     },
   },
   views: {
@@ -160,6 +160,8 @@ const calendarOptions = ref({
       weekNumbers: true,
       hiddenDays: [0, 2, 3, 4, 5, 6],
       dayHeaders: false,
+      dayMaxEventRows: true,
+
       weekNumberFormat: { week: "numeric" },
       dateAlignment: "month",
       validRange: () => setMonthLimits(),
@@ -167,6 +169,7 @@ const calendarOptions = ref({
     dayGridDay: {
       type: "dayGrid",
       buttonText: "day",
+
       visibleRange: {
         start: getThisWeekDay(1),
         end: getThisWeekDay(6),
@@ -184,19 +187,21 @@ const calendarOptions = ref({
   },
   headerToolbar: {
     left: "title",
-    center: `multiMonthYear,dayGridMonth,dayGridDay prev,next add`,
+    center: `multiMonthYear,dayGridMonth,dayGridDay add`,
     right: "",
   },
   initialView: "dayGridDay",
   firstDay: 1,
   weekNumberCalculation: "local",
   multiMonthMaxColumns: 1,
+  dayMaxEvents: 1,
+  dayMaxEventRows: 1,
   editable: true,
   selectable: true,
-  dayMaxEvents: true,
   weekends: true,
   fixedWeekCount: false,
   eventSources: true,
+  moreLinkClick: () => navigateTo("dashboard"),
   datesSet: datesSelection,
   dateClick: handleDateClick,
   eventsSet: () => {
@@ -224,11 +229,18 @@ const currentView = ref();
 const yerviewYear = ref();
 const lastTarget = ref(null);
 
+function navigateTo(navTargetString) {
+  emits("sendNavOptions", navTargetString);
+}
+
 function handleMousedown(e) {
   const target = e.target;
   const isMonthElement = target.classList.contains("fc-multimonth-month");
+  const isGoalsIndex = target.classList.contains("month-has-events");
 
+  if (isGoalsIndex) navigateTo("dashboard");
   if (!isMonthElement) return;
+
   handleDateClick(target);
 
   const isSelected = target.getAttribute("is-selected") === "true";
@@ -390,45 +402,51 @@ function setYearly() {
 * {
   text-decoration: none;
 }
-#calendar-element {
+/* #calendar-element {
   position: relative;
-}
+} */
 
-ul,
+/* ul,
 li {
   list-style: none;
   text-decoration: none;
-}
+} */
 
 :deep(.is-hidden) {
   display: none;
 }
 
 :deep(.fc) {
-  display: flex;
-  margin: 0rem 1rem;
+  height: 100%;
+  width: 100%;
   padding: 1rem;
+  display: flex;
   font-size: 5rem;
-  font-family: "Roboto", sans-serif;
-  flex: 2;
   border-radius: 30px;
   border: solid 2px rgba(128, 128, 128, 0.308);
-  box-shadow: 0rem 0.5rem 0rem rgba(128, 128, 128, 0.308);
+  border-bottom: solid 3px rgba(128, 128, 128, 0.308);
+
+  font-family: "Roboto", sans-serif;
 }
 
 :deep(.fc .fc-toolbar.fc-header-toolbar) {
-  margin-bottom: 1rem;
-  height: 60%;
+  margin-bottom: 0;
+  min-height: max-content;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: space-between;
+  border: none;
+  padding: 1rem 0rem;
+  /* flex: 1; */
+}
+:deep(.fc .fc-toolbar-title) {
+  font-size: 8rem;
 }
 
 :deep(.fc-toolbar-chunk) {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem 0;
 }
 
 :deep(.fc-toolbar-chunk:first-child) {
@@ -444,7 +462,7 @@ li {
 
 :deep(.fc .fc-button-primary) {
   padding: 0.5rem 1.5rem;
-  font-size: 2rem;
+  font-size: 2.5rem;
   line-height: 3rem;
   border: none;
   background: none;
@@ -525,9 +543,31 @@ li {
   height: 5rem;
   color: #2c3e50;
 }
-
 :deep(.fc-event-title-container) {
-  font-size: 10rem;
+  background: white;
+  border: black;
+}
+:deep(.fc-event-title) {
+  display: none;
+  font-size: 5rem;
+  content: "0";
+  border: black;
+
+  height: 5rem;
+  background: white;
+  border: black;
+}
+
+:deep(.fc-event-title-container::after) {
+  content: "+1";
+  font-size: 2rem;
+  height: 3rem;
+  width: 3rem;
+  /* background: black; */
+  color: #47a3ff;
+
+  border: none;
+  border: black;
 }
 
 :deep(.fc-multimonth-month) {

@@ -2,7 +2,9 @@
   <section id="goal-card-element">
     <base-card class="card" id="goal-card">
       <template #title>
-        <h2 id="goal-card-label">NEW GOAL</h2>
+        <h2 id="goal-card-label">
+          {{ props.isRequest ? "NEW REQUEST" : "NEW GOAL" }}
+        </h2>
       </template>
 
       <template #content>
@@ -29,15 +31,17 @@
         </div>
       </template>
       <template #options>
-        <div class="card-section" id="goal-info">
+        <div class="card-section" id="goal-info" v-if="!props.isRequest">
           <span>Goal for a {{ props.goalType }}</span>
           <span>Set a completion for</span>
-          <span>{{ props.dateLabel }}</span>
+          <span>{{ props.itemLabel }}</span>
         </div>
       </template>
       <template #button>
         <div id="goal-card-controls" class="card-section">
-          <button type="button" id="button-save" @click="addGoal">save</button>
+          <button type="button" id="button-save" @click="handleSubmit">
+            {{ props.isRequest ? "send" : "save" }}
+          </button>
         </div>
       </template>
     </base-card>
@@ -49,7 +53,7 @@ import { useStore } from "vuex";
 import { ref, defineProps, defineEmits, onBeforeMount } from "vue";
 
 const store = useStore();
-const props = defineProps(["dateInfo", "dateLabel", "goalType"]);
+const props = defineProps(["dateInfo", "itemLabel", "goalType", "isRequest"]);
 const emits = defineEmits(["goalSaved"]);
 
 const inputTitle = ref("");
@@ -57,18 +61,46 @@ const inputDesc = ref("");
 const compDate = ref();
 onBeforeMount(() => (compDate.value = props.dateInfo));
 
+function handleSubmit() {
+  props.isRequest ? addRequest() : addGoal();
+}
+
+const id = ref(
+  Date.now().toString(36) + Math.random().toString(36).substr(2, 9)
+);
+
+async function addRequest() {
+  try {
+    store.dispatch("sendData", {
+      type: "request",
+      data: {
+        id: id.value,
+        title: inputTitle.value.toUpperCase(),
+        desc: inputDesc.value[0].toUpperCase() + inputDesc.value.slice(1),
+        itemLabel: "pending",
+      },
+    });
+    emits("goalSaved", true);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 async function addGoal() {
   try {
     await store.dispatch("sendData", {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
-      title: inputTitle.value.toUpperCase(),
-      desc: inputDesc.value[0].toUpperCase() + inputDesc.value.slice(1),
-      type: props.goalType,
-      isCompleted: false,
-      isFailed: false,
-      started: Date.now(),
-      compDate: compDate.value,
-      dateLabel: props.dateLabel,
+      type: "goal",
+      data: {
+        id: id.value,
+        title: inputTitle.value.toUpperCase(),
+        desc: inputDesc.value[0].toUpperCase() + inputDesc.value.slice(1),
+        type: props.goalType,
+        isCompleted: false,
+        isFailed: false,
+        started: Date.now(),
+        compDate: compDate.value,
+        itemLabel: props.itemLabel,
+      },
     });
     emits("goalSaved", true);
   } catch (err) {

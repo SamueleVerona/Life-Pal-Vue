@@ -65,7 +65,6 @@ function handleControls(e) {
 
   const isSubmitBtn = target.id.includes("submit");
 
-  console.log(isSubmitBtn);
   const isLogin = mode.value === "login";
 
   if (isValidTarget) {

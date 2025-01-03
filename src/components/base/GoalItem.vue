@@ -1,22 +1,25 @@
 <template>
   <div class="goal-content exploded" :class="classes">
-    <h2 class="goal-title">{{ props.goal.title }}</h2>
+    <h2 class="goal-title">{{ props.item.title }}</h2>
     <div class="goal-info">
       <p class="goal-description">
-        {{ props.goal.desc }}
+        {{ props.item.desc }}
       </p>
       <div class="goal-stats">
         <h3 class="goal-date">
-          Set for:
           <span>
-            {{ props.goal.dateLabel }}
+            {{
+              props.isRequest
+                ? "Status: " + props.item.itemLabel
+                : "Set for: " + props.item.itemLabel
+            }}
           </span>
         </h3>
       </div>
       <div
         class="goal-toggle"
         :class="{ comp: completed, fail: failed }"
-        v-if="hasExpired"
+        v-if="props.hasExpired || isAdmin"
       >
         <h3 class="goal-toggle-text">{{ goalToggleText }}</h3>
         <div class="button-wrapper">
@@ -25,7 +28,8 @@
             class="button-comp"
             :class="{ selected: completed }"
             @click="markAs"
-            :data-goal_id="props.goal.databaseId"
+            :data-item_id="props.item.databaseId"
+            :data-item_userId="props.item.userId"
           >
             ✔
           </button>
@@ -34,19 +38,20 @@
             class="button-fail"
             :class="{ selected: failed }"
             @click="markAs"
-            :data-goal_id="props.goal.databaseId"
+            :data-item_id="props.item.databaseId"
+            :data-item_userId="props.item.userId"
           >
             ✖
           </button>
         </div>
       </div>
-      <div class="progress-bar" v-if="isProgressVisible">
+      <div class="progress-bar" v-if="isProgressVisible && !props.isRequest">
         <h3 class="progress-bar-text">
           <!-- time left:
                     {{ compRate(goal.started, goal.compDate) }} -->
         </h3>
         <div
-          :style="{ width: compRate(props.goal.started, props.goal.compDate) }"
+          :style="{ width: compRate(props.item.started, props.item.compDate) }"
         ></div>
       </div>
     </div>
@@ -57,20 +62,23 @@
 </template>
 
 <script setup>
-import { defineProps, computed, ref, defineEmits } from "vue";
+import { defineProps, computed, ref, defineEmits, inject } from "vue";
+
+const isAdmin = inject("isAdmin");
 
 const isProgressVisible = computed(
-  () => !props.hasExpired && !props.goal.isCompleted && !props.goal.isFailed
+  () => !props.hasExpired && !props.item.isCompleted && !props.item.isFailed
 );
 
-const props = defineProps(["goal", "hasExpired"]);
+const props = defineProps(["item", "hasExpired", "isRequest"]);
+
 const emits = defineEmits(["sendMarkedGoal"]);
 const classes = computed(() => {
   return {
-    day: props.goal.type === "day",
-    week: props.goal.type === "week",
-    month: props.goal.type === "month",
-    year: props.goal.type === "year",
+    day: props.item.type === "day",
+    week: props.item.type === "week",
+    month: props.item.type === "month",
+    year: props.item.type === "year",
     dialog: props.hasExpired,
   };
 });
@@ -92,32 +100,44 @@ const failed = ref(false);
 
 function markAs(e) {
   const isButtonComp = e.target.classList.contains("button-comp");
-  const goalId = e.target.dataset.goal_id;
+
+  const itemId = e.target.dataset.item_id;
+  const userId = e.target.dataset.item_userid;
 
   if (isButtonComp) {
     completed.value = true;
     failed.value = false;
-    goalToggleText.value = "completed";
+    goalToggleText.value = isAdmin ? "accepted" : "completed";
 
     const markedGoal = {
-      goalId,
+      itemId,
       isCompleted: completed.value,
       isFailed: failed.value,
     };
+    const markedRequest = {
+      userId,
+      itemId,
+      itemLabel: "accepted",
+    };
 
-    emits("sendMarkedGoal", markedGoal);
+    emits("sendMarkedGoal", isAdmin ? markedRequest : markedGoal);
   } else {
     completed.value = false;
     failed.value = true;
-    goalToggleText.value = "failed";
+    goalToggleText.value = isAdmin ? "rejected" : "failed";
 
     const markedGoal = {
-      goalId,
+      itemId,
       isCompleted: completed.value,
       isFailed: failed.value,
     };
+    const markedRequest = {
+      userId,
+      itemId,
+      itemLabel: "rejected",
+    };
 
-    emits("sendMarkedGoal", markedGoal);
+    emits("sendMarkedGoal", isAdmin ? markedRequest : markedGoal);
   }
 }
 </script>
@@ -155,7 +175,7 @@ function markAs(e) {
   text-align: center;
   font-weight: bolder;
   font-style: italic;
-  color: brown;
+  color: rgb(184, 75, 75);
 }
 
 .goal-info {
@@ -174,6 +194,7 @@ function markAs(e) {
   border-bottom: solid 2px rgba(92, 88, 97, 0.352);
   align-self: center;
   text-align: center;
+  font-weight: 600;
 }
 .goal-stats {
   position: relative;
@@ -280,6 +301,21 @@ function markAs(e) {
 }
 .label {
   font-size: 1.5rem;
+}
+.goal-content {
+  border: solid 3px rgb(230, 230, 230);
+  border-bottom: solid 10px rgba(157, 157, 157, 0.978);
+  border-bottom: solid 10px rgba(176, 176, 176, 0.978);
+  border: solid 1px rgba(162, 162, 162, 0.389);
+
+  background: radial-gradient(
+    ellipse at bottom left,
+    rgba(109, 106, 255, 0.67) 1%,
+    rgba(117, 200, 255, 0.659) 20%,
+    rgba(244, 236, 209, 0.345) 13%,
+    rgba(234, 231, 224, 0.345) 15%,
+    transparent 95%
+  );
 }
 
 .goal-content.day {

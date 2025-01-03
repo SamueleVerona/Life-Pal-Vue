@@ -4,12 +4,13 @@
       v-if="!hasSomeExpired"
       id="nav"
       @mousedown="handleNavigation"
-      :triggers="navButtonClicked"
+      :toggleProfile="toggleProfile"
+      :isAdmin="isAdmin"
     ></user-nav>
     <section id="user-home-element">
       <user-calendar
         id="calendar-element"
-        v-if="navButtonClicked === 'calendar' && !hasSomeExpired"
+        v-if="navButtonClicked === 'calendar' && !hasSomeExpired && !isAdmin"
         :userData="userData"
         @send-time-id="
           (timeId) => {
@@ -31,8 +32,13 @@
         v-if="navButtonClicked === 'dashboard' && !hasSomeExpired"
         id="dash-element"
         :goalType="timeDivId"
-        :userData="userData"
+        :allGoals="userData"
+        :finished="finished"
+        :unfinished="unfinished"
         :newDate="dateInfo"
+        :toggleProfile="toggleProfile"
+        :isAdmin="isAdmin"
+        :userRequests="userRequests"
         @start-adding="
           () => {
             navButtonClicked = 'goal';
@@ -43,10 +49,11 @@
       <goal-card
         v-if="navButtonClicked === 'goal' && !hasSomeExpired"
         :dateInfo="dateInfo"
-        :dateLabel="dateLabel"
+        :itemLabel="dateLabel"
         :goalType="timeDivId"
+        :isRequest="toggleProfile"
         id="goal-card-element"
-        @goal-saved="resetCal"
+        @goal-saved="resetNav"
       ></goal-card>
     </section>
     <base-dialog
@@ -76,7 +83,7 @@
 </template>
 
 <script setup>
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, ref, computed, onMounted, provide } from "vue";
 import { useStore } from "vuex";
 import UserNav from "../navigation/UserNav.vue";
 import UserDash from "../navigation/UserDash.vue";
@@ -94,11 +101,19 @@ const dashboardBackup = ref();
 const dateInfo = ref();
 const dateLabel = ref();
 
+const isAdmin = computed(() => store.getters.userIsAdmin);
+
+provide('isAdmin', isAdmin.value);
+
 const userData = computed(() => store.getters.userGoals);
+const finished = computed(() => store.getters.finishedGoals);
+const unfinished = computed(() => store.getters.unfinishedGoals);
+
 const expiredGoals = computed(() => store.getters.expiredGoals);
 const hasSomeExpired = computed(() =>
   expiredGoals.value.length > 0 ? true : false
 );
+const userRequests = computed(() => store.getters.allRequests);
 
 const markedGoals = ref({});
 const dialogText = ref("Time to be honest");
@@ -134,23 +149,31 @@ viewInfo.value = today.value;
 const lastView = ref(null);
 const navButtonClicked = ref("calendar");
 
+const toggleProfile = ref(false);
+
 function handleNavigation(e) {
   if (!e.target.id.includes("button")) return;
-
   const targetButton = e.target.dataset.buttonId;
-
-  if (targetButton === "completed" || targetButton === "failed") {
-    timeDivId.value = targetButton;
+  const isProfileButton = targetButton.includes("profile");
+  if (isProfileButton) {
     navButtonClicked.value = "dashboard";
+
+    toggleProfile.value = !toggleProfile.value;
   } else {
     timeDivId.value = dashboardBackup.value;
     navButtonClicked.value = targetButton;
   }
 }
 
-function resetCal() {
-  navButtonClicked.value = "calendar";
+function resetNav() {
+  toggleProfile.value
+    ? (navButtonClicked.value = "dashboard")
+    : (navButtonClicked.value = "calendar");
 }
+
+onMounted(() => {
+  if (isAdmin.value) navButtonClicked.value = "dashboard";
+});
 </script>
 
 <style scoped>
@@ -164,7 +187,7 @@ function resetCal() {
 #nav {
   margin: auto;
   margin-top: 1rem;
-  width: max-content;
+  width: 60%;
   padding: 0.5rem 1rem;
   border: solid 1px rgba(128, 128, 128, 0.308);
   border-radius: 60px;
@@ -193,8 +216,7 @@ goal-item {
 #goal-card-element {
   height: 100%;
 }
-#dash-element,
-:deep(.fc) {
+#dash-element {
   height: 100%;
 }
 
