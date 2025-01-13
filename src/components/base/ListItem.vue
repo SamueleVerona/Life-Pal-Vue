@@ -1,45 +1,66 @@
 <template>
-  <div class="goal-content exploded" :class="classes">
-    <h2 class="goal-title">{{ props.item.title }}</h2>
+  <div class="goal-content" :class="classes">
+    <h2 class="goal-title">
+      {{
+        props.item.title[0].toUpperCase() +
+        props.item.title.slice(1).toLowerCase()
+      }}
+    </h2>
     <div class="goal-info">
       <p class="goal-description">
         {{ props.item.desc }}
       </p>
       <div class="goal-stats">
         <h3 class="goal-date">
+          <span>{{ props.isRequest ? "Status: " : "Set for: " }}</span>
           <span>
-            {{
-              props.isRequest
-                ? "Status: " + props.item.itemLabel
-                : "Set for: " + props.item.itemLabel
-            }}
+            {{ props.item.itemLabel }}
           </span>
         </h3>
       </div>
+      <div class="request-reply" v-if="props.isRequest">
+        <span>Admin says:</span>
+        <button
+          type="button"
+          v-if="isAdmin && props.userIsEditing"
+          @mousedown="() => (adminIsReplying = !adminIsReplying)"
+        >
+          {{ props.item.reply ? "change reply" : "add reply" }}
+        </button>
+        <p>{{ props.item.reply || "no reply yet" }}</p>
+      </div>
+      <div
+        class="admin-reply"
+        v-if="isAdmin && props.userIsEditing && adminIsReplying"
+      >
+        <textarea
+          name="amdin-reply"
+          class="txtarea"
+          rows="3"
+          cols="60"
+          v-model="requestReply"
+        ></textarea>
+      </div>
       <div
         class="goal-toggle"
-        :class="{ comp: completed, fail: failed }"
-        v-if="props.hasExpired || isAdmin"
+        :class="{ comp: goalStatus && markFlag, fail: !goalStatus && markFlag }"
+        v-if="props.hasExpired || (isAdmin && props.userIsEditing)"
       >
         <h3 class="goal-toggle-text">{{ goalToggleText }}</h3>
         <div class="button-wrapper">
           <button
             type="button"
-            class="button-comp"
-            :class="{ selected: completed }"
+            class="button-completed"
+            :class="{ selected: goalStatus && markFlag }"
             @click="markAs"
-            :data-item_id="props.item.databaseId"
-            :data-item_userId="props.item.userId"
           >
             ✔
           </button>
           <button
             type="button"
             class="button-fail"
-            :class="{ selected: failed }"
+            :class="{ selected: !goalStatus && markFlag }"
             @click="markAs"
-            :data-item_id="props.item.databaseId"
-            :data-item_userId="props.item.userId"
           >
             ✖
           </button>
@@ -62,17 +83,18 @@
 </template>
 
 <script setup>
-import { defineProps, computed, ref, defineEmits, inject } from "vue";
+import { defineProps, computed, ref, defineEmits, inject, watch } from "vue";
 
 const isAdmin = inject("isAdmin");
 
 const isProgressVisible = computed(
   () => !props.hasExpired && !props.item.isCompleted && !props.item.isFailed
 );
+const requestReply = ref();
 
-const props = defineProps(["item", "hasExpired", "isRequest"]);
+const props = defineProps(["item", "hasExpired", "isRequest", "userIsEditing"]);
 
-const emits = defineEmits(["sendMarkedGoal"]);
+const emits = defineEmits(["sendMarkedItem", "sendReply"]);
 const classes = computed(() => {
   return {
     day: props.item.type === "day",
@@ -93,53 +115,78 @@ function compRate(start, comp) {
   }
 }
 
-const goalToggleText = ref("mark it");
+const goalToggleText = ref("");
 
-const completed = ref(false);
-const failed = ref(false);
+props.item.itemLabel === "pending"
+  ? (goalToggleText.value = "mark status")
+  : (goalToggleText.value = "change status");
+
+const goalStatus = ref(false);
+const markFlag = ref(false);
+
+// const completed = ref(false);
+// const failed = ref(false);
+const reqStatus = ref();
+const adminIsReplying = ref(false);
 
 function markAs(e) {
-  const isButtonComp = e.target.classList.contains("button-comp");
+  const isButtonComp = e.target.classList.contains("button-completed");
+  const isButtonFail = e.target.classList.contains("button-fail");
 
-  const itemId = e.target.dataset.item_id;
-  const userId = e.target.dataset.item_userid;
+  const itemId = props.item.databaseId;
+  const userId = props.item.userId;
 
   if (isButtonComp) {
-    completed.value = true;
-    failed.value = false;
+    markFlag.value = true;
+
+    goalStatus.value = true;
+    reqStatus.value = "accepted";
     goalToggleText.value = isAdmin ? "accepted" : "completed";
+  }
+  if (isButtonFail) {
+    markFlag.value = true;
 
-    const markedGoal = {
-      itemId,
-      isCompleted: completed.value,
-      isFailed: failed.value,
-    };
-    const markedRequest = {
-      userId,
-      itemId,
-      itemLabel: "accepted",
-    };
-
-    emits("sendMarkedGoal", isAdmin ? markedRequest : markedGoal);
-  } else {
-    completed.value = false;
-    failed.value = true;
+    goalStatus.value = false;
+    reqStatus.value = "rejected";
     goalToggleText.value = isAdmin ? "rejected" : "failed";
+  }
 
-    const markedGoal = {
-      itemId,
-      isCompleted: completed.value,
-      isFailed: failed.value,
-    };
-    const markedRequest = {
-      userId,
-      itemId,
-      itemLabel: "rejected",
-    };
+  const markedGoal = {
+    itemId,
+    isCompleted: goalStatus.value,
+    isFailed: !goalStatus.value,
+  };
+  const markedRequest = {
+    userId,
+    itemId,
+    itemLabel: reqStatus.value,
+    reply: requestReply.value,
+  };
 
-    emits("sendMarkedGoal", isAdmin ? markedRequest : markedGoal);
+  if (reqStatus.value != props.item.itemLabel)
+    emits("sendMarkedItem", isAdmin ? markedRequest : markedGoal);
+}
+
+function sendReply() {
+  if (requestReply.value && requestReply.value.length > 5) {
+    console.log("writing");
+    emits("sendReply", {
+      isReply: true,
+      request: {
+        itemId: props.item.databaseId,
+        userId: props.item.userId,
+        itemLabel: reqStatus.value,
+        reply: requestReply.value,
+      },
+    });
   }
 }
+
+watch(requestReply, () => sendReply());
+watch(props.item, () => {
+  requestReply.value = "";
+  adminIsReplying.value = false;
+});
 </script>
 
 <style scoped>
@@ -148,15 +195,16 @@ function markAs(e) {
   display: flex;
   flex-direction: column;
   margin: 0.8rem 0rem;
-}
-.goal-content.exploded {
+
   min-height: max-content;
-  width: 80%;
+  width: 100%;
+
   border-radius: 40px;
-  align-self: center;
+  /* align-self: center; */
+  box-shadow: var(--basic-shadow);
 }
 
-.goal-content.exploded.dialog {
+.goal-content .dialog {
   min-height: 40%;
   width: 90%;
   margin: 0.5rem auto;
@@ -175,7 +223,6 @@ function markAs(e) {
   text-align: center;
   font-weight: bolder;
   font-style: italic;
-  color: rgb(184, 75, 75);
 }
 
 .goal-info {
@@ -187,14 +234,15 @@ function markAs(e) {
   min-height: 10rem;
 }
 .goal-description {
-  min-height: 3rem;
+  /* min-height: 3rem; */
   width: 90%;
   padding: 0.5rem 1.5rem 0.5rem 0.8rem;
   border: none;
   border-bottom: solid 2px rgba(92, 88, 97, 0.352);
   align-self: center;
   text-align: center;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 2.5rem;
 }
 .goal-stats {
   position: relative;
@@ -207,13 +255,41 @@ function markAs(e) {
   background: rgba(248, 255, 253, 0.164);
   align-self: center;
 }
+
 .goal-date,
-.goal-date span {
+.goal-date span,
+.request-reply span,
+.request-reply p {
   font-size: 1.5rem;
   font-weight: bold;
 }
-.goal-date span {
+.goal-date span:last-child {
   color: brown;
+}
+.goal-date span,
+.request-reply span {
+  color: rgb(0, 87, 187);
+}
+
+.request-reply {
+  border-top: solid 2px rgba(92, 88, 97, 0.177);
+  /* border: solid; */
+  width: max-content;
+  align-self: center;
+  overflow: visible;
+}
+
+.request-reply,
+.admin-reply {
+  text-align: center;
+  margin-bottom: 1rem;
+  position: relative;
+}
+.txtarea {
+  font-size: 1.5rem;
+  font-weight: 500;
+  resize: none;
+  width: 80%;
 }
 
 .goal-toggle {
@@ -224,7 +300,7 @@ function markAs(e) {
 
   width: 50%;
   border-radius: 18px;
-  border: solid 2px;
+  border: solid 2px blue;
   margin-bottom: 0.5rem;
   text-align: center;
   font-size: 1.8rem;
@@ -247,17 +323,30 @@ function markAs(e) {
   border-radius: 18px;
 }
 
-.button-wrapper button {
+.button-wrapper button,
+.request-reply button {
   border: none;
   border-radius: 30px;
   padding: 0rem 0.5rem;
   font-size: 1.5rem;
+  cursor: pointer;
 }
+.request-reply button {
+  position: absolute;
+  font-size: 1.3rem;
+  width: max-content;
+  /* top: 0.4rem; */
+  color: red;
+}
+button:hover {
+  color: aqua;
+}
+
 .goal-toggle.comp {
   border-color: rgb(4, 208, 109);
 }
 
-.button-wrapper .button-comp.selected {
+.button-wrapper .button-completed.selected {
   color: rgb(6, 255, 135);
 }
 .goal-toggle.fail {
@@ -319,19 +408,19 @@ function markAs(e) {
 }
 
 .goal-content.day {
-  border: solid 3px rgb(94, 156, 255);
-  border-bottom: solid 10px rgba(94, 156, 255, 0.978);
-  border-bottom: solid 10px rgba(85, 150, 255, 0.978);
-  border: solid 1px rgba(94, 156, 255, 0.389);
+  border: solid 1px var(--item-goal-day);
 
   background: radial-gradient(
     ellipse at bottom right,
-    rgba(60, 209, 255, 0.742) 1%,
+    var(--item-goal-day) 1%,
     rgba(169, 255, 219, 0.659) 35%,
     rgba(209, 244, 231, 0.345) 18%,
     rgba(224, 234, 230, 0.345) 20%,
     transparent 95%
   );
+}
+.goal-content.day .goal-title {
+  color: var(--item-goal-day);
 }
 .goal-content.week {
   border: solid 1px rgb(255, 116, 47, 0.389);

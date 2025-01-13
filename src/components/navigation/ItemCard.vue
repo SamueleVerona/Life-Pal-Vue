@@ -38,10 +38,15 @@
         </div>
       </template>
       <template #button>
-        <div id="goal-card-controls" class="card-section">
-          <button type="button" id="button-save" @click="handleSubmit">
+        <div
+          id="goal-card-controls"
+          class="card-section"
+          @mousedown="handleSubmit"
+        >
+          <button type="button" id="button-save">
             {{ props.isRequest ? "send" : "save" }}
           </button>
+          <button type="button" id="button-back">back</button>
         </div>
       </template>
     </base-card>
@@ -54,15 +59,22 @@ import { ref, defineProps, defineEmits, onBeforeMount } from "vue";
 
 const store = useStore();
 const props = defineProps(["dateInfo", "itemLabel", "goalType", "isRequest"]);
-const emits = defineEmits(["goalSaved"]);
+const emits = defineEmits(["goalSaved", "backAction"]);
 
 const inputTitle = ref("");
 const inputDesc = ref("");
 const compDate = ref();
 onBeforeMount(() => (compDate.value = props.dateInfo));
 
-function handleSubmit() {
-  props.isRequest ? addRequest() : addGoal();
+function handleSubmit(e) {
+  const target = e.target;
+  const isSubmitBtn = target.id.includes("save");
+
+  if (isSubmitBtn) {
+    props.isRequest ? addRequest() : addGoal();
+  } else {
+    emits("backAction");
+  }
 }
 
 const id = ref(
@@ -114,10 +126,47 @@ async function addGoal() {
   font-family: "Poppins", sans-serif;
   font-style: oblique;
 }
+
 #goal-card-element {
   border-radius: 30px;
-  border: solid 2px rgba(252, 175, 31, 0.781);
-  border-bottom: solid 10px rgba(252, 178, 31, 0.781);
+  border: solid 2px var(--glow-item-card-dark);
+  /* border-bottom: solid 10px rgba(252, 178, 31, 0.781); */
+  box-shadow: 0rem 3rem 4rem var(--glow-item-card-dark),
+    0rem 6rem 5rem 5rem var(--glow-item-card-dark);
+
+  position: relative;
+  animation: shadow-glow 2s infinite ease-in-out;
+}
+
+#goal-card-element::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+
+  width: 8rem;
+  height: 5rem;
+  border: none;
+  border-left: solid 2px rgba(252, 175, 31, 0.781);
+  border-top: solid 2px rgba(252, 175, 31, 0.781);
+  border-top-left-radius: 30px;
+  z-index: -1;
+}
+@keyframes shadow-glow {
+  0% {
+    box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
+      0rem 5rem 10rem 5rem var(--glow-item-card-dark);
+  }
+
+  50% {
+    box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
+      0rem 5rem 10rem 8rem var(--glow-item-card-light);
+  }
+
+  100% {
+    box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
+      0rem 5rem 10rem 5rem var(--glow-item-card-dark);
+  }
 }
 
 #goal-card {
@@ -229,5 +278,23 @@ button {
   background: transparent;
   border: solid 2px rgb(255, 59, 69);
   border-bottom: solid 3px rgb(255, 36, 94);
+}
+
+#button-back {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+}
+#button-back:hover {
+  color: rgb(16, 201, 177);
+}
+
+@media screen and (max-width: 425px) {
+  #goal-card-element {
+    width: 100%;
+  }
 }
 </style>

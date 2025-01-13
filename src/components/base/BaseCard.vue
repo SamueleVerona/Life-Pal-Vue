@@ -2,7 +2,7 @@
   <div class="container">
     <section class="card-content" v-if="$slots.title">
       <slot name="title" class="title">
-        <h2>Titolo</h2>
+        <!-- <h2>Titolo</h2> -->
       </slot>
       <slot name="content" class="content">
         <p>Ipse dixit descritione</p>

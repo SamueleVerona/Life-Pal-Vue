@@ -11,7 +11,7 @@
           :disabled="props.toggleProfile || isAdmin"
         >
           <span class="front" inert>calendar</span>
-          <span class="back" inert>dash:</span>
+          <span class="back" inert>dashboard:</span>
         </button>
       </li>
       <li>
@@ -20,12 +20,36 @@
           id="button-dash"
           class="btn-primary-nav flip-button"
           :class="{ flipped: props.toggleProfile || $props.isAdmin }"
+          :disabled="props.toggleProfile || props.isAdmin"
           data-button-id="dashboard"
         >
-          <span class="front" inert>goals</span>
+          <span class="front" inert>dashboard</span>
           <span class="back" inert>requests</span>
         </button>
       </li>
+      <li>
+        <button
+          type="button"
+          id="button-unsub"
+          class="btn-primary-nav"
+          data-button-id="unsub"
+          v-if="!props.isAdmin && props.toggleProfile"
+        >
+          delete account
+        </button>
+      </li>
+      <li>
+        <button
+          type="button"
+          id="button-log"
+          class="btn-primary-nav"
+          v-if="props.toggleProfile || props.isAdmin"
+          data-button-id="log"
+        >
+          log out
+        </button>
+      </li>
+
       <li>
         <button
           type="button"
@@ -41,7 +65,6 @@
 
 <script setup>
 import { defineProps } from "vue";
-
 const props = defineProps(["toggleProfile", "isAdmin"]);
 </script>
 
@@ -50,7 +73,7 @@ const props = defineProps(["toggleProfile", "isAdmin"]);
   font-family: "Poppins", Sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
+  /* color: #2c3e50; */
 }
 nav {
   position: relative;
@@ -62,86 +85,111 @@ ul {
   align-items: center;
   list-style: none;
   background: transparent;
-  border-radius: 60px;
 }
 
 .btn-primary-nav {
   flex: 1;
   box-sizing: border-box;
   width: max-content;
-  height: 100%;
-  padding: 0.8rem 1.5rem;
-  border-radius: 30px;
-  margin: 0rem 0.5rem;
+  padding: 0.5rem 1rem;
+
   font-size: 3rem;
   font-family: inherit;
   font-weight: bolder;
   background: none;
-  border: solid 1px rgb(218, 218, 218);
-  border-bottom: solid 3px rgb(218, 218, 218);
+  border: none;
+  color: inherit;
+
+  cursor: pointer;
+  transition: color 0.1s ease-out;
 }
+#button-calendar {
+  border-right: solid 1px rgb(218, 218, 218);
+}
+#button-calendar.flipped {
+  border: none;
+}
+
 .btn-primary-nav.flip-button {
   height: 100%;
   position: relative;
-  min-width: 16rem;
 }
 
-.btn-primary-nav.flip-button span {
-  height: 100%;
-  width: 100%;
-  font-size: 3rem;
-  top: 0;
-  left: 0;
-  transition: all 0.4s;
-}
-
-button:active {
-  border: solid 1px rgb(1, 217, 229);
-  border-bottom: solid 2px rgb(0, 242, 255);
-  color: rgb(4, 167, 172);
-}
-.front {
+span {
   display: block;
+  height: 100%;
+  font-size: 3rem;
+
+  transition: transform 0.4s ease;
+}
+
+span.front {
   backface-visibility: hidden;
   transform: rotateX(0deg);
 }
-.flip-button.flipped > .front {
-  opacity: 0;
-  transform: rotateX(180deg);
-}
-.back {
-  align-items: center;
-  justify-content: center;
-  display: flex;
 
+span.back {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  align-content: center;
+  top: 0;
+  left: 0;
+
+  min-width: 100%;
 
   backface-visibility: hidden;
   transform: rotateX(180deg);
   opacity: 0;
-  /* border: solid; */
   line-height: 3rem;
 }
+.btn-primary-nav.flip-button.flipped {
+  width: 20rem;
+  border: none;
+}
 
-.flip-button.flipped > .back {
+.flip-button.flipped .front {
+  opacity: 0;
+  transform: rotateX(180deg);
+}
+
+.flip-button.flipped span.back {
   transform: rotateX(0deg);
   opacity: 1;
 }
+#button-dash.flipped {
+  width: 16rem;
+}
 
-#button-calendar.flipped {
-  border-color: transparent;
-  /* padding: 0rem; */
-  /* margin: 0; */
-  /* width: max-content; */
+.btn-primary-nav:not(:disabled):hover {
+  color: rgb(4, 167, 172);
+}
+button:not(:disabled):active {
+  border-color: rgb(1, 217, 229);
+  color: rgb(4, 167, 172);
 }
 
 #button-profile {
+  margin-left: 0.5rem;
+  margin-right: 2rem;
   height: 6rem;
   aspect-ratio: 1/1;
   background-image: url(/src/assets/user.png);
   background-size: cover;
+  border: none;
+}
+#button-log {
+  border: none;
+  border-left: solid 1px rgb(218, 218, 218);
+
+  color: rgb(0, 145, 255);
+}
+#button-unsub {
+  border: none;
+  border-left: solid 1px rgb(218, 218, 218);
+
+  color: rgb(121, 0, 127);
+}
+#button-log:hover,
+#button-unsub:hover {
+  color: rgb(255, 0, 38);
 }
 </style>

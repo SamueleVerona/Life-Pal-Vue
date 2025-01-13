@@ -3,7 +3,7 @@
     id="dash-element"
     class="has-goals"
     :class="{
-      'no-goals': userData.length === 0,
+      'no-goals': !itemsArray.length,
       completed: primaryOptionSelected === 'completed',
       failed: primaryOptionSelected === 'failed',
     }"
@@ -14,20 +14,20 @@
           <div id="selector-primary-filter" class="selector">
             <div
               id="selector-primary-list"
-              class="selector-list is-hidden"
-              @mousedown="selectFilterOption"
+              class="selector-list"
+              v-if="primaryFilterToggle"
             >
               <div
                 v-for="option in primaryFilterOptions"
                 :key="option"
-                class="option selector-option"
+                class="option selector-option option-primary"
               >
                 {{ option }}
               </div>
             </div>
-            <span class="selector-option selected" inert>{{
-              primaryOptionSelected
-            }}</span>
+            <span class="selector-option selected" inert
+              >{{ primaryOptionSelected }}
+            </span>
           </div>
 
           <div
@@ -37,15 +37,19 @@
           >
             <div
               id="selector-secondary-list"
-              class="selector-list is-hidden"
-              @mousedown="selectFilterOption"
+              class="selector-list"
+              v-if="secondaryFilterToggle"
             >
-              <div class="selector-secondary-option selector-option">all</div>
+              <div
+                class="selector-secondary-option selector-option option-secondary option"
+              >
+                all
+              </div>
               <div
                 v-for="el in secondaryFilterOptions"
                 :value="el"
                 :key="el"
-                class="selector-secondary-option selector-option"
+                class="selector-secondary-option selector-option option-secondary option"
               >
                 {{ el }}
               </div>
@@ -58,36 +62,53 @@
         <button
           id="button-new"
           class="button-dash-secondary"
-          @mousedown="() => emits('startAdding')"
+          v-if="
+            props.profileModeActive &&
+            !props.userIsAdmin &&
+            itemsArray.length > 0
+          "
+          @mousedown="() => emits('openNewItem')"
         >
           add
         </button>
         <button
           id="button-dash-stats"
           class="button-dash-secondary"
+          v-if="!props.userIsAdmin && !props.profileModeActive"
           @mousedown="toggleStats"
         >
           stats
         </button>
       </header>
-      <section id="goals-container">
+      <section id="items-container">
         <div v-if="!itemsArray.length" class="empty-list">
-          <h2 v-if="!isAdding">No goals yet!</h2>
+          <h2 v-if="!userIsAdding">
+            {{
+              props.profileModeActive ? "No requests here!" : "No goals yet!"
+            }}
+          </h2>
           <button
             type="button"
-            @click="showNewGoal"
+            @mousedown="handleStart"
             class="button-start"
-            v-if="!isAdding"
+            v-if="!userIsAdding"
           >
-            Start planning
+            {{ props.profileModeActive ? "Send one" : "Start planning" }}
           </button>
         </div>
-        <ul v-else-if="itemsArray.length > 0">
+        <ul v-else-if="itemsArray.length">
           <li v-for="item in itemsArray" :key="item.id">
-            <goal-item
+            <list-item
               :item="item"
-              :isRequest="props.toggleProfile || props.isAdmin"
-              @sendMarkedGoal="handleMarkedItems"
+              :isRequest="props.profileModeActive || props.userIsAdmin"
+              :userIsEditing="userIsEditing"
+              @sendMarkedItem="handleMarkedItems"
+              @sendReply="
+                (item) => {
+                  userIsEditing = item.isReply;
+                  handleMarkedItems(item.request);
+                }
+              "
             >
               <template #selector>
                 <input
@@ -95,52 +116,68 @@
                   type="checkbox"
                   :key="item.id"
                   :name="item.id"
-                  :value="item.databaseId"
+                  :value="{
+                    userId: item.userId,
+                    id: item.databaseId,
+                  }"
                   v-model="selectedItems"
-                  v-if="userIsEditing"
+                  v-if="userIsEditing && userIsDeleting"
                 />
               </template>
-            </goal-item>
+            </list-item>
           </li>
         </ul>
       </section>
       <div id="dash-footer" @mousedown="handleListEdit">
         <button
           type="button"
-          id="button-edit"
+          id="button-save-change"
           class="button-dash-secondary"
-          v-if="!isAdding && itemsArray.length > 0"
+          v-if="userIsEditing && props.userIsAdmin"
         >
-          Edit
+          save
         </button>
         <button
           type="button"
           id="button-rem"
           class="button-dash-secondary"
-          v-if="userIsEditing"
+          v-if="userIsEditing && props.userIsAdmin"
         >
           delete
         </button>
         <button
           type="button"
-          id="button-select-all"
+          id="button-confirm"
           class="button-dash-secondary"
-          v-if="userIsEditing"
+          v-if="userIsEditing && userIsDeleting"
         >
-          select all
+          confirm
         </button>
         <button
           type="button"
-          id="button-save-change"
+          id="button-select-all"
           class="button-dash-secondary"
-          v-if="userIsEditing"
+          v-if="userIsEditing && userIsDeleting"
         >
-          save changes
+          select all
+        </button>
+
+        <button
+          type="button"
+          id="button-edit"
+          class="button-dash-secondary"
+          v-if="!userIsAdding && itemsArray.length"
+        >
+          {{ props.userIsAdmin ? "edit" : "delete" }}
         </button>
       </div>
     </section>
-    <section id="section-stats" v-if="!props.toggleRequests && !isAdmin">
-      <section id="section-stats-content" v-if="isStatsVisible">
+    <section
+      id="section-stats"
+      class="maximized"
+      v-if="!props.profileModeActive && !userIsAdmin"
+    >
+      <section id="section-stats-content" v-if="statsSectionVisible">
         <div class="stat">
           <h3 class="progress-bar-text">
             All time goals:
@@ -150,7 +187,7 @@
         <div class="stat">
           <h3 class="progress-bar-text">
             Ongoing:
-            {{ userStats.string }}
+            {{ userStats.stringRate }}
           </h3>
           <div class="progress-bar">
             <div
@@ -194,7 +231,7 @@
 
     <base-dialog
       class="dialog-dash"
-      :show="userIsDeleting"
+      :show="userIsConfirming"
       :errorMessage="
         selectedItems.length > 1
           ? `Once they're gone, they're gone`
@@ -204,10 +241,10 @@
       :allConfirmed="selectedItems.length > 0"
       :buttonBackground="`var(--dialog-button-color-delete)`"
       :wrapperBackground="`var(--dialog-wrapper-color-delete)`"
-      @confirm-action="deleteGoals"
+      @confirm-action="deleteItems"
       @close="
         () => {
-          userIsDeleting = false;
+          userIsConfirming = false;
         }
       "
     >
@@ -221,41 +258,16 @@ import { ref, defineProps, defineEmits, computed, onMounted, watch } from "vue";
 
 const store = useStore();
 const props = defineProps([
-  "goalType",
+  "calendarTimeOpt",
   "allGoals",
   "finished",
   "unfinished",
   "insertNewGoal",
-  "newDate",
-  "toggleProfile",
+  "profileModeActive",
   "userRequests",
-  "isAdmin",
+  "userIsAdmin",
 ]);
-const emits = defineEmits(["startAdding"]);
-
-const userData = computed(() => {
-  let filtered;
-  switch (primaryOptionSelected.value) {
-    case "completed":
-      filtered = props.finished.filter((goal) => goal.isCompleted);
-      break;
-    case "failed":
-      filtered = props.finished.filter((goal) => goal.isFailed);
-      break;
-    case "all goals":
-      {
-        filtered = props.unfinished;
-      }
-      break;
-    default:
-      filtered = props.unfinished.filter(
-        (goal) => goal.type === primaryOptionSelected.value
-      );
-      break;
-  }
-
-  return filtered;
-});
+const emits = defineEmits(["openCalendar", "openNewItem", "maxItemsReached"]);
 
 function setOptions(itemsArr) {
   return itemsArr
@@ -274,135 +286,173 @@ const goalsFilterOptions = [
   "completed",
   "failed",
 ];
-
 const requestsFilterOptions = ["pending", "accepted", "rejected"];
 
 const primaryFilterOptions = computed(() =>
-  props.toggleProfile || props.isAdmin
+  props.profileModeActive || props.userIsAdmin
     ? requestsFilterOptions
     : goalsFilterOptions
 );
-const secondaryFilterOptions = computed(() => setOptions(userData.value));
+
+const secondaryFilterOptions = computed(() => setOptions(userGoals.value));
 const secondaryOptionSelected = ref("all");
+
+const userGoals = computed(() => {
+  let filtered;
+  switch (primaryOptionSelected.value) {
+    case "completed":
+      filtered = props.finished.filter((goal) => goal.isCompleted);
+      break;
+    case "failed":
+      filtered = props.finished.filter((goal) => goal.isFailed);
+
+      break;
+    case "all goals":
+      {
+        filtered = props.unfinished;
+      }
+      break;
+    default:
+      filtered = props.unfinished.filter(
+        (goal) => goal.type === primaryOptionSelected.value
+      );
+      break;
+  }
+  return filtered;
+});
 
 const filteredGoals = computed(() => {
   if (secondaryOptionSelected.value === "all") {
-    return userData.value;
+    return userGoals.value;
   } else {
-    return userData.value.filter(
+    return userGoals.value.filter(
       (goal) => goal.itemLabel === secondaryOptionSelected.value
     );
   }
 });
 
+const filteredRequests = computed(() =>
+  props.userRequests.filter(
+    (req) => req.itemLabel === primaryOptionSelected.value
+  )
+);
+
 const itemsArray = computed(() =>
-  props.toggleProfile || props.isAdmin
+  props.profileModeActive || props.userIsAdmin
     ? filteredRequests.value
     : filteredGoals.value
 );
 
-const isAdding = ref(false);
+const userIsAdding = ref(false);
 const userIsEditing = ref(false);
 const selectedItems = ref([]);
 const primaryOptionSelected = ref();
 
 watch(selectedItems, () => {
-  const currGoalsTotal = filteredGoals.value.length;
-  const currSelectedGoals = selectedItems.value.length;
+  const currTotalItms = itemsArray.value.length;
+  const currSelectedItms = selectedItems.value.length;
 
-  currSelectedGoals < currGoalsTotal
+  currSelectedItms < currTotalItms
     ? (allSelectedFlag.value = false)
     : (allSelectedFlag.value = true);
 });
 
 watch(props, () => {
-  props.toggleProfile || props.isAdmin
-    ? (primaryOptionSelected.value = "pending")
-    : (primaryOptionSelected.value = props.goalType);
+  if (props.profileModeActive || props.userIsAdmin) {
+    primaryOptionSelected.value = "pending";
+  } else {
+    primaryOptionSelected.value = props.calendarTimeOpt;
+  }
 });
 
-async function deleteGoals() {
+async function deleteItems() {
   try {
-    await store.dispatch("deleteData", selectedItems.value);
+    await store.dispatch("deleteData", {
+      type: props.profileModeActive || props.userIsAdmin ? "request" : "goal",
+      items: selectedItems.value,
+    });
     userIsEditing.value = false;
     userIsDeleting.value = false;
-
-    selectedItems.value = [];
   } catch (err) {
     console.log(err);
   }
+  selectedItems.value = [];
+  userIsConfirming.value = false;
 }
 
-function toggleDeleteBtn() {
+function toggleListEdit() {
   userIsEditing.value = !userIsEditing.value;
+  if (!props.userIsAdmin) userIsDeleting.value = true;
 }
 
-function showNewGoal() {
-  emits("startAdding");
+function addNewItem() {
+  emits("openNewItem");
 }
+function handleStart() {
+  props.profileModeActive ? addNewItem() : emits("openCalendar");
+}
+
+const primaryFilterToggle = ref(false);
+const secondaryFilterToggle = ref(false);
 
 function handleMousedown(e) {
   const target = e.target;
-  const isSelector = target.classList.contains("selector");
-  const isFilteroption = target.classList.contains("selector-option");
+  const validTarget = target.classList.contains("selector");
+
+  const isPrimFilter = target.id.includes("primary-filter");
+  const isSecFilter = target.id.includes("secondary-filter");
+  const isFilteroption = target.classList.contains("option");
   const isRequestBtn = target.id.includes("request");
 
-  if (isSelector) {
-    target.classList.toggle("open");
-    target.firstElementChild.classList.toggle("is-hidden");
-  } else if (isFilteroption) {
-    target.parentElement.classList.add("is-hidden");
-
-    document
-      .querySelectorAll(".selector")
-      .forEach((el) => el.classList.remove("open"));
-  } else if (isRequestBtn) {
-    showNewGoal();
-  } else {
-    document
-      .querySelectorAll(".selector")
-      .forEach((el) => el.classList.remove("open"));
-
-    document.querySelectorAll(".selector-list").forEach((el) => {
-      el.classList.add("is-hidden");
-    });
+  if (!validTarget) {
+    primaryFilterToggle.value = false;
+    secondaryFilterToggle.value = false;
+    userIsEditing.value = false;
+  }
+  if (isPrimFilter) {
+    primaryFilterToggle.value = !primaryFilterToggle.value;
+  }
+  if (isSecFilter) {
+    secondaryFilterToggle.value = !secondaryFilterToggle.value;
+  }
+  if (isFilteroption) {
+    selectFilterOption(target);
+  }
+  if (isRequestBtn) {
+    addNewItem();
   }
 }
-function selectFilterOption(e) {
+
+function selectFilterOption(target) {
   userIsEditing.value = false;
   selectedItems.value = [];
-  const target = e.target;
-  const isFilterOption = e.target.classList.contains("option");
+  const isPrimary = target.classList.contains("option-primary");
+  const isSecondary = target.classList.contains("option-secondary");
   const optionText = target.textContent.trim();
-
-  if (props.toggleProfile || props.isAdmin) {
-    primaryOptionSelected.value = optionText;
-  } else if (isFilterOption) {
+  if (isPrimary) {
     primaryOptionSelected.value = optionText;
     secondaryOptionSelected.value = "all";
-  } else {
-    secondaryOptionSelected.value = optionText;
   }
+  if (isSecondary) secondaryOptionSelected.value = optionText;
 }
 
-const isStatsVisible = ref(false);
+const statsSectionVisible = ref(false);
+
 function toggleStats() {
-  isStatsVisible.value = !isStatsVisible.value;
+  statsSectionVisible.value = !statsSectionVisible.value;
   const section = document.querySelector("#section-stats");
   section.classList.toggle("maximized");
 }
 
 const userStats = computed(() => {
   const totalGoals = props.allGoals.length;
-  const totalOngoing = props.allGoals.filter(
-    (goal) => goal.isCompleted === false && goal.isFailed === false
-  ).length;
+  const totalOngoing = props.unfinished.length;
 
-  const totalCompleted = props.allGoals.filter(
+  const totalCompleted = props.finished.filter(
     (goal) => goal.isCompleted === true
   ).length;
 
-  const totalFailed = props.allGoals.filter(
+  const totalFailed = props.finished.filter(
     (goal) => goal.isFailed === true
   ).length;
 
@@ -418,7 +468,7 @@ const userStats = computed(() => {
     (totalOngoing * 100) / (totalGoals ? totalGoals : 1) + "%";
 
   return {
-    string: `${totalOngoing}/${totalGoals}`,
+    stringRate: `${totalOngoing}/${totalGoals}`,
     ongoingRate,
     successRate,
     failRate,
@@ -426,8 +476,11 @@ const userStats = computed(() => {
 });
 
 const allSelectedFlag = ref(false);
+
 function selectAll() {
-  const allSelected = filteredGoals.value.map((goal) => goal.databaseId);
+  const allSelected = itemsArray.value.map((item) => {
+    return { userId: item.userId, id: item.databaseId };
+  });
 
   if (!allSelectedFlag.value && selectedItems.value.length === 0) {
     selectedItems.value = allSelected;
@@ -439,29 +492,30 @@ function selectAll() {
 }
 
 const userIsDeleting = ref(false);
+const userIsConfirming = ref(false);
+
 function handleListEdit(e) {
   const targetButton = e.target.id.slice(7);
-
   switch (targetButton) {
     case "edit":
-      toggleDeleteBtn();
+      toggleListEdit();
       break;
     case "rem":
-      userIsDeleting.value = true;
+      userIsDeleting.value = !userIsDeleting.value;
       break;
     case "select-all":
       selectAll();
+      break;
+    case "confirm":
+      userIsConfirming.value = true;
+      break;
+    case "save-change":
+      sendMarkedReqs();
       break;
     default:
       return;
   }
 }
-
-const filteredRequests = computed(() =>
-  props.userRequests.filter(
-    (req) => req.itemLabel === primaryOptionSelected.value
-  )
-);
 
 function handleMarkedItems(item) {
   const id = item.itemId;
@@ -472,10 +526,22 @@ function handleMarkedItems(item) {
     : selectedItems.value.push(item);
 }
 
+function sendMarkedReqs() {
+  store.dispatch("changeReqState", selectedItems.value);
+  userIsEditing.value = false;
+}
+
+watch(itemsArray, () => {
+  if (props.profileModeActive)
+    itemsArray.value.length === 10
+      ? emits("maxItemsReached", true)
+      : emits("maxItemsReached", false);
+});
+
 onMounted(() => {
-  props.toggleProfile || props.isAdmin
+  props.profileModeActive || props.userIsAdmin
     ? (primaryOptionSelected.value = "pending")
-    : (primaryOptionSelected.value = props.goalType);
+    : (primaryOptionSelected.value = props.calendarTimeOpt);
 });
 </script>
 
@@ -488,12 +554,10 @@ onMounted(() => {
   position: relative;
   display: flex;
   flex-direction: row;
-  border-radius: 35px;
+  border-radius: 30px;
 
   border: solid 2px rgb(218, 218, 218);
   border-bottom: solid 3px rgb(218, 218, 218);
-  /* border: solid 2px rgba(35, 212, 243, 0.704);
-  border-bottom: solid 10px rgba(23, 177, 204, 0.704); */
 }
 .has-goals {
   background: linear-gradient(70deg, #d9eef81b 40%, #e7dfffdb 100%);
@@ -503,13 +567,48 @@ onMounted(() => {
 }
 
 #dash-element.completed {
-  border: solid 2px rgba(31, 252, 116, 0.781);
-  border-bottom: solid 3px rgba(31, 252, 116, 0.781);
+  border: solid 2px var(--glow-dash-comp-dark);
+  border-bottom: solid 3px var(--glow-dash-comp-dark);
+  animation: shadow-glow-comp 3s infinite;
 }
 
 #dash-element.failed {
-  border: solid 2px rgb(156, 81, 255);
-  border-bottom: solid 3px rgb(152, 41, 255);
+  border: solid 2px var(--glow-dash-fail-dark);
+  border-bottom: solid 3px var(--glow-dash-fail-dark);
+  animation: shadow-glow-fail 3s infinite ease-out;
+}
+
+@keyframes shadow-glow-comp {
+  0% {
+    box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
+      0rem 5rem 10rem 3rem var(--glow-dash-comp-dark);
+  }
+
+  50% {
+    box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
+      0rem 5rem 10rem 8rem var(--glow-dash-comp-light);
+  }
+
+  100% {
+    box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
+      0rem 5rem 10rem 3rem var(--glow-dash-comp-dark);
+  }
+}
+@keyframes shadow-glow-fail {
+  0% {
+    box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
+      0rem 5rem 10rem 3rem var(--glow-dash-fail-dark);
+  }
+
+  50% {
+    box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
+      0rem 5rem 10rem 8rem var(--glow-dash-fail-light);
+  }
+
+  100% {
+    box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
+      0rem 5rem 10rem 3rem var(--glow-dash-fail-dark);
+  }
 }
 
 #section-items-display {
@@ -529,7 +628,7 @@ header {
   align-items: center;
   justify-content: start;
   z-index: 1;
-  /* border: solid; */
+  height: max-content;
 }
 
 #container-filters {
@@ -540,8 +639,7 @@ header {
   overflow: visible;
 }
 
-.selector,
-.button-dash-secondary {
+.selector {
   min-width: 10rem;
   max-width: max-content;
   padding: 0rem 1.2rem;
@@ -550,65 +648,104 @@ header {
   overflow: visible;
 
   background: transparent;
-  border: solid 2px;
-  border-bottom: solid 4px;
-  border-radius: 30px;
-
+  border: none;
+  border-right: solid 1px rgba(128, 128, 128, 0.363);
   align-content: center;
-  font-size: 2rem;
+  font-size: 3rem;
   text-align: center;
   cursor: pointer;
 }
 
-.selector {
-  box-shadow: 0rem 0.3rem 0rem 0rem rgb(120, 120, 131),
-    0rem 0.6rem 0rem 0rem rgb(173, 173, 190);
+.button-dash-secondary {
+  position: relative;
+  height: 5rem;
+  margin: 0rem 0.3rem;
+  padding: 0rem 1.5rem;
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 400;
+  background: white;
+  border: solid 2px rgba(128, 128, 128, 0.363);
+  border-radius: 30px;
+  box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);
+  cursor: pointer;
+}
+.selector:last-child {
+  border: none;
+}
+
+.selector:has(.selected):hover .selected {
+  color: #13c7d7;
 }
 
 .open {
   box-shadow: none;
 }
 
-#selector-primary-filter {
-  border-color: rgb(0, 213, 206);
-  border-bottom-color: rgb(0, 172, 178);
-}
 #selector-secondary-filter {
-  border-color: rgb(236, 162, 34);
-  border-bottom-color: rgb(183, 125, 26);
-  height: 4rem;
+  margin-left: 0.5rem;
 }
 .selector-list {
   position: absolute;
-  top: 5rem;
+  padding-top: 0.25rem;
+  top: 5.5rem;
   left: 0;
-  border: solid 2px;
   background: transparent;
-  backdrop-filter: blur(5px);
-  text-align: center;
-  border-radius: 20px;
+  backdrop-filter: blur(4px);
+  border-right: solid 1px;
+  border-bottom: solid 1px;
+  border-bottom-right-radius: 30px;
+  /* border: none; */
+  width: 100%;
 }
 
 #selector-primary-list {
   border-color: rgb(0, 213, 206);
 }
 #selector-secondary-list {
-  border-color: rgb(236, 162, 34);
-  top: 4rem;
+  border-color: rgb(158, 3, 255);
+  width: max-content;
 }
 
 .selector-option {
-  font-size: 2rem;
-  padding: 0.5rem;
-  border-radius: 20px;
-  text-align: center;
+  font-size: 2.2rem;
+  padding: 0rem 1rem 0.5rem 1.5rem;
+  text-align: left;
   cursor: pointer;
+  border-bottom: solid 2px rgb(0, 213, 206);
+  border: none;
+}
+.selector-option.selected {
+  font-size: 3rem;
+}
+
+.selector-option:last-child {
+  border: none;
+}
+
+#selector-secondary-list .selector-option {
+  border-color: rgb(158, 3, 255);
 }
 
 .selected {
-  font-size: 2.5rem;
   color: #000000;
   font-weight: 600;
+}
+.selector-option.selected::after {
+  content: "";
+  background-image: url("/src/assets/down-arrow.png");
+  background-size: cover; /* Oppure "contain" o altre opzioni */
+  background-position: center;
+  display: inline-block;
+  margin-left: 1rem;
+  width: 2rem;
+  height: 2rem;
+  transform: translateY(10%);
+  justify-items: center;
+  transition: transform 0.2s ease;
+}
+.selector:has(.selector-list) .selector-option.selected::after {
+  transform: rotate(180deg);
 }
 
 .selector-option:hover {
@@ -619,64 +756,63 @@ header {
   display: none;
 }
 
-.button-dash-secondary {
-  height: 4rem;
-  margin: 0rem 0.3rem;
-  min-width: 6rem;
-  font-weight: bold;
-}
-
-#button-comp {
-  border-color: rgb(67, 210, 129);
-  border-bottom-color: rgb(48, 209, 129);
-  color: rgb(48, 209, 129);
-}
-
-#button-fail {
-  border-color: rgb(156, 81, 255);
-  border-bottom-color: rgb(152, 41, 255);
-  color: rgb(152, 41, 255);
-}
-
-#button-comp:hover,
-#button-fail:hover {
-  color: #13acd7;
-}
-
-#goals-container {
-  padding: 0rem 1rem;
-  max-height: 80%;
+#items-container {
+  padding: 1rem 1rem;
+  height: 100%;
+  scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
-  scrollbar-color: rgb(98, 37, 253) rgba(3, 3, 255, 0);
+  scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
   overflow-y: auto;
+  overflow-x: visible;
   z-index: 0;
+}
+
+#items-container ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: auto;
+
+  grid-template-areas: "li li";
+  gap: 0;
+}
+#items-container ul li {
+  margin: 0rem 0.5rem;
+  overflow: visible;
+  z-index: 1;
+
+  /* border: solid; */
 }
 
 #dash-footer {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-end;
   min-height: max-content;
   width: 100%;
   padding: 1rem 1rem;
   justify-self: bottom;
   overflow: visible;
-}
-
-.button-dash-secondary:hover {
-  color: rgb(10, 214, 221);
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
 }
 
 #button-edit {
-  background: rgb(255, 229, 203);
-  border: none;
-  border-bottom: solid 4px #d2a977;
+  background: rgb(255, 76, 66);
+  border-color: rgb(249, 83, 83);
+  color: white;
+}
+#button-edit:hover {
+  /* color: white; */
+}
+.button-dash-secondary:hover {
+  color: rgb(9, 247, 255);
+  box-shadow: 0rem 0.2rem 0.5rem rgba(128, 128, 128, 0.434);
 }
 
 #button-rem {
   background: rgba(255, 125, 125, 0.995);
   border: none;
-  border-bottom: solid 4px #a34343;
   color: white;
 }
 #button-rem:hover {
@@ -686,7 +822,6 @@ header {
 
 #button-select-all {
   border: solid 1px rgba(35, 212, 243, 0.704);
-  border-bottom: solid 4px rgba(35, 212, 243, 0.704);
 }
 
 li {
@@ -723,27 +858,58 @@ h2,
 .remove-checkbox {
   appearance: none;
   cursor: pointer;
-  width: 2.3rem;
-  height: 2.3rem;
+  width: 100%;
+  height: 100%;
   border: 2px solid rgb(0, 0, 0);
   border-bottom: 3px solid rgba(0, 0, 0, 0.986);
 
-  border-radius: 12px;
   position: absolute;
-  bottom: 0.5rem;
-  right: 1.5rem;
+  bottom: 0rem;
+  right: 0;
+  border: solid 3px rgb(255, 0, 128);
+
+  border-radius: 40px;
+  backdrop-filter: blur(2px);
+}
+.remove-checkbox::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4rem;
+  aspect-ratio: 1;
+
+  border-bottom-left-radius: 20px;
+
+  border-left: solid 3px;
+  border-bottom: solid 3px;
+  border-color: rgb(255, 0, 128);
+  background: transparent;
 }
 .remove-checkbox:checked {
-  border: 2px solid rgb(255, 55, 119);
-  border-bottom: 3px solid rgba(255, 1, 1, 0.986);
-  background: rgb(239, 40, 103);
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 46, 46, 0.393),
+    transparent 60%
+  );
+}
+.remove-checkbox:checked::after {
+  background: rgb(255, 0, 128);
 }
 
 #section-stats {
   display: flex;
   flex-direction: column;
   padding: 1rem 0rem;
-  min-height: 3rem;
+  height: 100%;
+  background: transparent;
+  position: absolute;
+  right: 0;
+  top: 0;
+  opacity: 1;
+  backdrop-filter: blur(15px);
+  transform: translateX(0px);
+  transition: all 0.3s ease;
 }
 
 #section-stats-content {
@@ -752,15 +918,20 @@ h2,
   height: 100%;
   border: none;
   border-left: solid 1px #1dffa8e3;
-  padding: 0rem 0.5rem;
-  margin: 0rem 1rem;
+
+  background: transparent;
+  padding: 0rem;
+  width: 100%;
 
   justify-content: center;
   align-items: center;
 }
 
-.maximized {
-  flex: 0.6;
+#section-stats.maximized {
+  /* width: 30%; */
+
+  right: -2rem;
+  opacity: 0;
 }
 
 #dash-header-stats {
@@ -769,8 +940,9 @@ h2,
 
 #button-dash-stats {
   border-color: #00e4b6;
+  border: none;
   position: absolute;
-  right: 0.5rem;
+  right: 1rem;
 }
 
 .stat {
@@ -794,7 +966,6 @@ h2,
 }
 
 .progress-bar-text {
-  /* border: solid; */
   text-align: center;
   font-size: 2rem;
   padding: 0.5rem 0rem;

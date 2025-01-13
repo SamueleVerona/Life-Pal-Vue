@@ -61,15 +61,6 @@ const closeDialog = () => {
   font-family: "Poppins", sans-serif;
 }
 
-:root {
-  --dialog-button-color-default: rgb(160, 255, 200);
-  --dialog-button-color-delete: rgb(243, 243, 243);
-  --dialog-button-color-delete-darker: rgb(255, 58, 58);
-
-  --dialog-wrapper-color-default: rgb(140, 81, 249);
-  --dialog-wrapper-color-delete: rgb(249, 81, 109);
-}
-
 .dialog-wrapper {
   position: absolute;
   left: 50%;
@@ -82,24 +73,26 @@ const closeDialog = () => {
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
   z-index: 200;
+  max-width: calc(70vw -100px);
+  /* padding: 1rem 0rem; */
 }
 .dialog-underlay {
   position: fixed;
-  top: 10vh;
+  top: 0;
   left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   background: rgba(190, 196, 208, 0.295);
   backdrop-filter: blur(10px);
-  height: 90vh;
+  height: 100%;
   width: 100%;
   font-size: 4rem;
   color: rgb(128, 128, 128);
   z-index: 100;
 }
 
-.dialog-underlay:hover {
+.dialog-underlay-text:hover {
   color: rgb(0, 0, 0);
   font-weight: 500;
 }
@@ -107,22 +100,27 @@ const closeDialog = () => {
   position: absolute;
   bottom: 10rem;
   font-size: 3.5rem;
+  cursor: pointer;
+  transition: all 0.1s ease;
 }
 
 .dialog-message {
   font-size: 3rem;
   padding: 4rem 3rem;
-  width: max-content;
+  width: 100%;
   color: white;
+  text-align: center;
+  white-space-collapse: preserve-breaks;
 }
 
 .dialog-button {
-  font-size: 3rem;
+  font-size: 2.5rem;
   padding: 1rem 0rem;
   width: 100%;
   min-height: max-content;
   background: var(--dialog-button-color-default);
   border: none;
+  font-weight: 500;
 }
 
 .dialog-button.user-active:enabled:hover {
@@ -130,17 +128,20 @@ const closeDialog = () => {
 }
 
 .dialog-button:not(.user-active):enabled:hover {
-  color: rgb(255, 0, 0);
+  color: rgb(167, 0, 67);
   background: var(--dialog-button-color-delete-darker);
-  font-weight: 500;
+  /* font-weight: 600; */
+  cursor: pointer;
 }
 
 .dialog-content-container.user-active {
+  max-height: 80vh;
   padding: 1rem 0rem;
   background: white;
   scrollbar-width: thin;
   scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .dialog-wrapper.user-active {

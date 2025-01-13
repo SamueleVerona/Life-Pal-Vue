@@ -40,6 +40,8 @@
     :errorMessage="gottenError"
     :show="!!gottenError"
     @close="closeDialog"
+    :wrapperBackground="`var(--dialog-button-color-default-earth)`"
+    :buttonBackground="`white`"
   ></base-dialog>
 </template>
 
@@ -88,8 +90,7 @@ async function submit() {
 
     router.push({
       name: "user-home",
-      params: { userId: userName.value },
-      meta: { isAuth: true },
+      meta: { isAuth: true, userId: userName.value },
     });
   } catch (err) {
     gottenError.value = err.message;
@@ -149,6 +150,8 @@ async function submit() {
   background-color: var(--sign-option-login);
   border-bottom: solid 3px var(--sign-option-login-darker);
   align-self: center;
+  justify-self: left;
+  transition: all 0.2s ease;
 }
 
 #submit-button {

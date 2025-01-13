@@ -6,24 +6,6 @@
       @mousedown="handleMousedown"
     >
     </full-calendar>
-
-    <!-- MULTI YEAR VIEW IMPLEMENTATION NEEDS OWN BRANCH
-    <section id="multi-year-view" v-if="isYearView && isYearSelected">
-      <u id="multi-year-list">
-        <li
-          v-for="year in decadeYears"
-          :key="year"
-          class="decade-year"
-          @mousedown="setSelected"
-          selected="false"
-          :data-year="year"
-        >
-          <div :data-year="year" class="decade-year-element">
-            {{ year }}
-          </div>
-        </li>
-      </u>
-    </section> -->
   </section>
 </template>
 
@@ -44,26 +26,17 @@ import {
   onMounted,
 } from "vue";
 
-const props = defineProps(["userData", "view"]);
+const props = defineProps(["userGoals", "view"]);
 const emits = defineEmits([
   "sendTimeId",
   "sendLastView",
   "sendDate",
   "sendNavOptions",
+  "maxItemsReached",
 ]);
-const decadeYears = ref([]);
 
-function setMultiYear() {
-  const dummy = [];
-  const currentYear = +new Date().getFullYear();
-  for (let i = 0; i <= 10; i++) {
-    dummy.push(currentYear + i);
-  }
-  decadeYears.value = dummy;
-}
 onMounted(() => {
   if (props.view) calendar.value.getApi().changeView(props.view);
-  setMultiYear();
 });
 
 const calendar = ref();
@@ -90,7 +63,7 @@ function setEvents(goals) {
 }
 
 watch(props, () => {
-  setEvents(props.userData);
+  setEvents(props.userGoals);
 });
 
 function getThisWeekDay(dayOfWeek) {
@@ -132,12 +105,6 @@ function setMonthLimits() {
 const calendarOptions = ref({
   plugins: [dayGridPlugin, multiMonthPlugin, interactionPlugin],
   customButtons: {
-    // yearly: {
-    //   text: "year",
-    //   click: () => {
-    //     handleYearly();
-    //   },
-    // },
     add: {
       text: "add goal",
       click: () => navigateTo("goal"),
@@ -162,7 +129,7 @@ const calendarOptions = ref({
       dayHeaders: false,
       dayMaxEventRows: true,
 
-      weekNumberFormat: { week: "numeric" },
+      weekNumberFormat: { week: "long" },
       dateAlignment: "month",
       validRange: () => setMonthLimits(),
     },
@@ -201,18 +168,29 @@ const calendarOptions = ref({
   weekends: true,
   fixedWeekCount: false,
   eventSources: true,
+  handleWindowResize: true,
+  windowResize: () => {
+    if (window.innerWidth < 768 && window.innerWidth > 500) {
+      calendar.value.getApi().setOption("weekNumberFormat", { week: "short" });
+    } else {
+      calendar.value.getApi().setOption("weekNumberFormat", { week: "long" });
+    }
+  },
   moreLinkClick: () => navigateTo("dashboard"),
   datesSet: datesSelection,
-  dateClick: handleDateClick,
+  dateClick: () => {
+    return;
+  },
   eventsSet: () => {
-    setYearly();
-    if (isYearView.value) {
-      setMonthly(viewInfo.value);
+    if (isWeekView.value) setWeekGoals(viewInfo.value);
+    else if (isYearView.value) {
+      setMonthGoals(viewInfo.value);
+    } else {
+      setDayGoals(viewInfo.value);
     }
   },
   viewDidMount: (info) => {
-    setEvents(props.userData);
-
+    setEvents(props.userGoals);
     viewInfo.value = info;
     currentView.value = info.view.type;
     if (isYearView.value) {
@@ -221,7 +199,6 @@ const calendarOptions = ref({
   },
   viewWillUnmount: (info) => {
     emits("sendLastView", info.view.type);
-    // lastView.value = info.view.type;
   },
 });
 
@@ -236,16 +213,36 @@ function navigateTo(navTargetString) {
 function handleMousedown(e) {
   const target = e.target;
   const isMonthElement = target.classList.contains("fc-multimonth-month");
-  const isGoalsIndex = target.classList.contains("month-has-events");
+  const isWeekElement =
+    target.classList.contains("fc-daygrid-day-frame") &&
+    currentView.value === "dayGridMonth";
 
-  if (isGoalsIndex) navigateTo("dashboard");
-  if (!isMonthElement) return;
+  const isDayElement =
+    target.classList.contains("fc-daygrid-day-frame") &&
+    currentView.value === "dayGridDay";
 
-  handleDateClick(target);
+  const parentIsDisabeld =
+    target.parentElement.classList.contains("fc-day-disabled");
+  const hasEventIndex = Array.from(target.children).some((child) =>
+    child.classList.contains("slot-events-index")
+  );
+  const isEventsIndex = target.classList.contains("slot-events-index");
+
+  if (hasEventIndex)
+    globalSlotEvents.value =
+      +target.querySelector(".slot-events-index").textContent;
+
+  if (isEventsIndex) navigateTo("dashboard");
+
+  if (!isMonthElement && !isWeekElement && !isDayElement) return;
+  if (parentIsDisabeld) return;
+
+  handleDateClick(target, isWeekElement);
 
   const isSelected = target.getAttribute("is-selected") === "true";
+  const isDisabled = target.getAttribute("disabled") === "true";
 
-  if (!isSelected) {
+  if (!isSelected && !isDisabled) {
     target.setAttribute("is-selected", "true");
     if (lastTarget.value) lastTarget.value.setAttribute("is-selected", "false");
     lastTarget.value = target;
@@ -256,176 +253,168 @@ function datesSelection(info) {
   yerviewYear.value = info.startStr.slice(0, 4);
   currentView.value = info.view.type;
 
-  const timeId = calendarOptions.value.views[currentView.value].buttonText;
-  emits("sendTimeId", timeId);
+  const timeSelection =
+    calendarOptions.value.views[currentView.value].buttonText;
+
+  emits("sendTimeId", timeSelection);
 }
 
-function handleDateClick(arg) {
+function handleDateClick(element, isWeekElement = false) {
+  let actualDate;
+  let dateLabel;
+
   if (isYearView.value) {
-    emits("sendDate", {
-      actualDate: arg.dataset.date + "-01",
-      dateLabel: new Date(arg.dataset.date + "-01")
-        .toDateString()
-        .split(" 01 ")
-        .join(" ")
-        .slice(4),
-    });
+    actualDate = element.dataset.date + "-01";
+    dateLabel = new Date(element.dataset.date + "-01")
+      .toDateString()
+      .split(" 01 ")
+      .join(" ")
+      .slice(4);
+  } else if (isWeekElement) {
+    actualDate = element.parentElement.dataset.date;
+
+    dateLabel = element.firstElementChild.getAttribute("aria-label");
   } else {
-    const dateLabel = arg.dayEl.querySelector("a").getAttribute("aria-label");
-    emits("sendDate", { actualDate: arg.dateStr, dateLabel });
+    actualDate = element.parentElement.dataset.date;
+    dateLabel = element.querySelector("a").getAttribute("aria-label");
   }
+  emits("sendDate", { actualDate, dateLabel });
 }
 
-function perTimeIdEvents(timeIdString, dateString) {
-  return props.userData.reduce((idx, goal) => {
+function getTimeSelectionEvents(timeIdString, dateString) {
+  return props.userGoals.reduce((idx, goal) => {
     if (goal.type === timeIdString && goal.compDate === dateString) idx++;
     return idx;
   }, 0);
 }
 
 const isYearView = computed(() => currentView.value === "multiMonthYear");
+const globalSlotEvents = ref(0);
+watch(globalSlotEvents, () =>
+  globalSlotEvents.value > 9
+    ? emits("maxItemsReached", true)
+    : emits("maxItemsReached", false)
+);
 
-function setMonthly(info) {
-  const firstValidYear = +today.value.getFullYear() + 1;
-  let elementsArray = info.el.childNodes;
-  elementsArray.forEach((el) => {
-    el.setAttribute("style", "");
-    const fullDate = el.dataset.date + "-01";
-    const monthString = new Date(el.dataset.date).toUTCString().slice(8, 11);
-    const perMonthEvents = perTimeIdEvents("month", fullDate);
+function setMonthGoals(calendarView) {
+  let firstValidYear;
+
+  if (today.value.getMonth() < 11) {
+    firstValidYear = +today.value.getFullYear();
+  } else {
+    firstValidYear + today.value.getFullYear() + 1;
+  }
+
+  let timeSlots = calendarView.el.childNodes;
+
+  timeSlots.forEach((slot) => {
+    slot.setAttribute("style", "");
+
+    const slotInternalDate = slot.dataset.date;
+
+    const firstOfMonth = slotInternalDate + "-01";
+    const monthShortName = new Date(slotInternalDate)
+      .toUTCString()
+      .slice(8, 11);
+
+    const perMonthEvents = getTimeSelectionEvents("month", firstOfMonth);
     let eventsIndex = "";
-    perMonthEvents ? (eventsIndex = "+" + perMonthEvents) : (eventsIndex = "");
-    el.textContent = monthString;
-    el.insertAdjacentHTML(
+
+    if (perMonthEvents) eventsIndex = "+" + perMonthEvents;
+
+    slot.textContent = monthShortName;
+
+    slot.insertAdjacentHTML(
       "beforeend",
-      ` <sup class='month-has-events'>${eventsIndex}</sup>`
+      ` <a class='slot-events-index'>${eventsIndex}</a>`
     );
 
-    const isValidMonth = +el.dataset.date.slice(0, 4) >= firstValidYear;
-    if (isValidMonth) el.setAttribute("isValid", true);
+    const slotMonth = +slotInternalDate.slice(5, 8);
+    let isValidMonth = false;
+
+    if (slotMonth > +today.value.getMonth() + 1) isValidMonth = true;
+
+    if (isValidMonth) {
+      slot.setAttribute("is-valid", true);
+    } else {
+      slot.setAttribute("disabled", true);
+    }
   });
 }
 
-function setYearly() {
-  const currYear = yerviewYear.value + "-01" + "-01";
-  const actualTitleValue = viewInfo.value.view.title;
+const isWeekView = computed(() => currentView.value === "dayGridMonth");
 
-  const yearviewTitle = document.querySelector(".fc-toolbar-title");
-  const perYearEvents = perTimeIdEvents("year", currYear);
-  let eventsIndex = "";
-  perYearEvents ? (eventsIndex = "+" + perYearEvents) : (eventsIndex = "");
-  const eventIndexElement = document.querySelector("sup");
+function setWeekGoals(weekView) {
+  let weekSlots = weekView.el.getElementsByTagName("tbody")[1].childNodes;
 
-  if (isYearView.value) {
-    eventIndexElement
-      ? (eventIndexElement.textContent = eventsIndex)
-      : yearviewTitle.insertAdjacentHTML(
-          "beforeend",
-          `<sup class='month-has-events'>${eventsIndex}</sup>`
-        );
-  } else {
-    eventIndexElement
-      ? eventIndexElement.remove()
-      : (yearviewTitle.textContent = actualTitleValue);
-  }
+  weekSlots.forEach((slot) => {
+    const slotElement = slot.firstElementChild;
 
-  // displayYearly();
+    const firstOfWeek = slotElement.dataset.date;
+
+    const perWeekEvents = getTimeSelectionEvents("week", firstOfWeek);
+
+    let eventsIndex = "";
+    if (perWeekEvents) eventsIndex = "+" + perWeekEvents;
+
+    slotElement.firstElementChild.insertAdjacentHTML(
+      "beforeend",
+      ` <a class='slot-events-index'>${eventsIndex}</a>`
+    );
+  });
 }
 
-// MULTI YEAR VIEW IMPLEMENTATION NEEDS OWN BRANCH
-//----------------------------------------------------//
+function setDayGoals(dayView) {
+  let dayslots =
+    dayView.el.getElementsByTagName("tbody")[1].firstElementChild.childNodes;
 
-// function displayYearly() {
-//   const yearlyButtonEl = document.querySelector(".fc-yearly-button");
-//   const currYear = yerviewYear.value + "-01" + "-01";
+  dayslots.forEach((slot) => {
+    const slotDate = slot.dataset.date;
+    let perDayEvents;
 
-//   const perYearEvents = perTimeIdEvents("year", currYear);
+    if (slotDate) {
+      perDayEvents = getTimeSelectionEvents("day", slotDate);
+    }
+    let eventsIndex = "";
+    if (perDayEvents) eventsIndex = "+" + perDayEvents;
 
-//     if (yerviewYear.value < +today.value.getFullYear() + 1) {
-//       yearlyButtonEl.classList.add("is-hidden");
-//     } else {
-//       yearlyButtonEl.classList.remove("is-hidden");
-//     }
+    const hasEventIndex =
+      slot.firstElementChild.lastElementChild.classList.contains(
+        "slot-events-index"
+      );
 
-//   if (isYearView.value) {
-//     perYearEvents
-//       ? (yearlyButtonEl.textContent = "year")
-//       : (yearlyButtonEl.textContent = "set yearly");
-//   }
-// }
+    if (hasEventIndex) slot.firstElementChild.lastElementChild.remove();
 
-// const isYearSelected = ref(false);
-
-// function emulateMultiYear() {
-//   document.querySelector(".fc-multiMonthYear-view").classList.add("is-hidden");
-//   document
-//     .querySelector(".fc-multiMonthYear-button")
-//     .classList.remove("fc-button-active");
-//   document.querySelector(".fc-yearly-button").classList.add("fc-button-active");
-// }
-
-// function handleYearly() {
-//   isYearSelected.value = true;
-
-//   if (isYearView.value) emulateMultiYear();
-//   else {
-//     calendar.value.getApi().changeView("multiMonthYear");
-//     emulateMultiYear();
-//     isYearSelected.value = true;
-//   }
-
-// emits("sendTimeId", "year");
-// if (e.target.textContent === "show") {
-//   emits("senNavOptions", [false, true, false]);
-// } else {
-//   emits("senNavOptions", [false, false, true]);
-// }
-// }
-
-// const prevSelectedYear = ref();
-
-// function setSelected(e) {
-//   const yearDate = e.target.dataset.year + "-01-01";
-//   emits("sendDate", yearDate);
-
-//   e.target.setAttribute("selected", true);
-//   if (!prevSelectedYear.value) {
-//     prevSelectedYear.value = e.target;
-//   } else {
-//     prevSelectedYear.value.setAttribute("selected", false);
-//     prevSelectedYear.value = e.target;
-//   }
-// }
+    slot.firstElementChild.insertAdjacentHTML(
+      "beforeend",
+      ` <a class='slot-events-index'>${eventsIndex}</a>`
+    );
+  });
+}
 </script>
 
 <style scoped>
 * {
   text-decoration: none;
 }
-/* #calendar-element {
-  position: relative;
-} */
-
-/* ul,
-li {
-  list-style: none;
-  text-decoration: none;
-} */
 
 :deep(.is-hidden) {
   display: none;
 }
+:deep(.fc-dayGridMonth-view .fc-daygrid-day-top),
+:deep(.fc-toolbar-chunk:nth-child(3)) {
+  display: none;
+}
 
 :deep(.fc) {
+  font-family: "Afacad Flux", Sans-serif;
   height: 100%;
   width: 100%;
   padding: 1rem;
   display: flex;
-  font-size: 5rem;
   border-radius: 30px;
   border: solid 2px rgba(128, 128, 128, 0.308);
   border-bottom: solid 3px rgba(128, 128, 128, 0.308);
-
   font-family: "Roboto", sans-serif;
 }
 
@@ -437,10 +426,12 @@ li {
   justify-content: space-between;
   border: none;
   padding: 1rem 0rem;
-  /* flex: 1; */
 }
 :deep(.fc .fc-toolbar-title) {
-  font-size: 8rem;
+  font-size: 6rem;
+  padding: 1rem;
+  text-align: center;
+  line-height: 6rem;
 }
 
 :deep(.fc-toolbar-chunk) {
@@ -450,19 +441,125 @@ li {
 }
 
 :deep(.fc-toolbar-chunk:first-child) {
-  font-size: 4rem;
-}
-:deep(.fc-multimonth-title) {
-  font-size: 3rem;
+  margin-bottom: 1rem;
 }
 
 :deep(.fc-multiMonthYear-view) {
   border: none;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  flex-basis: 200px;
+  height: max-content;
+  align-self: center;
+}
+
+:deep(td[role="gridcell"]) {
+  overflow: visible;
+}
+
+:deep(.fc-dayGridMonth-view tbody[role="presentation"]),
+:deep(.fc-dayGridDay-view tbody[role="presentation"]) {
+  padding: 1rem 0rem;
+  justify-self: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  height: 100%;
+}
+
+:deep(.fc-scrollgrid-sync-table) {
+  table-layout: fixed;
+}
+
+:deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]),
+:deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+:deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
+  flex-wrap: wrap;
+  flex-direction: row;
+  flex-basis: 90%;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  max-height: max-content;
+}
+
+:deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]) {
+  display: contents;
+}
+:deep(.fc-dayGridMonth-view tbody[role="presentation"] td) {
+  flex: 1 1 calc((100vw) / 5);
+  max-width: calc((100vw) / 5);
+
+  aspect-ratio: 1;
+  padding: 0rem 0.2rem;
+}
+
+:deep(.fc-dayGridDay-view tbody[role="presentation"] td) {
+  flex: 1 1 calc((100vw) / 10);
+
+  max-width: calc((100vw) / 5);
+  aspect-ratio: 1;
+  padding: 0rem 0.2rem;
+}
+
+:deep(.fc-daygrid-day) {
+  transition: transform 0.3s ease-out;
+}
+
+:deep(.fc-daygrid-day-frame) {
+  font-weight: bolder;
+  width: 100%;
+  aspect-ratio: 1;
+  color: #2c3e50;
+  box-shadow: 0.2rem 0.5rem 0.5rem grey;
+  border-radius: 30px;
+  border: solid;
+}
+
+:deep(.fc-dayGridMonth-view .fc-daygrid-day-frame) {
+  border-color: rgb(255, 100, 188);
+}
+:deep(.fc-dayGridDay-view .fc-daygrid-day .fc-daygrid-day-frame) {
+  border-color: rgb(76, 159, 255);
+}
+
+:deep(.fc-daygrid-week-number) {
+  background: none;
+  color: inherit;
+  font-size: 2.5rem;
+  text-align: center;
+  width: 100%;
+  padding-top: 0.5rem;
+}
+
+:deep(td.fc-day.fc-daygrid-day.fc-day-disabled) {
+  background: transparent;
+  overflow: visible;
+  display: none;
+}
+
+:deep(.fc-daygrid-day-top a) {
+  font-size: 2.6rem;
+  color: inherit;
+  text-align: center;
+  width: 100%;
+}
+
+:deep(.fc-daygrid-day:hover) {
+  transform: translateY(-5px);
 }
 
 :deep(.fc .fc-button-primary) {
   padding: 0.5rem 1.5rem;
-  font-size: 2.5rem;
+  font-size: 2rem;
   line-height: 3rem;
   border: none;
   background: none;
@@ -503,26 +600,15 @@ li {
   padding: 0.5rem 1.5rem;
   border-radius: 30px;
   margin: 0rem 0.5rem;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-family: inherit;
   font-weight: 500;
   background: none;
-  border: solid 2px rgb(236, 225, 71);
-  border-bottom: solid 3px rgb(225, 235, 34);
-  color: rgb(181, 169, 0);
+  color: rgb(0, 181, 181);
 }
 
 :deep(.fc .fc-add-button:hover) {
   color: rgb(243, 138, 96);
-}
-
-:deep(.fc-toolbar-chunk:nth-child(3)) {
-  display: none;
-}
-
-:deep(table) {
-  padding: 0;
-  font-size: 25rem;
 }
 
 :deep(.fc-scrollgrid),
@@ -532,102 +618,157 @@ li {
 :deep(td) {
   border: none;
 }
-:deep(.fc-daygrid-day) {
-  border-radius: 10px;
-}
 
-:deep(.fc-daygrid-day-frame) {
-  font-weight: bolder;
-  border: solid 2px #510094;
-  border-radius: 12px;
-  height: 5rem;
-  color: #2c3e50;
-}
-:deep(.fc-event-title-container) {
-  background: white;
-  border: black;
-}
-:deep(.fc-event-title) {
-  display: none;
-  font-size: 5rem;
-  content: "0";
-  border: black;
-
-  height: 5rem;
-  background: white;
-  border: black;
-}
-
+:deep(.fc-multimonth-title),
+:deep(.fc-multimonth-daygrid-table),
+:deep(thead),
+:deep(.fc-daygrid-day-events),
+:deep(.fc-daygrid-event-harness),
+:deep(.fc-event-title-container),
+:deep(.fc-event-title),
 :deep(.fc-event-title-container::after) {
-  content: "+1";
-  font-size: 2rem;
-  height: 3rem;
-  width: 3rem;
-  /* background: black; */
-  color: #47a3ff;
-
-  border: none;
-  border: black;
+  display: none;
 }
 
 :deep(.fc-multimonth-month) {
-  border: solid 2px #510094;
-  border-radius: 10px;
-  cursor: pointer;
-  width: 20%;
-  height: auto;
-  background: rgba(200, 177, 246, 0.526);
-  font-size: 3rem;
+  position: relative;
+  justify-content: center;
+  max-width: 13vw;
+  width: 13vw;
+  height: 13vw;
+  padding-top: 1rem;
+  margin: 0.3rem;
+
+  font-size: 2.5rem;
   font-weight: bold;
   text-align: center;
-  align-content: center;
-  justify-content: center;
-  padding: 0;
+
+  border-radius: 1em;
+  border: solid rgb(62, 209, 128) 3px;
+  background: transparent;
+  box-shadow: 0.2rem 0.5rem 0.5rem grey;
+  transition: transform 0.3s ease;
 }
 
-:deep(.fc .fc-multimonth-multicol .fc-multimonth-month) {
-  padding: 0;
+:deep(.fc-multimonth-month:hover) {
+  transform: translateY(-3px);
 }
 
-:deep(.fc-multimonth-month[isValid]),
-:deep(td[isValid] > div) {
-  border: solid rgb(221, 1, 255) 3px;
-  border-radius: 10px;
+:deep(.fc-multimonth-month:not([is-valid])) {
+  display: none;
+}
+
+:deep(.slot-events-index) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(4rem - 15px);
   cursor: pointer;
-  background: none;
-}
-
-:deep(.fc-multimonth-daygrid-table),
-:deep(thead) {
-  display: none;
-}
-:deep(.fc-multimonth-title) {
-  display: none;
-}
-
-:deep(.fc-daygrid-day.fc-day-today) {
-  background: rgba(2, 177, 78, 0.182);
-  border-radius: 10px;
-}
-
-:deep(.fc-daygrid-week-number) {
-  background: none;
-  color: orange;
-  font-size: 2rem;
-}
-:deep(.fc-multimonth-month[is-selected="true"]) {
-  background-color: var(--fc-highlight-color);
-  position: relative;
-}
-
-:deep(.month-has-events) {
   color: rgb(0, 149, 255);
   z-index: 100;
 }
-:deep(sup) {
-  cursor: pointer;
+
+:deep(.slot-events-index:hover) {
+  color: orange;
 }
-:deep(sup:hover) {
-  color: rgb(255, 128, 0);
+:deep(.fc-highlight),
+:deep(.fc-daygrid-day-top) {
+  z-index: -100;
+}
+
+:deep(.fc-multimonth-month[is-selected="true"]),
+:deep(.fc-daygrid-day-frame[is-selected="true"]) {
+  background-color: var(--fc-highlight-color);
+}
+
+@media screen and (max-width: 500px) {
+  :deep(.fc-view-harness.fc-view-harness-active) {
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
+    scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
+  }
+  :deep(.fc-multiMonthYear-view) {
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: max-content;
+  }
+  :deep(.fc-multimonth-month) {
+    min-height: 15rem;
+    min-height: 40vw;
+
+    min-width: 40vw;
+    aspect-ratio: 1;
+    margin: 2px 0px;
+    margin-bottom: 0.5rem;
+  }
+  :deep(.fc-multimonth-month:not([is-valid])) {
+    display: none;
+  }
+
+  :deep(.fc-scroller.fc-scroller-liquid-absolute) {
+    scrollbar-gutter: stable both-edges;
+    height: 100%;
+    scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
+  }
+  :deep(.fc-daygrid-body.fc-daygrid-body-balanced),
+  :deep(.fc-daygrid-body.fc-daygrid-body-unbalanced) {
+    width: 100% !important;
+    text-align: center;
+    justify-items: center;
+  }
+
+  :deep(.fc-scrollgrid-sync-table) {
+    table-layout: auto;
+    scrollbar-gutter: stable both-edges;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+  }
+
+  :deep(.fc-dayGridMonth-view tbody[role="presentation"]),
+  :deep(.fc-dayGridDay-view tbody[role="presentation"]) {
+    padding: 0rem;
+
+    flex-direction: column;
+    justify-content: center;
+
+    align-items: center;
+    width: max-content;
+    height: 100%;
+    overflow: visible;
+  }
+  :deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]),
+  :deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+
+    padding: 0;
+    margin: 0.5rem 0rem;
+  }
+
+  :deep(
+      .fc-dayGridMonth-view
+        tbody[role="presentation"]
+        tr[role="row"]:has(.fc-day-disabled)
+    ) {
+    display: none;
+  }
+
+  :deep(.fc-dayGridMonth-view tbody[role="presentation"] td),
+  :deep(.fc-dayGridDay-view tbody[role="presentation"] td) {
+    min-width: 13%;
+    width: 40vw;
+    max-width: 40vw;
+    aspect-ratio: 1;
+  }
+  :deep(.fc-dayGridDay-view tbody[role="presentation"] td) {
+    margin: 0.5rem 0rem;
+  }
 }
 </style>

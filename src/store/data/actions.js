@@ -30,48 +30,67 @@ function setDatabaseId(dataObject) {
 }
 function parseAdminRequests(dataObject) {
   const parsedArray = Object.entries(dataObject).flatMap((item) => {
-    return Object.entries(item[1].requests).map((req) => {
-      return { ...req[1], databaseId: req[0] };
-    });
+    return item[1].requests
+      ? Object.entries(item[1].requests).map((req) => {
+          return { ...req[1], databaseId: req[0] };
+        })
+      : [];
   });
   return parsedArray;
 }
 
 export default {
-  async deleteData(context, goalsToRemove) {
+  async deleteData(context, payload) {
     const sessionToken = context.getters.sessionToken;
     const UID = context.getters.userToken;
-    const curGoals = context.getters.userGoals;
+    let urlMod;
+    let itemMod;
 
-    try {
-      const validNames = new Set(curGoals.map(({ databaseId }) => databaseId));
+    const deletionType = payload.type;
+    let itemsToDelete = payload.items;
 
-      const deletePromises = goalsToRemove.map((goalId) => {
-        if (validNames.has(goalId)) {
-          return fetch(
-            `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals/${goalId}.json?auth=${sessionToken}`,
-            {
-              method: "DELETE",
-            }
-          );
-        } else {
-          return new Promise((_, reject) =>
-            reject("Goal at index does not exist")
-          );
-        }
-      });
+    if (deletionType === "account") itemsToDelete = [0];
 
-      const deleted = await Promise.allSettled(deletePromises);
-
-      const someRejected = deleted.some((res) => res.status === "rejected");
-      if (someRejected) {
-        throw new Error("Deleting failed, invalid URL ");
+    const deletePromises = itemsToDelete.map((item) => {
+      if (deletionType === "goal") {
+        urlMod = UID + "/goals";
+        itemMod = item.id;
+      } else if (deletionType === "request") {
+        urlMod = item.userId + "/requests";
+        itemMod = item.id;
       } else {
-        context.dispatch("getData");
-        context.commit("setExpiredGoals", []);
+        urlMod = UID;
+        itemMod = "";
       }
-    } catch (err) {
-      throw err.message;
+
+      return fetch(
+        `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${urlMod}/${itemMod}.json?auth=${sessionToken}`,
+        {
+          method: "DELETE",
+        }
+      );
+    });
+
+    const resData = await Promise.allSettled(deletePromises);
+
+    const resStatuses = resData.map((res) => {
+      return { status: res.value.status, message: res.value.statusText };
+    });
+    const someRejected = resStatuses.some((res) => res.status != 200);
+
+    if (someRejected) {
+      const error = resStatuses.reduce((accum, curr) => {
+        accum.push(curr.status);
+        return "errors: (" + accum + ")";
+      }, []);
+      console.warn(error);
+      throw new Error("Couldn't delete your data.\nTry again");
+    } else {
+      if (deletionType !== "account") {
+        context.dispatch("getData", { type: payload.type });
+      } else {
+        return true;
+      }
     }
   },
   async sendData(context, payload) {
@@ -116,7 +135,9 @@ export default {
 
       const resData = await res.json();
       if (!res.ok) {
-        throw new Error(resData.message || "Failed to load new goal");
+        throw new Error(
+          resData.message || "Failed to load new goal.\nTry again"
+        );
       }
 
       context.dispatch("getData", { type: payload.type });
@@ -149,25 +170,38 @@ export default {
       );
 
       const resData = await res.json();
-      if (!res.ok) throw new Error("Failed fetching");
+      if (!res.ok) throw new Error("Couldn't retrieve data.\n Try again");
 
-      if (payload.type === "all") {
-        if (!isAdmin) {
+      if (!isAdmin) {
+        if (payload.type === "all") {
+          if (!resData) {
+            context.commit("loadData", { goals: [], requests: [] });
+            return;
+          }
+
           const requests = resData.requests
             ? setDatabaseId(resData.requests)
             : [];
 
-          const goals = await context.dispatch("checkGoals", resData.goals);
+          const goals = resData.goals
+            ? await context.dispatch("checkGoals", setDatabaseId(resData.goals))
+            : [];
 
           context.commit("loadData", { goals, requests });
+        } else if (payload.type === "goal") {
+          const goals = resData
+            ? await context.dispatch("checkGoals", setDatabaseId(resData))
+            : [];
+
+          context.commit("loadGoals", goals);
         } else {
-          const allUsersRequests = parseAdminRequests(resData);
-          context.commit("loadRequests", [...allUsersRequests]);
+          const requests = resData ? setDatabaseId(resData) : [];
+
+          context.commit("loadRequests", requests);
         }
-      } else if (payload.type === "goal") {
-        context.commit("loadGoals", Object.values(resData));
       } else {
-        context.commit("loadRequests", Object.values(resData));
+        let allUsersRequests = resData ? parseAdminRequests(resData) : [];
+        context.commit("loadRequests", [...allUsersRequests]);
       }
     } catch (err) {
       throw err.message;
@@ -177,8 +211,6 @@ export default {
     const expired = [];
 
     const checkedGoals = Object.entries(goals).map((goal) => {
-      if (!goal[1].databaseId) goal[1].databaseId = goal[0];
-
       const isExpired = checkforCompletion(goal[1]);
       if (isExpired) {
         expired.push(goal[1]);
@@ -200,7 +232,7 @@ export default {
     try {
       const deletePromises = goalsToArray.map((goal) => {
         return fetch(
-          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals/${goal.goalId}.json?auth=${sessionToken}`,
+          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${UID}/goals/${goal.itemId}.json?auth=${sessionToken}`,
           {
             method: "PATCH",
             headers: {
@@ -217,10 +249,46 @@ export default {
       const patched = await Promise.allSettled(deletePromises);
 
       const someRejected = patched.some((res) => res.status === "rejected");
+
       if (someRejected) {
-        throw new Error("Patching failed");
+        throw new Error("Couldn't set goals status.\nTry again");
       } else {
-        context.dispatch("getData");
+        context.dispatch("getData", { type: "goal" });
+      }
+
+      //QUESTION:
+      //WOULD PATCHING THE LOCAL COPY DIRECTLY ALSO, BE FASTER THAN REFETCHING?
+    } catch (err) {
+      throw err.message;
+    }
+  },
+  async changeReqState(context, reqsToPatch) {
+    const sessionToken = context.getters.sessionToken;
+
+    try {
+      const deletePromises = reqsToPatch.map((req) => {
+        return fetch(
+          `https://life-pal-89067-default-rtdb.europe-west1.firebasedatabase.app/users/${req.userId}/requests/${req.itemId}.json?auth=${sessionToken}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              itemLabel: req.itemLabel,
+              reply: req.reply,
+            }),
+          }
+        );
+      });
+
+      const patched = await Promise.allSettled(deletePromises);
+
+      const someRejected = patched.some((res) => res.status === "rejected");
+      if (someRejected) {
+        throw new Error("Couldn't change requests status.\nTry again");
+      } else {
+        context.dispatch("getData", { type: "request" });
       }
 
       //QUESTION:
@@ -231,15 +299,14 @@ export default {
   },
 };
 
-// NEED A FUNCTION FOR SENDING BUG REPORTS OR SUGGESTIONS (BASICLY  requests)
+// NEED A FUNCTION FOR SENDING BUG REPORTS OR SUGGESTIONS (BASICLY  requests)✔
 //--SET UP ADMIN PROFILE: ✔
-//--NEEDS TO HAVE ACCESS TO ALL MESSAGES (FILTERABLE FOR USER)
-//--NEEDS OPTION TO REPLY TO USERS
-//--NEEDS OPTION TO ACCEPT OR REJECT A REQUEST AND OPTIONALLY REPLY WITH A MESSAGE
+//--NEEDS OPTION TO REPLY TO USERS✔
+//--NEEDS OPTION TO ACCEPT OR REJECT A REQUEST AND OPTIONALLY REPLY WITH A MESSAGE✔
 
 //--USER:
 //--NEEDS CARD FOR SENDING MESSAGES ✔
 //--NEEDS FILTER OPTION FOR SEEING PENDING/ACCEPTED/REJECTED REQUESTS ✔
 //--NEEDS 'REQUESTS' SECTIONS ON DATABASE ✔
-//--NEEDS WAY TO SEE REPLIES FROM ADMIN
-//--(REQUESTS WILL HAVE 'ACCEPTED' OR 'REJECTED' MARK WITH OPTIONAL MESSAGE ATTACHED)
+//--NEEDS WAY TO SEE REPLIES FROM ADMIN✔
+//--(REQUESTS WILL HAVE 'ACCEPTED' OR 'REJECTED' MARK WITH OPTIONAL MESSAGE ATTACHED)✔

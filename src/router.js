@@ -16,18 +16,18 @@ const router = createRouter({
     },
     {
       name: "user-home",
-      path: "/:userId",
+      path: "/userHome",
       component: UserHome,
       props: true,
-      beforeEnter(to, fom, next) {
+      beforeEnter(to, from, next) {
         if (store.getters.userToken) {
-          to.params.userId = store.getters.userToken;
-          to.params.isAuth = true;
+          to.meta.userId = store.getters.userToken;
+          to.meta.isAuth = true;
           next();
         } else {
-          to.params.isAuth = false;
+          to.meta.isAuth = false;
 
-          next("/userSign");
+          next("/landing");
         }
       },
     },

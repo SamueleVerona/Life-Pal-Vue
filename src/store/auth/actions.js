@@ -33,9 +33,16 @@ export default {
     });
     const resData = await res.json();
     if (!res.ok) {
+      const resError = resData.error.message.replaceAll("_", " ");
+      //  +
+      // "\n(error: " +
+      // resData.error.code +
+      // ")";
+      console.warn(resData.error);
+
       throw new Error(
-        resData.error.message.replace("_", " ").toLowerCase() ||
-          "Something went wrong"
+        resError[0] + resError.toLowerCase().slice(1) ||
+          "Something is wrong with your credentials.\nCheck and try again"
       );
     }
 
@@ -53,5 +60,36 @@ export default {
   },
   logout(context) {
     context.commit("logout");
+  },
+
+  async deleteAccount(context) {
+    const token = context.getters.sessionToken;
+
+    const dataDeleted = await context.dispatch("deleteData", {
+      type: "account",
+    });
+    if (dataDeleted) {
+      const delRequest = await fetch(
+        "https://identitytoolkit.googleapis.com/v1/accounts:delete?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTH",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken: token }),
+        }
+      );
+
+      const resData = await delRequest.json();
+
+      if (!delRequest.ok) {
+        console.warn(resData.error.code, resData.error.message);
+        throw new Error(
+          resData.error.message || "Couldn't delete your account.\nTry again"
+        );
+      }
+
+      context.commit("logout");
+    }
   },
 };
