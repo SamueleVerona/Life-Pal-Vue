@@ -1,5 +1,9 @@
 <template>
-  <router-view> </router-view>
+  <router-view v-slot="slotProps">
+    <transition name="app">
+      <component :is="slotProps.Component"></component>
+    </transition>
+  </router-view>
 </template>
 
 <!-- <script>
@@ -34,6 +38,17 @@ export default {
 
   --dialog-wrapper-color-default: rgb(140, 81, 249);
   --dialog-wrapper-color-delete: rgb(249, 81, 109);
+
+  --new-item: rgba(252, 175, 31, 0.781);
+
+  --landing-card-mid: rgb(195, 195, 195);
+  --landing-card-dark: rgb(146, 146, 146);
+
+  --sign-option-login: rgb(166, 161, 255);
+  --sign-option-login-darker: rgb(112, 104, 255);
+
+  --sign-option-signup: rgb(144, 224, 174);
+  --sign-option-signup-darker: rgb(91, 176, 123);
 }
 #app {
   font-family: "Afacad Flux", Sans-serif;
@@ -49,6 +64,24 @@ export default {
   box-sizing: border-box;
   font-style: normal;
   overflow: hidden;
+}
+.app-enter-from {
+  opacity: 0;
+}
+.app-leave-to {
+  opacity: 0;
+}
+
+.app-enter-active {
+  transition: opacity 0.7s ease;
+}
+.app-leave-active {
+  transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.app-enter-to,
+.app-leave-from {
+  opacity: 1;
 }
 
 @media screen and (max-width: 2048px) {

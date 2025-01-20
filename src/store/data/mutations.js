@@ -39,4 +39,11 @@ export default {
   setExpiredGoals(state, expGoals) {
     state.expiredGoals = expGoals;
   },
+  resetData(state) {
+    state.allRequests = [];
+    state.userGoals = [];
+    state.finishedGoals = [];
+    state.unfinishedGoals = [];
+    state.expiredGoals = [];
+  },
 };

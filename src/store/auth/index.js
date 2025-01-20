@@ -7,9 +7,9 @@ const authModule = {
     return {
       sessionToken: null,
       userToken: null,
-      tokenExp: null,
-      userId: null,
       userIsAdmin: false,
+      userIsLocked: true,
+      isAuth: false,
     };
   },
   mutations,

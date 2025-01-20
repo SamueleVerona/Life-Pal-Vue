@@ -12,33 +12,23 @@ const router = createRouter({
     {
       path: "/userSign",
       component: UserSign,
-      props: true,
+      async beforeEnter(_, _1, next) {
+        const tryLogin = await store.dispatch("autoLogin");
+        tryLogin ? next("/userHome") : next();
+      },
     },
+
     {
       name: "user-home",
       path: "/userHome",
       component: UserHome,
-      props: true,
-      beforeEnter(to, from, next) {
-        if (store.getters.userToken) {
-          to.meta.userId = store.getters.userToken;
-          to.meta.isAuth = true;
-          next();
-        } else {
-          to.meta.isAuth = false;
-
-          next("/landing");
-        }
+      beforeEnter(_, _1, next) {
+        const isAuth = store.getters.isAuth;
+        isAuth ? next() : next("/userSign");
       },
     },
+    { path: "/:catchAll(.*)", redirect: "/landing" },
   ],
 });
-
-// router.beforeEach((to, from, next) => {
-//   if (to.name === "user-home" && store.getters.auth.userID) next();
-//   else {
-//     next(false);
-//   }
-// });
 
 export default router;

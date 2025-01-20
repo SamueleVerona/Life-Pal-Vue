@@ -3,7 +3,7 @@
     <base-card class="card" id="goal-card">
       <template #title>
         <h2 id="goal-card-label">
-          {{ props.isRequest ? "NEW REQUEST" : "NEW GOAL" }}
+          {{ props.isRequest ? "New Request" : "New Goal" }}
         </h2>
       </template>
 
@@ -15,7 +15,7 @@
             name="goalTitle"
             placeholder="Choose a title"
             v-model="inputTitle"
-            maxlength="16"
+            maxlength="25"
             required
           />
           <textarea
@@ -33,7 +33,7 @@
       <template #options>
         <div class="card-section" id="goal-info" v-if="!props.isRequest">
           <span>Goal for a {{ props.goalType }}</span>
-          <span>Set a completion for</span>
+          <span>Set a completion for :</span>
           <span>{{ props.itemLabel }}</span>
         </div>
       </template>
@@ -50,6 +50,13 @@
         </div>
       </template>
     </base-card>
+    <base-dialog
+      :show="errorMessage"
+      :errorMessage="errorMessage"
+      @close="closeDialog"
+      :wrapperBackground="'var(--dialog-button-color-default-earth)'"
+      :buttonBackground="'white'"
+    ></base-dialog>
   </section>
 </template>
 
@@ -66,15 +73,32 @@ const inputDesc = ref("");
 const compDate = ref();
 onBeforeMount(() => (compDate.value = props.dateInfo));
 
+const errorMessage = ref();
 function handleSubmit(e) {
   const target = e.target;
   const isSubmitBtn = target.id.includes("save");
-
-  if (isSubmitBtn) {
-    props.isRequest ? addRequest() : addGoal();
-  } else {
+  const isBtnBack = target.id.includes("back");
+  if (isBtnBack) {
     emits("backAction");
   }
+
+  if (isSubmitBtn) {
+    if (!inputTitle.value) {
+      errorMessage.value = "You need a title first";
+      return;
+    }
+
+    if (props.isRequest) addRequest();
+    else {
+      compDate.value
+        ? addGoal()
+        : (errorMessage.value = "You need a time slot also");
+    }
+  }
+}
+
+function closeDialog() {
+  errorMessage.value = "";
 }
 
 const id = ref(
@@ -88,7 +112,7 @@ async function addRequest() {
       data: {
         id: id.value,
         title: inputTitle.value.toUpperCase(),
-        desc: inputDesc.value[0].toUpperCase() + inputDesc.value.slice(1),
+        desc: inputDesc.value ? inputDesc.value : "",
         itemLabel: "pending",
       },
     });
@@ -105,7 +129,7 @@ async function addGoal() {
       data: {
         id: id.value,
         title: inputTitle.value.toUpperCase(),
-        desc: inputDesc.value[0].toUpperCase() + inputDesc.value.slice(1),
+        desc: inputDesc.value ? inputDesc.value : "",
         type: props.goalType,
         isCompleted: false,
         isFailed: false,
@@ -187,7 +211,7 @@ async function addGoal() {
 }
 
 #goal-card-label {
-  font-size: 2.8rem;
+  font-size: 4rem;
   margin-bottom: 1rem;
   text-align: center;
   color: rgb(190, 100, 36);
@@ -203,6 +227,13 @@ async function addGoal() {
   text-align: center;
   color: #401700;
 }
+#goal-title:focus,
+#goal-title:active,
+#goal-description:focus {
+  outline: none;
+  background-color: transparent !important;
+}
+
 #goal-title::placeholder {
   color: rgba(50, 40, 63, 0.563);
   font-size: 3rem;
@@ -212,14 +243,13 @@ async function addGoal() {
 
 #goal-description {
   font-size: 2.5rem;
-  padding: 0.5rem 0.5rem;
+  padding: 1rem 2rem;
   width: 100%;
   border: none;
   resize: none;
   caret-color: #000000;
   background: transparent;
   text-align: left;
-
   color: #401700;
 }
 #goal-description::placeholder {
@@ -272,6 +302,7 @@ button {
   border-bottom: solid 3px rgb(16, 201, 177);
   background: rgb(190, 255, 241);
   color: #2c3e50;
+  transition: all 0.15s ease;
 }
 #button-save:hover {
   color: rgb(255, 36, 94);
@@ -292,9 +323,15 @@ button {
   color: rgb(16, 201, 177);
 }
 
+/* @media screen and (max-width: 600px) {
+  #goal-card-element {
+    width: 100%;
+  }
+} */
+/* 
 @media screen and (max-width: 425px) {
   #goal-card-element {
     width: 100%;
   }
-}
+} */
 </style>

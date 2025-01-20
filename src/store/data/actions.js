@@ -1,43 +1,4 @@
-function checkforCompletion(goal) {
-  const TODAY_MS = Date.now();
-  const completionTime =
-    typeof goal.compDate === "number"
-      ? goal.compDate
-      : new Date(goal.compDate).getTime();
-
-  if (TODAY_MS >= completionTime && !goal.isCompleted && !goal.isFailed)
-    return true;
-  else false;
-}
-function generateId() {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let id = "";
-
-  for (let i = 0; i < 22; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length - 1);
-    id += characters[randomIndex];
-  }
-  return id;
-}
-function setDatabaseId(dataObject) {
-  const parsedArray = Object.entries(dataObject).map((item) => {
-    if (!item[1].databaseId) item[1].databaseId = item[0];
-    return item[1];
-  });
-
-  return parsedArray;
-}
-function parseAdminRequests(dataObject) {
-  const parsedArray = Object.entries(dataObject).flatMap((item) => {
-    return item[1].requests
-      ? Object.entries(item[1].requests).map((req) => {
-          return { ...req[1], databaseId: req[0] };
-        })
-      : [];
-  });
-  return parsedArray;
-}
+import * as helpers from "../helpers/dataHelpers.js";
 
 export default {
   async deleteData(context, payload) {
@@ -117,7 +78,7 @@ export default {
         method = "POST";
         body = JSON.stringify({ ...payload.data, userId: UID });
       } else {
-        const id = generateId();
+        const id = helpers.generateId();
         method = "PUT";
         body = JSON.stringify({ [id]: { ...payload.data, userId: UID } });
       }
@@ -149,7 +110,7 @@ export default {
     try {
       const UID = context.getters.userToken;
       const token = context.getters.sessionToken;
-      const isAdmin = context.rootGetters.userIsAdmin;
+      const isAdmin = context.getters.userIsAdmin;
 
       let urlMod;
 
@@ -170,6 +131,7 @@ export default {
       );
 
       const resData = await res.json();
+
       if (!res.ok) throw new Error("Couldn't retrieve data.\n Try again");
 
       if (!isAdmin) {
@@ -180,27 +142,35 @@ export default {
           }
 
           const requests = resData.requests
-            ? setDatabaseId(resData.requests)
+            ? helpers.setDatabaseId(resData.requests)
             : [];
 
           const goals = resData.goals
-            ? await context.dispatch("checkGoals", setDatabaseId(resData.goals))
+            ? await context.dispatch(
+                "checkGoals",
+                helpers.setDatabaseId(resData.goals)
+              )
             : [];
 
           context.commit("loadData", { goals, requests });
         } else if (payload.type === "goal") {
           const goals = resData
-            ? await context.dispatch("checkGoals", setDatabaseId(resData))
+            ? await context.dispatch(
+                "checkGoals",
+                helpers.setDatabaseId(resData)
+              )
             : [];
 
           context.commit("loadGoals", goals);
         } else {
-          const requests = resData ? setDatabaseId(resData) : [];
+          const requests = resData ? helpers.setDatabaseId(resData) : [];
 
           context.commit("loadRequests", requests);
         }
       } else {
-        let allUsersRequests = resData ? parseAdminRequests(resData) : [];
+        let allUsersRequests = resData
+          ? helpers.parseAdminRequests(resData)
+          : [];
         context.commit("loadRequests", [...allUsersRequests]);
       }
     } catch (err) {
@@ -210,13 +180,14 @@ export default {
   checkGoals(context, goals) {
     const expired = [];
 
-    const checkedGoals = Object.entries(goals).map((goal) => {
-      const isExpired = checkforCompletion(goal[1]);
-      if (isExpired) {
-        expired.push(goal[1]);
+    const checkedGoals = goals.map((goal) => {
+      if (!goal.isCompleted && !goal.isFailed) {
+        const isExpired = helpers.checkforCompletion(goal);
+        if (isExpired) {
+          expired.push(goal);
+        }
       }
-
-      return goal[1];
+      return goal;
     });
 
     context.commit("setExpiredGoals", expired);
@@ -255,9 +226,6 @@ export default {
       } else {
         context.dispatch("getData", { type: "goal" });
       }
-
-      //QUESTION:
-      //WOULD PATCHING THE LOCAL COPY DIRECTLY ALSO, BE FASTER THAN REFETCHING?
     } catch (err) {
       throw err.message;
     }
@@ -290,23 +258,13 @@ export default {
       } else {
         context.dispatch("getData", { type: "request" });
       }
-
-      //QUESTION:
-      //WOULD PATCHING THE LOCAL COPY DIRECTLY ALSO, BE FASTER THAN REFETCHING?
     } catch (err) {
       throw err.message;
     }
   },
+  resetData(context) {
+    context.commit("resetData");
+  },
 };
-
-// NEED A FUNCTION FOR SENDING BUG REPORTS OR SUGGESTIONS (BASICLY  requests)✔
-//--SET UP ADMIN PROFILE: ✔
-//--NEEDS OPTION TO REPLY TO USERS✔
-//--NEEDS OPTION TO ACCEPT OR REJECT A REQUEST AND OPTIONALLY REPLY WITH A MESSAGE✔
-
-//--USER:
-//--NEEDS CARD FOR SENDING MESSAGES ✔
-//--NEEDS FILTER OPTION FOR SEEING PENDING/ACCEPTED/REJECTED REQUESTS ✔
-//--NEEDS 'REQUESTS' SECTIONS ON DATABASE ✔
-//--NEEDS WAY TO SEE REPLIES FROM ADMIN✔
-//--(REQUESTS WILL HAVE 'ACCEPTED' OR 'REJECTED' MARK WITH OPTIONAL MESSAGE ATTACHED)✔
+//SUGGESTION:
+//PATCHING THE LOCAL COPY DIRECTLY BEFORE REFETCHING (LAZY LOADING)

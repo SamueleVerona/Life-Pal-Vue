@@ -96,12 +96,18 @@
             {{ props.profileModeActive ? "Send one" : "Start planning" }}
           </button>
         </div>
-        <ul v-else-if="itemsArray.length">
+        <transition-group
+          tag="ul"
+          name="items-list"
+          mode="out-in"
+          v-else-if="itemsArray.length"
+        >
           <li v-for="item in itemsArray" :key="item.id">
             <list-item
               :item="item"
               :isRequest="props.profileModeActive || props.userIsAdmin"
               :userIsEditing="userIsEditing"
+              :timeInc="itemTimeInc"
               @sendMarkedItem="handleMarkedItems"
               @sendReply="
                 (item) => {
@@ -126,30 +132,23 @@
               </template>
             </list-item>
           </li>
-        </ul>
+        </transition-group>
       </section>
       <div id="dash-footer" @mousedown="handleListEdit">
         <button
           type="button"
           id="button-save-change"
           class="button-dash-secondary"
-          v-if="userIsEditing && props.userIsAdmin"
+          v-if="userIsEditing && props.userIsAdmin && !userIsDeleting"
         >
           save
         </button>
-        <button
-          type="button"
-          id="button-rem"
-          class="button-dash-secondary"
-          v-if="userIsEditing && props.userIsAdmin"
-        >
-          delete
-        </button>
+
         <button
           type="button"
           id="button-confirm"
           class="button-dash-secondary"
-          v-if="userIsEditing && userIsDeleting"
+          v-if="userIsEditing && userIsDeleting && selectedItems.length"
         >
           confirm
         </button>
@@ -161,6 +160,14 @@
         >
           select all
         </button>
+        <button
+          type="button"
+          id="button-rem"
+          class="button-dash-secondary"
+          v-if="userIsEditing && props.userIsAdmin"
+        >
+          delete
+        </button>
 
         <button
           type="button"
@@ -168,16 +175,13 @@
           class="button-dash-secondary"
           v-if="!userIsAdding && itemsArray.length"
         >
-          {{ props.userIsAdmin ? "edit" : "delete" }}
+          {{ props.userIsAdmin ? "edit" : userIsEditing ? "close" : "delete" }}
         </button>
       </div>
     </section>
-    <section
-      id="section-stats"
-      class="maximized"
-      v-if="!props.profileModeActive && !userIsAdmin"
-    >
-      <section id="section-stats-content" v-if="statsSectionVisible">
+    <transition name="stats">
+      <section id="section-stats" v-if="statsSectionVisible">
+        <!-- <section id="section-stats-content"> -->
         <div class="stat">
           <h3 class="progress-bar-text">
             All time goals:
@@ -226,24 +230,26 @@
             ></div>
           </div>
         </div>
+        <!-- </section> -->
       </section>
-    </section>
-
+    </transition>
     <base-dialog
       class="dialog-dash"
-      :show="userIsConfirming"
+      :show="userIsConfirming || errorMessage"
       :errorMessage="
-        selectedItems.length > 1
-          ? `Once they're gone, they're gone`
-          : `Once it's gone, it's gone`
+        errorMessage ||
+        (selectedItems.length > 1
+          ? `Once they're gone,\nthey're gone`
+          : `Once it's gone,\nit's gone`)
       "
-      :submitText="`delete`"
+      :submitText="errorMessage ? 'click outside' : `delete`"
       :allConfirmed="selectedItems.length > 0"
       :buttonBackground="`var(--dialog-button-color-delete)`"
       :wrapperBackground="`var(--dialog-wrapper-color-delete)`"
       @confirm-action="deleteItems"
       @close="
         () => {
+          errorMessage = '';
           userIsConfirming = false;
         }
       "
@@ -254,7 +260,15 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { ref, defineProps, defineEmits, computed, onMounted, watch } from "vue";
+import {
+  ref,
+  defineProps,
+  defineEmits,
+  computed,
+  onMounted,
+  watch,
+  onUnmounted,
+} from "vue";
 
 const store = useStore();
 const props = defineProps([
@@ -357,7 +371,8 @@ watch(selectedItems, () => {
     : (allSelectedFlag.value = true);
 });
 
-watch(props, () => {
+const dashMode = computed(() => props.profileModeActive);
+watch(dashMode, () => {
   if (props.profileModeActive || props.userIsAdmin) {
     primaryOptionSelected.value = "pending";
   } else {
@@ -365,6 +380,7 @@ watch(props, () => {
   }
 });
 
+const errorMessage = ref();
 async function deleteItems() {
   try {
     await store.dispatch("deleteData", {
@@ -374,7 +390,7 @@ async function deleteItems() {
     userIsEditing.value = false;
     userIsDeleting.value = false;
   } catch (err) {
-    console.log(err);
+    errorMessage.value = err;
   }
   selectedItems.value = [];
   userIsConfirming.value = false;
@@ -382,6 +398,7 @@ async function deleteItems() {
 
 function toggleListEdit() {
   userIsEditing.value = !userIsEditing.value;
+  selectedItems.value = [];
   if (!props.userIsAdmin) userIsDeleting.value = true;
 }
 
@@ -440,8 +457,8 @@ const statsSectionVisible = ref(false);
 
 function toggleStats() {
   statsSectionVisible.value = !statsSectionVisible.value;
-  const section = document.querySelector("#section-stats");
-  section.classList.toggle("maximized");
+  // const section = document.querySelector("#section-stats");
+  // section.classList.toggle("maximized");
 }
 
 const userStats = computed(() => {
@@ -513,6 +530,7 @@ function handleListEdit(e) {
       sendMarkedReqs();
       break;
     default:
+      userIsEditing.value = false;
       return;
   }
 }
@@ -538,11 +556,23 @@ watch(itemsArray, () => {
       : emits("maxItemsReached", false);
 });
 
+let timer;
+
+const itemTimeInc = ref(0);
+
 onMounted(() => {
   props.profileModeActive || props.userIsAdmin
     ? (primaryOptionSelected.value = "pending")
     : (primaryOptionSelected.value = props.calendarTimeOpt);
+
+  if (props.allGoals.length)
+    timer = setInterval(() => {
+      itemTimeInc.value -= 1000;
+      // console.log(itemTimeInc.value);
+    }, 1000);
 });
+
+onUnmounted(() => clearInterval(timer));
 </script>
 
 <style scoped>
@@ -801,17 +831,16 @@ header {
   background: rgb(255, 76, 66);
   border-color: rgb(249, 83, 83);
   color: white;
+  font-weight: 500;
 }
-#button-edit:hover {
-  /* color: white; */
-}
+
 .button-dash-secondary:hover {
   color: rgb(9, 247, 255);
   box-shadow: 0rem 0.2rem 0.5rem rgba(128, 128, 128, 0.434);
 }
 
 #button-rem {
-  background: rgba(255, 125, 125, 0.995);
+  background: rgba(173, 66, 66, 0.995);
   border: none;
   color: white;
 }
@@ -860,56 +889,41 @@ h2,
   cursor: pointer;
   width: 100%;
   height: 100%;
-  border: 2px solid rgb(0, 0, 0);
-  border-bottom: 3px solid rgba(0, 0, 0, 0.986);
 
   position: absolute;
   bottom: 0rem;
   right: 0;
-  border: solid 3px rgb(255, 0, 128);
+  border-style: none;
+  border: solid 1px rgb(0, 255, 157);
 
   border-radius: 40px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: brightness(90%);
+  transition: all 0.2s ease;
 }
-.remove-checkbox::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 4rem;
-  aspect-ratio: 1;
 
-  border-bottom-left-radius: 20px;
-
-  border-left: solid 3px;
-  border-bottom: solid 3px;
-  border-color: rgb(255, 0, 128);
-  background: transparent;
-}
 .remove-checkbox:checked {
   background: linear-gradient(
     to bottom right,
-    rgba(255, 46, 46, 0.393),
+    rgba(255, 10, 22, 0.711),
     transparent 60%
   );
-}
-.remove-checkbox:checked::after {
-  background: rgb(255, 0, 128);
+  border-color: red;
+  backdrop-filter: brightness(100%);
 }
 
 #section-stats {
+  width: 40%;
+  position: absolute;
+  backdrop-filter: blur(15px);
+  right: 0;
+  top: 5%;
+  height: 90%;
+  /* transform: translateX(0) translateY(5%); */
   display: flex;
   flex-direction: column;
-  padding: 1rem 0rem;
-  height: 100%;
-  background: transparent;
-  position: absolute;
-  right: 0;
-  top: 0;
-  opacity: 1;
-  backdrop-filter: blur(15px);
-  transform: translateX(0px);
-  transition: all 0.3s ease;
+  justify-content: center;
+  align-items: center;
+  border-left: solid 1px #1dffa8e3;
 }
 
 #section-stats-content {
@@ -917,7 +931,6 @@ h2,
   flex-direction: column;
   height: 100%;
   border: none;
-  border-left: solid 1px #1dffa8e3;
 
   background: transparent;
   padding: 0rem;
@@ -927,11 +940,21 @@ h2,
   align-items: center;
 }
 
-#section-stats.maximized {
-  /* width: 30%; */
-
-  right: -2rem;
+.stats-enter-from,
+.stats-leave-to {
   opacity: 0;
+  transform: translateX(200px);
+}
+
+.stats-enter-active,
+.stats-leave-active {
+  transition: all 0.5s ease-in-out;
+}
+
+.stats-leave-from,
+.stats-enter-to {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 #dash-header-stats {
@@ -946,11 +969,12 @@ h2,
 }
 
 .stat {
-  border: solid 2px rgb(9, 249, 205);
-  border-radius: 18px;
+  border: solid 1px rgb(9, 249, 205);
+  border-radius: 30px;
   width: 80%;
   padding: 1rem;
   margin: 1rem 0rem;
+  box-shadow: 0.2rem 0.3rem 0.5rem rgb(186, 186, 186);
 }
 
 .progress-bar {
@@ -984,5 +1008,61 @@ h2,
 
 .dialog-button {
   color: white;
+}
+
+.items-list-enter-from,
+.items-list-leave-to {
+  opacity: 0;
+  transform: scale(0.1);
+  transform-origin: center;
+}
+.items-list-enter-active:nth-child(even) {
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.items-list-enter-active:nth-child(odd) {
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) 0.2s;
+}
+.items-list-leave-active {
+  transition: all 0.5s ease-out;
+  position: absolute;
+}
+.items-list-leave-active:nth-child(odd) {
+  transition: all 0.5s ease-out 0.05s;
+  position: absolute;
+}
+.items-list-enter-to,
+.items-list-leave-from {
+  transform: scale(1);
+
+  opacity: 1;
+  transform-style: preserve-3d;
+}
+
+.items-list-move {
+  transition: all 0.5s ease;
+}
+
+@media screen and (max-width: 748px) {
+  #items-container ul {
+    grid-template-columns: 50% 1fr;
+    grid-auto-rows: auto;
+    grid-template-areas: "li li";
+  }
+}
+
+@media screen and (max-width: 600px) {
+  #items-container ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* grid-auto-columns: auto;
+    grid-auto-rows: auto;
+
+    gap: 0; */
+  }
+
+  #items-container ul li {
+    width: 90%;
+  }
 }
 </style>

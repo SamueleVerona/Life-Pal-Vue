@@ -2,7 +2,6 @@
   <header>
     <h1>Life Pal</h1>
     <router-link :to="toPath">{{ pathText }}</router-link>
-    <!-- <h2 id="user" v-if="route.params.isAuth">{{ store.getters.userId }}</h2> -->
   </header>
 </template>
 

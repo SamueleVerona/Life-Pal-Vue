@@ -1,5 +1,4 @@
 <template>
-  <!-- <router-link :to="userId"></router-link> -->
   <section id="content">
     <user-nav
       v-if="!hasSomeExpired"
@@ -7,58 +6,61 @@
       @mousedown="handleNavigation"
       :toggleProfile="toggleProfile"
       :isAdmin="isAdmin"
+      :isLocked="isLocked"
     ></user-nav>
     <section id="user-home-element">
-      <user-calendar
-        id="calendar-element"
-        v-if="navButtonClicked === 'calendar' && !hasSomeExpired && !isAdmin"
-        :userGoals="userData"
-        @send-time-id="
-          (timeId) => {
-            dashboardBackup = timeId;
-            timeSelection = timeId;
-          }
-        "
-        @send-last-view="(view) => (lastView = view)"
-        @send-date="
-          (date) => {
-            dateInfo = date.actualDate;
-            dateLabel = date.dateLabel;
-          }
-        "
-        @send-nav-options="handleNewItem"
-        @max-items-reached="blockNewItem"
-        :view="lastView"
-      ></user-calendar>
-      <user-dash
-        v-if="navButtonClicked === 'dashboard' && !hasSomeExpired"
-        id="dash-element"
-        :calendarTimeOpt="timeSelection"
-        :allGoals="userData"
-        :finished="finished"
-        :unfinished="unfinished"
-        :profileModeActive="toggleProfile"
-        :userIsAdmin="isAdmin"
-        :userRequests="userRequests"
-        @max-items-reached="blockNewItem"
-        @open-new-item="handleNewItem"
-        @open-calendar="
-          () => {
-            navButtonClicked = 'calendar';
-          }
-        "
-      >
-      </user-dash>
-      <goal-card
-        v-if="navButtonClicked === 'goal' && !hasSomeExpired"
-        :dateInfo="dateInfo"
-        :itemLabel="dateLabel"
-        :goalType="timeSelection"
-        :isRequest="toggleProfile"
-        id="goal-card-element"
-        @goal-saved="resetNav"
-        @back-action="handleBackAction"
-      ></goal-card>
+      <transition name="home" mode="out-in">
+        <user-calendar
+          id="calendar-element"
+          v-if="navButtonClicked === 'calendar' && !isAdmin"
+          :userGoals="userData"
+          @send-time-id="
+            (timeId) => {
+              dashboardBackup = timeId;
+              timeSelection = timeId;
+            }
+          "
+          @send-last-view="(view) => (lastView = view)"
+          @send-date="
+            (date) => {
+              dateInfo = date.actualDate;
+              dateLabel = date.dateLabel;
+            }
+          "
+          @send-nav-options="handleNewItem"
+          @max-items-reached="blockNewItem"
+          :view="lastView"
+        ></user-calendar>
+        <user-dash
+          v-else-if="navButtonClicked === 'dashboard'"
+          id="dash-element"
+          :calendarTimeOpt="timeSelection"
+          :allGoals="userData"
+          :finished="finished"
+          :unfinished="unfinished"
+          :profileModeActive="toggleProfile"
+          :userIsAdmin="isAdmin"
+          :userRequests="userRequests"
+          @max-items-reached="blockNewItem"
+          @open-new-item="handleNewItem"
+          @open-calendar="
+            () => {
+              navButtonClicked = 'calendar';
+            }
+          "
+        >
+        </user-dash>
+        <item-card
+          v-else
+          :dateInfo="dateInfo"
+          :itemLabel="dateLabel"
+          :goalType="timeSelection"
+          :isRequest="toggleProfile"
+          id="goal-card-element"
+          @goal-saved="resetNav"
+          @back-action="handleBackAction"
+        ></item-card>
+      </transition>
     </section>
     <base-dialog
       :show="hasSomeExpired"
@@ -66,6 +68,8 @@
       :submitText="dialogText"
       :allConfirmed="allConfirmed"
       @confirmAction="confirmMarkedGoals"
+      :wrapperBackground="dialogBkgColor"
+      :buttonBackground="dialogBtnColor"
     >
       <template #title>
         <list-item
@@ -83,8 +87,8 @@
       :show="!!gottenError"
       :submitText="unsubText"
       :allConfirmed="unsubFlag"
-      :buttonBackground="`var(--dialog-button-color-delete)`"
       :wrapperBackground="dialogBkgColor"
+      :buttonBackground="`var(--dialog-button-color-delete)`"
       @close="closeDialog"
       @confirm-action="deleteAccount"
     ></base-dialog>
@@ -92,18 +96,21 @@
 </template>
 
 <script setup>
-import { defineComponent, ref, computed, onMounted, provide } from "vue";
+// v-if="navButtonClicked === 'dashboard' && !hasSomeExpired"
+// v-if="navButtonClicked === 'goal' && !hasSomeExpired"
+
+import { defineComponent, ref, computed, onMounted, provide, watch } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 
 import UserNav from "../navigation/UserNav.vue";
 import UserDash from "../navigation/UserDash.vue";
-import GoalCard from "../navigation/ItemCard.vue";
+import ItemCard from "../navigation/ItemCard.vue";
 import UserCalendar from "../navigation/UserCalendar.vue";
 
 defineComponent(UserNav);
 defineComponent(UserDash);
-defineComponent(GoalCard);
+defineComponent(ItemCard);
 defineComponent(UserCalendar);
 
 const store = useStore();
@@ -115,6 +122,7 @@ const dateInfo = ref();
 const dateLabel = ref();
 
 const isAdmin = computed(() => store.getters.userIsAdmin);
+const isLocked = computed(() => store.getters.userIsLocked);
 
 provide("isAdmin", isAdmin.value);
 
@@ -139,7 +147,10 @@ function handleMarkedGoals(goalObj) {
   const goalId = goalObj.itemId;
   markedGoals.value[goalId] = goalObj;
 
-  if (allConfirmed.value) dialogText.value = "Confirm ";
+  if (allConfirmed.value) {
+    dialogText.value = "Confirm ";
+    dialogBtnColor.value = "var(--dialog-button-color-default-green)";
+  }
 }
 
 const gottenError = ref(null);
@@ -175,12 +186,24 @@ function handleNavigation(e) {
   const isDashboardBtn = targetButton.includes("dashboard");
 
   if (isLogBtn) {
-    router.push({
+    router.replace({
       path: "/landing",
     });
     store.dispatch("logout");
   }
+
+  const validSession = computed(() => store.getters.isAuth);
+
+  watch(validSession, () => {
+    if (!validSession.value)
+      router.replace({
+        path: "/landing",
+      });
+  });
+
   if (isUnsubBtn) {
+    unsubText.value = ref("delete account");
+
     unsub();
   }
   if (isProfileButton) {
@@ -243,19 +266,25 @@ function blockNewItem(boolean) {
   hasMaxItems.value = boolean;
 }
 
-function handleNewItem() {
-  if (hasMaxItems.value) {
-    dialogBkgColor.value = "var(--dialog-button-color-default-earth)";
-    unsubText.value = "click outside";
-    gottenError.value = "Max items reached for this slot.\n Try deleting some";
-  } else {
-    navButtonClicked.value = "goal";
+function handleNewItem(navOption) {
+  if (navOption === "dashboard") navButtonClicked.value = "dashboard";
+  else {
+    if (hasMaxItems.value) {
+      dialogBkgColor.value = "var(--dialog-button-color-default-earth)";
+      unsubText.value = "click outside";
+      gottenError.value =
+        "Max items reached for this slot.\n Try deleting some";
+    } else {
+      navButtonClicked.value = "goal";
+    }
   }
 }
 
 const dialogBkgColor = ref("black");
+const dialogBtnColor = ref("white");
 
 onMounted(() => {
+  console.log("mounted");
   if (isAdmin.value) {
     navButtonClicked.value = "dashboard";
   }
@@ -271,7 +300,7 @@ onMounted(() => {
   padding: 2rem;
 }
 #nav {
-  margin: 1rem auto;
+  margin: 0rem auto 1rem auto;
   width: 100%;
 
   padding: 0.5rem 1rem;
@@ -291,12 +320,11 @@ onMounted(() => {
   height: 100%;
 }
 #goal-card-element {
-  width: 60%;
-  margin: 0rem auto;
-}
-
-#goal-card-element {
+  width: 50rem;
   height: 100%;
+
+  margin: 0rem auto;
+  transition: all 0.3s ease;
 }
 
 #calendar-element {
@@ -304,7 +332,43 @@ onMounted(() => {
   height: 100%;
 }
 
+.home-enter-from {
+  opacity: 0;
+  transform: rotateY(-15deg);
+  transform-origin: right;
+}
+.home-leave-to {
+  opacity: 0;
+  transform: rotateY(-15deg);
+  transform-origin: left;
+}
+.home-enter-active,
+.home-leave-active {
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.home-enter-to,
+.home-leave-from {
+  opacity: 1;
+  transform: rotateY(0deg);
+}
+
+@media screen and (max-width: 1024px) {
+  #goal-card-element {
+    width: 40rem;
+  }
+}
+
+/* @media screen and (max-width: 768px) {
+  #goal-card-element {
+    width: 80%;
+  }
+} */
+
 @media screen and (max-width: 500px) {
+  #nav {
+    padding: 0.5rem 0rem;
+  }
   #goal-card-element {
     width: 100%;
   }

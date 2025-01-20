@@ -16,4 +16,4 @@ app.component("list-item", ListItem);
 app.use(router);
 app.use(store);
 
-app.mount("#app");
+router.isReady().then(() => app.mount("#app"));

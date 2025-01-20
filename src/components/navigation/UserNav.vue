@@ -33,7 +33,7 @@
           id="button-unsub"
           class="btn-primary-nav"
           data-button-id="unsub"
-          v-if="!props.isAdmin && props.toggleProfile"
+          v-if="!props.isAdmin && props.toggleProfile && !props.isLocked"
         >
           delete account
         </button>
@@ -49,7 +49,6 @@
           log out
         </button>
       </li>
-
       <li>
         <button
           type="button"
@@ -57,6 +56,7 @@
           class="btn-primary-nav"
           data-button-id="profile"
           :disabled="props.isAdmin"
+          :toggled="props.toggleProfile"
         ></button>
       </li>
     </ul>
@@ -65,7 +65,7 @@
 
 <script setup>
 import { defineProps } from "vue";
-const props = defineProps(["toggleProfile", "isAdmin"]);
+const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
 </script>
 
 <style scoped>
@@ -174,7 +174,15 @@ button:not(:disabled):active {
   aspect-ratio: 1/1;
   background-image: url(/src/assets/user.png);
   background-size: cover;
-  border: none;
+  background-clip: border-area;
+  border: solid 2px rgb(221, 221, 221);
+  border-radius: 100%;
+  transition: all 0.2s ease;
+}
+
+#button-profile:hover,
+#button-profile[toggled="true"] {
+  border-color: rgb(1, 217, 229);
 }
 #button-log {
   border: none;
@@ -191,5 +199,29 @@ button:not(:disabled):active {
 #button-log:hover,
 #button-unsub:hover {
   color: rgb(255, 0, 38);
+}
+
+@media screen and (max-width: 900px) {
+  #button-calendar.flipped {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .btn-primary-nav.flip-button.flipped {
+    display: none;
+  }
+  .btn-primary-nav,
+  span {
+    font-size: 2.5rem;
+  }
+  #button-log {
+    border: none;
+  }
+  #button-unsub {
+    border: none;
+
+    border-right: solid 1px rgb(218, 218, 218);
+  }
 }
 </style>

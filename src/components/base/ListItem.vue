@@ -7,8 +7,11 @@
       }}
     </h2>
     <div class="goal-info">
-      <p class="goal-description">
-        {{ props.item.desc }}
+      <p class="goal-description" v-if="props.item.desc">
+        {{
+          props.item.desc[0].toUpperCase() +
+          props.item.desc.slice(1).toLowerCase()
+        }}
       </p>
       <div class="goal-stats">
         <h3 class="goal-date">
@@ -46,11 +49,13 @@
         :class="{ comp: goalStatus && markFlag, fail: !goalStatus && markFlag }"
         v-if="props.hasExpired || (isAdmin && props.userIsEditing)"
       >
-        <h3 class="goal-toggle-text">{{ goalToggleText }}</h3>
+        <h3 class="goal-toggle-text">
+          {{ goalToggleText }}
+        </h3>
         <div class="button-wrapper">
           <button
             type="button"
-            class="button-completed"
+            class="toggle-btn button-completed"
             :class="{ selected: goalStatus && markFlag }"
             @click="markAs"
           >
@@ -58,7 +63,7 @@
           </button>
           <button
             type="button"
-            class="button-fail"
+            class="toggle-btn button-fail"
             :class="{ selected: !goalStatus && markFlag }"
             @click="markAs"
           >
@@ -67,13 +72,13 @@
         </div>
       </div>
       <div class="progress-bar" v-if="isProgressVisible && !props.isRequest">
-        <h3 class="progress-bar-text">
-          <!-- time left:
-                    {{ compRate(goal.started, goal.compDate) }} -->
-        </h3>
         <div
           :style="{ width: compRate(props.item.started, props.item.compDate) }"
-        ></div>
+        >
+          <span class="progress-bar-text">
+            {{ timeLeft }}
+          </span>
+        </div>
       </div>
     </div>
     <div>
@@ -92,7 +97,13 @@ const isProgressVisible = computed(
 );
 const requestReply = ref();
 
-const props = defineProps(["item", "hasExpired", "isRequest", "userIsEditing"]);
+const props = defineProps([
+  "item",
+  "hasExpired",
+  "isRequest",
+  "userIsEditing",
+  "timeInc",
+]);
 
 const emits = defineEmits(["sendMarkedItem", "sendReply"]);
 const classes = computed(() => {
@@ -115,17 +126,37 @@ function compRate(start, comp) {
   }
 }
 
+const goalStartMs = new Date(props.item.started).getTime();
+const goalCompMs = new Date(props.item.compDate).getTime();
+const totalTime = goalCompMs - goalStartMs;
+const elapsedTime = Date.now() - goalStartMs;
+
+const timeLeft = computed(() => {
+  const timeLeftS = (totalTime - elapsedTime + props.timeInc) / 1000;
+  const seconds = Math.floor(timeLeftS % 60);
+  const mins = Math.floor((timeLeftS / 60) % 60);
+  const hours = Math.floor(timeLeftS / 3600);
+
+  if (timeLeftS <= 0) {
+    return "expired";
+  }
+
+  return `left: ${hours}H ${mins}M ${seconds}S `;
+});
+
 const goalToggleText = ref("");
 
-props.item.itemLabel === "pending"
-  ? (goalToggleText.value = "mark status")
-  : (goalToggleText.value = "change status");
+if (props.isRequest) {
+  props.item.itemLabel === "pending"
+    ? (goalToggleText.value = "mark status")
+    : (goalToggleText.value = "change status");
+} else {
+  goalToggleText.value = "mark it";
+}
 
 const goalStatus = ref(false);
 const markFlag = ref(false);
 
-// const completed = ref(false);
-// const failed = ref(false);
 const reqStatus = ref();
 const adminIsReplying = ref(false);
 
@@ -169,7 +200,6 @@ function markAs(e) {
 
 function sendReply() {
   if (requestReply.value && requestReply.value.length > 5) {
-    console.log("writing");
     emits("sendReply", {
       isReply: true,
       request: {
@@ -195,12 +225,12 @@ watch(props.item, () => {
   display: flex;
   flex-direction: column;
   margin: 0.8rem 0rem;
+  padding: 1rem;
 
-  min-height: max-content;
+  max-height: max-content;
   width: 100%;
 
   border-radius: 40px;
-  /* align-self: center; */
   box-shadow: var(--basic-shadow);
 }
 
@@ -211,9 +241,9 @@ watch(props.item, () => {
 }
 .goal-title {
   min-height: max-content;
-  width: max-content;
+  width: 100%;
 
-  padding: 0.5rem 1.5rem;
+  padding: 0rem 1.5rem 0.5rem 1.5rem;
   margin: 0.5rem 0rem;
   align-self: center;
   border: none;
@@ -223,18 +253,16 @@ watch(props.item, () => {
   text-align: center;
   font-weight: bolder;
   font-style: italic;
+  /* text-overflow: clip; */
 }
 
 .goal-info {
   display: flex;
   flex-direction: column;
-  padding-top: 1rem;
   text-overflow: clip;
   font-size: 3rem;
-  min-height: 10rem;
 }
 .goal-description {
-  /* min-height: 3rem; */
   width: 90%;
   padding: 0.5rem 1.5rem 0.5rem 0.8rem;
   border: none;
@@ -242,12 +270,12 @@ watch(props.item, () => {
   align-self: center;
   text-align: center;
   font-weight: 500;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
 }
 .goal-stats {
   position: relative;
   display: flex;
-  padding: 0.5rem;
+  padding-top: 0.5rem;
   margin: 0.5rem 0rem;
   width: max-content;
   text-align: center;
@@ -300,7 +328,7 @@ watch(props.item, () => {
 
   width: 50%;
   border-radius: 18px;
-  border: solid 2px blue;
+  border: solid 2px rgb(183, 183, 183);
   margin-bottom: 0.5rem;
   text-align: center;
   font-size: 1.8rem;
@@ -335,7 +363,6 @@ watch(props.item, () => {
   position: absolute;
   font-size: 1.3rem;
   width: max-content;
-  /* top: 0.4rem; */
   color: red;
 }
 button:hover {
@@ -345,47 +372,97 @@ button:hover {
 .goal-toggle.comp {
   border-color: rgb(4, 208, 109);
 }
+.toggle-btn {
+  margin: 0rem 0.2rem;
+}
 
-.button-wrapper .button-completed.selected {
+.button-completed.selected {
   color: rgb(6, 255, 135);
 }
 .goal-toggle.fail {
   border-color: rgb(255, 6, 102);
 }
-.button-wrapper .button-fail.selected {
-  color: rgb(255, 6, 6);
+.button-fail.selected {
+  color: rgb(255, 6, 81);
 }
 
 .progress-bar {
   height: 2rem;
   width: 50%;
   margin-bottom: 0.3rem;
-  border: solid 2px rgb(6, 82, 148);
-  border-bottom: solid 3px rgb(6, 82, 148);
+  border: solid 1px rgb(226, 226, 226);
+  /* border-bottom: solid 3px rgb(6, 82, 148); */
 
-  border-radius: 30px;
+  border-radius: 50px;
   background: rgb(255, 255, 255);
 
   align-self: center;
+  position: relative;
+  /* overflow: visible; */
 }
-.progress-bar > div {
+.progress-bar div {
   background: rgb(84, 162, 247);
   border-radius: 30px;
   border-right: solid 4px rgb(67, 199, 251);
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
 
   height: 100%;
   z-index: 100;
 }
+
+.progress-bar div:after {
+  content: "";
+  height: 100%;
+  width: inherit;
+  position: absolute;
+  /* border: solid; */
+  bottom: 0;
+  border-radius: 30px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0),
+    rgb(146, 255, 199)
+  );
+  animation: progress-glow 3s cubic-bezier(0.86, 0, 0.07, 1) infinite;
+  box-shadow: 0rem 0rem 0.6rem 0.1rem rgb(67, 199, 251);
+  overflow: visible;
+}
+
+@keyframes progress-glow {
+  0% {
+    opacity: 0;
+    width: 0rem;
+  }
+  40% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+    width: inherit;
+    box-shadow: 0rem 0rem 0.6rem 0rem rgb(67, 199, 251);
+  }
+
+  100% {
+    opacity: 0;
+    /* width: inherit;
+    box-shadow: 0rem 0rem 0.6rem 0rem rgb(67, 199, 251); */
+  }
+}
 .progress-bar-text {
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: rgb(26, 42, 101);
-  font-size: 1.5rem;
-  line-height: 1.5rem;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: max-content;
 
+  text-align: center;
+  font-size: 1.2rem;
+  line-height: 1.8rem;
+  font-weight: 500;
+  text-transform: lowercase;
+
+  color: inherit;
   background: none;
 }
 .label {
@@ -399,8 +476,8 @@ button:hover {
 
   background: radial-gradient(
     ellipse at bottom left,
-    rgba(109, 106, 255, 0.67) 1%,
-    rgba(117, 200, 255, 0.659) 20%,
+    var(--dialog-button-color-default-earth) 1%,
+    rgba(255, 225, 161, 0.659) 20%,
     rgba(244, 236, 209, 0.345) 13%,
     rgba(234, 231, 224, 0.345) 15%,
     transparent 95%
@@ -423,7 +500,7 @@ button:hover {
   color: var(--item-goal-day);
 }
 .goal-content.week {
-  border: solid 1px rgb(255, 116, 47, 0.389);
+  border: solid 1px var(--item-goal-week);
   background: radial-gradient(
     ellipse at bottom right,
     rgba(255, 73, 60, 0.742) 1%,
@@ -434,22 +511,14 @@ button:hover {
   );
 }
 .goal-content.month {
-  border: solid 1px rgba(255, 161, 47, 0.389);
+  border: solid 1px var(--item-goal-month);
   background: radial-gradient(
     ellipse at bottom right,
-    rgba(235, 60, 255, 0.742) 1%,
+    var(--item-goal-month) 1%,
     rgba(255, 199, 169, 0.348) 35%,
     rgba(209, 244, 231, 0.345) 18%,
     rgba(224, 234, 230, 0.345) 20%,
     transparent 25%
   );
 }
-/* .goal-content.year {
-  border: solid 2px rgb(255, 203, 47);
-  border-bottom: solid 10px rgb(255, 203, 47);
-}
-.goal-content.decade {
-  border: solid 2px rgb(47, 210, 255);
-  border-bottom: solid 10px rgb(47, 210, 255);
-} */
 </style>

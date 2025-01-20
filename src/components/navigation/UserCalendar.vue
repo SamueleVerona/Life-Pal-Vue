@@ -128,7 +128,6 @@ const calendarOptions = ref({
       hiddenDays: [0, 2, 3, 4, 5, 6],
       dayHeaders: false,
       dayMaxEventRows: true,
-
       weekNumberFormat: { week: "long" },
       dateAlignment: "month",
       validRange: () => setMonthLimits(),
@@ -169,6 +168,8 @@ const calendarOptions = ref({
   fixedWeekCount: false,
   eventSources: true,
   handleWindowResize: true,
+  windowResizeDelay: 1,
+  locale: "en",
   windowResize: () => {
     if (window.innerWidth < 768 && window.innerWidth > 500) {
       calendar.value.getApi().setOption("weekNumberFormat", { week: "short" });
@@ -524,6 +525,11 @@ function setDayGoals(dayView) {
   border: solid;
 }
 
+:deep(.fc-multiMonthYear-view .fc-daygrid-day-frame) {
+  border: none;
+  display: none;
+}
+
 :deep(.fc-dayGridMonth-view .fc-daygrid-day-frame) {
   border-color: rgb(255, 100, 188);
 }
@@ -584,14 +590,14 @@ function setDayGoals(dayView) {
 :deep(.fc .fc-button-primary:focus),
 :deep(.fc .fc-button-primary:not(:disabled):focus) {
   box-shadow: none;
-  border: solid 2px rgb(121, 188, 255);
+  border: solid 1px rgb(1, 217, 229);
 }
 
 :deep(.fc .fc-button-primary:active),
 :deep(.fc .fc-button-primary:not(:disabled).fc-button-active) {
   background: none;
   border: solid 1px rgb(1, 217, 229);
-  border-bottom: solid 2px rgb(0, 242, 255);
+  /* border-bottom: solid 2px rgb(0, 242, 255); */
   color: rgb(4, 167, 172);
 }
 
@@ -604,11 +610,11 @@ function setDayGoals(dayView) {
   font-family: inherit;
   font-weight: 500;
   background: none;
-  color: rgb(0, 181, 181);
+  color: rgb(4, 167, 172);
 }
 
 :deep(.fc .fc-add-button:hover) {
-  color: rgb(243, 138, 96);
+  color: var(--dialog-button-color-default-earth);
 }
 
 :deep(.fc-scrollgrid),
@@ -619,8 +625,8 @@ function setDayGoals(dayView) {
   border: none;
 }
 
+:deep(.fc-day-today),
 :deep(.fc-multimonth-title),
-:deep(.fc-multimonth-daygrid-table),
 :deep(thead),
 :deep(.fc-daygrid-day-events),
 :deep(.fc-daygrid-event-harness),
@@ -705,6 +711,7 @@ function setDayGoals(dayView) {
     aspect-ratio: 1;
     margin: 2px 0px;
     margin-bottom: 0.5rem;
+    border-radius: 30px;
   }
   :deep(.fc-multimonth-month:not([is-valid])) {
     display: none;
@@ -742,6 +749,7 @@ function setDayGoals(dayView) {
     height: 100%;
     overflow: visible;
   }
+
   :deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]),
   :deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
     overflow: visible;
