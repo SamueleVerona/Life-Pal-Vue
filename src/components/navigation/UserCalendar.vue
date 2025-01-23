@@ -171,10 +171,14 @@ const calendarOptions = ref({
   windowResizeDelay: 1,
   locale: "en",
   windowResize: () => {
+    const calApi = calendar.value.getApi();
     if (window.innerWidth < 768 && window.innerWidth > 500) {
-      calendar.value.getApi().setOption("weekNumberFormat", { week: "short" });
+      calApi.setOption("multiMonthTitleFormat", { month: "narrow" });
+
+      calApi.setOption("weekNumberFormat", { week: "short" });
     } else {
-      calendar.value.getApi().setOption("weekNumberFormat", { week: "long" });
+      calApi.setOption("weekNumberFormat", { week: "long" });
+      calApi.setOption("multiMonthTitleFormat", { month: "short" });
     }
   },
   moreLinkClick: () => navigateTo("dashboard"),
@@ -194,9 +198,6 @@ const calendarOptions = ref({
     setEvents(props.userGoals);
     viewInfo.value = info;
     currentView.value = info.view.type;
-    if (isYearView.value) {
-      calendar.value.getApi().gotoDate("2025-01");
-    }
   },
   viewWillUnmount: (info) => {
     emits("sendLastView", info.view.type);
@@ -309,21 +310,15 @@ function setMonthGoals(calendarView) {
   let timeSlots = calendarView.el.childNodes;
 
   timeSlots.forEach((slot) => {
-    slot.setAttribute("style", "");
+    // slot.setAttribute("style", "");
 
     const slotInternalDate = slot.dataset.date;
-
     const firstOfMonth = slotInternalDate + "-01";
-    const monthShortName = new Date(slotInternalDate)
-      .toUTCString()
-      .slice(8, 11);
 
     const perMonthEvents = getTimeSelectionEvents("month", firstOfMonth);
     let eventsIndex = "";
 
     if (perMonthEvents) eventsIndex = "+" + perMonthEvents;
-
-    slot.textContent = monthShortName;
 
     slot.insertAdjacentHTML(
       "beforeend",
@@ -397,6 +392,8 @@ function setDayGoals(dayView) {
 <style scoped>
 * {
   text-decoration: none;
+
+  /* font-weight: 800; */
 }
 
 :deep(.is-hidden) {
@@ -408,7 +405,8 @@ function setDayGoals(dayView) {
 }
 
 :deep(.fc) {
-  font-family: "Afacad Flux", Sans-serif;
+  font-family: "Roboto Regular", sans-serif;
+
   height: 100%;
   width: 100%;
   padding: 1rem;
@@ -416,7 +414,6 @@ function setDayGoals(dayView) {
   border-radius: 30px;
   border: solid 2px rgba(128, 128, 128, 0.308);
   border-bottom: solid 3px rgba(128, 128, 128, 0.308);
-  font-family: "Roboto", sans-serif;
 }
 
 :deep(.fc .fc-toolbar.fc-header-toolbar) {
@@ -625,8 +622,9 @@ function setDayGoals(dayView) {
   border: none;
 }
 
+/* :deep(.fc-multimonth-title), */
 :deep(.fc-day-today),
-:deep(.fc-multimonth-title),
+:deep(.fc-multiMonthYear-view .fc-multimonth-daygrid-table),
 :deep(thead),
 :deep(.fc-daygrid-day-events),
 :deep(.fc-daygrid-event-harness),
@@ -634,6 +632,23 @@ function setDayGoals(dayView) {
 :deep(.fc-event-title),
 :deep(.fc-event-title-container::after) {
   display: none;
+}
+
+:deep(.fc-multimonth-header) {
+  position: absolute;
+  display: contents;
+  top: 0;
+  padding: 0;
+  z-index: -1000;
+}
+
+:deep(.fc-multimonth-title) {
+  width: 100%;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0;
+  align-self: center;
 }
 
 :deep(.fc-multimonth-month) {
@@ -669,7 +684,7 @@ function setDayGoals(dayView) {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: calc(4rem - 15px);
+  font-size: calc(2rem + 0.5vw);
   cursor: pointer;
   color: rgb(0, 149, 255);
   z-index: 100;
@@ -694,6 +709,9 @@ function setDayGoals(dayView) {
     scrollbar-gutter: stable both-edges;
     scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
   }
+
+  /* fc-day fc-day-mon fc-day-future */
+
   :deep(.fc-multiMonthYear-view) {
     flex-direction: column;
     flex-wrap: nowrap;

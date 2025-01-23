@@ -1,55 +1,53 @@
 <template>
-  <section id="goal-card-element">
-    <base-card class="card" id="goal-card">
-      <template #title>
-        <h2 id="goal-card-label">
-          {{ props.isRequest ? "New Request" : "New Goal" }}
-        </h2>
-      </template>
-
-      <template #content>
-        <div class="card-section">
-          <input
-            id="goal-title"
-            type="text"
-            name="goalTitle"
-            placeholder="Choose a title"
-            v-model="inputTitle"
-            maxlength="25"
-            required
-          />
-          <textarea
-            name="goalDesc"
-            id="goal-description"
-            placeholder="Describe your goal"
-            rows="5"
-            cols="1"
-            v-model="inputDesc"
-            required
-            minlength="5"
-          ></textarea>
-        </div>
-      </template>
-      <template #options>
-        <div class="card-section" id="goal-info" v-if="!props.isRequest">
-          <span>Goal for a {{ props.goalType }}</span>
-          <span>Set a completion for :</span>
-          <span>{{ props.itemLabel }}</span>
-        </div>
-      </template>
-      <template #button>
-        <div
-          id="goal-card-controls"
-          class="card-section"
-          @mousedown="handleSubmit"
+  <section class="section">
+    <section class="section__card">
+      <h2 class="card__label">
+        {{ props.isRequest ? "New Request" : "New Goal" }}
+      </h2>
+      <form class="card__form" @submit.prevent>
+        <input
+          class="item__title"
+          type="text"
+          placeholder="Choose a title"
+          v-model="inputTitle"
+          maxlength="25"
+          required
+        />
+        <textarea
+          class="item__description"
+          placeholder="Describe your goal"
+          rows="5"
+          cols="1"
+          v-model="inputDesc"
+          required
+        ></textarea>
+      </form>
+      <section class="card__item-data" v-if="!props.isRequest">
+        <span class="item-data item-data--label"
+          >Goal for a {{ props.goalType }}</span
         >
-          <button type="button" id="button-save">
-            {{ props.isRequest ? "send" : "save" }}
-          </button>
-          <button type="button" id="button-back">back</button>
-        </div>
-      </template>
-    </base-card>
+        <span class="item-data">Set a completion for :</span>
+        <span class="item-data item-data--time-slot">{{
+          props.itemLabel
+        }}</span>
+      </section>
+      <section class="card__controls" @mousedown="handleSubmit">
+        <button
+          type="button"
+          class="btn btn--item-submit"
+          data-button-id="submit"
+        >
+          {{ props.isRequest ? "send" : "save" }}
+        </button>
+        <button
+          type="button"
+          class="btn btn--back-action"
+          data-button-id="back"
+        >
+          back
+        </button>
+      </section>
+    </section>
     <base-dialog
       :show="errorMessage"
       :errorMessage="errorMessage"
@@ -74,10 +72,14 @@ const compDate = ref();
 onBeforeMount(() => (compDate.value = props.dateInfo));
 
 const errorMessage = ref();
+
 function handleSubmit(e) {
   const target = e.target;
-  const isSubmitBtn = target.id.includes("save");
-  const isBtnBack = target.id.includes("back");
+  const validTarget = target.classList.contains("btn");
+  if (!validTarget) return;
+
+  const isSubmitBtn = target.dataset.buttonId.includes("submit");
+  const isBtnBack = target.dataset.buttonId.includes("back");
   if (isBtnBack) {
     emits("backAction");
   }
@@ -145,193 +147,197 @@ async function addGoal() {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 * {
   font-family: "Poppins", sans-serif;
-  font-style: oblique;
 }
 
-#goal-card-element {
+@mixin vertical-flex {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin center-flex {
+  justify-content: center;
+  align-items: center;
+}
+
+.section {
   border-radius: 30px;
   border: solid 2px var(--glow-item-card-dark);
-  /* border-bottom: solid 10px rgba(252, 178, 31, 0.781); */
   box-shadow: 0rem 3rem 4rem var(--glow-item-card-dark),
     0rem 6rem 5rem 5rem var(--glow-item-card-dark);
 
   position: relative;
   animation: shadow-glow 2s infinite ease-in-out;
-}
 
-#goal-card-element::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: 0;
+  @keyframes shadow-glow {
+    0% {
+      box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
+        0rem 5rem 10rem 5rem var(--glow-item-card-dark);
+    }
 
-  width: 8rem;
-  height: 5rem;
-  border: none;
-  border-left: solid 2px rgba(252, 175, 31, 0.781);
-  border-top: solid 2px rgba(252, 175, 31, 0.781);
-  border-top-left-radius: 30px;
-  z-index: -1;
-}
-@keyframes shadow-glow {
-  0% {
-    box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
-      0rem 5rem 10rem 5rem var(--glow-item-card-dark);
-  }
+    50% {
+      box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
+        0rem 5rem 10rem 8rem var(--glow-item-card-light);
+    }
 
-  50% {
-    box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
-      0rem 5rem 10rem 8rem var(--glow-item-card-light);
-  }
-
-  100% {
-    box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
-      0rem 5rem 10rem 5rem var(--glow-item-card-dark);
+    100% {
+      box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
+        0rem 5rem 10rem 5rem var(--glow-item-card-dark);
+    }
   }
 }
 
-#goal-card {
+.section__card {
   height: 100%;
   position: relative;
-  padding: 1rem 1rem;
   background: linear-gradient(10deg, #d9eef81b 40%, #e7dfffdb 100%);
-  display: flex;
-  flex-direction: column;
+  @include vertical-flex;
   justify-content: space-between;
-}
 
-.card-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-#goal-card-label {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  text-align: center;
-  color: rgb(190, 100, 36);
-}
-
-#goal-title {
-  height: max-content;
-  font-size: 3rem;
-  border: none;
-  background: transparent;
-  border-bottom: solid 1px rgba(50, 40, 63, 0.162);
-  box-shadow: 0rem 0.1rem 0rem 0rem rgba(200, 198, 203, 0.563);
-  text-align: center;
-  color: #401700;
-}
-#goal-title:focus,
-#goal-title:active,
-#goal-description:focus {
-  outline: none;
-  background-color: transparent !important;
-}
-
-#goal-title::placeholder {
-  color: rgba(50, 40, 63, 0.563);
-  font-size: 3rem;
-  text-align: center;
-  text-justify: center;
-}
-
-#goal-description {
-  font-size: 2.5rem;
-  padding: 1rem 2rem;
-  width: 100%;
-  border: none;
-  resize: none;
-  caret-color: #000000;
-  background: transparent;
-  text-align: left;
-  color: #401700;
-}
-#goal-description::placeholder {
-  color: rgba(50, 40, 63, 0.563);
-  font-size: 3rem;
-  text-align: center;
-}
-
-span {
-  font-size: 2rem;
-  padding: 0.5rem;
-  font-weight: 600;
-  color: rgba(50, 40, 63, 0.563);
-  border-bottom: solid 1px rgba(50, 40, 63, 0.162);
-}
-
-span:nth-child(1) {
-  margin-top: 1rem;
-  color: rgb(77, 146, 146);
-}
-
-span:nth-child(2) {
-  border: none;
-  padding: 0.5rem 0rem 0rem 0rem;
-}
-
-span:last-of-type {
-  color: rgb(190, 100, 36);
-}
-
-#goal-card-controls {
-  width: 100%;
-  padding: 1rem 1rem;
-  height: 1fr;
-}
-
-button {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #2c3e50;
-  width: max-content;
-  border-radius: 25px;
-  border: none;
-  cursor: pointer;
-  padding: 1rem 2rem;
-}
-
-#button-save {
-  border: solid 2px rgb(7, 216, 175);
-  border-bottom: solid 3px rgb(16, 201, 177);
-  background: rgb(190, 255, 241);
-  color: #2c3e50;
-  transition: all 0.15s ease;
-}
-#button-save:hover {
-  color: rgb(255, 36, 94);
-  background: transparent;
-  border: solid 2px rgb(255, 59, 69);
-  border-bottom: solid 3px rgb(255, 36, 94);
-}
-
-#button-back {
-  position: absolute;
-  right: 0.5rem;
-  bottom: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: transparent;
-  border: none;
-}
-#button-back:hover {
-  color: rgb(16, 201, 177);
-}
-
-/* @media screen and (max-width: 600px) {
-  #goal-card-element {
-    width: 100%;
+  .card__label {
+    font-style: normal;
+    font-size: 4rem;
+    padding: 3rem 0rem;
+    text-align: center;
+    color: rgb(190, 100, 36);
+    margin-bottom: 5rem;
   }
-} */
-/* 
-@media screen and (max-width: 425px) {
-  #goal-card-element {
-    width: 100%;
+
+  .card__form {
+    @include vertical-flex;
+    @include center-flex;
+
+    padding: 1rem 0rem;
+    .item__title {
+      height: max-content;
+      font-size: 3rem;
+      border: none;
+      background: transparent;
+      border-bottom: solid 1px rgba(50, 40, 63, 0.162);
+      box-shadow: 0rem 0.1rem 0rem 0rem rgba(200, 198, 203, 0.563);
+      text-align: center;
+      color: #401700;
+
+      &:focus,
+      &:active {
+        outline: none;
+        background-color: transparent !important;
+      }
+
+      &::placeholder {
+        color: rgba(50, 40, 63, 0.563);
+        font-size: 3rem;
+        text-align: center;
+        text-justify: center;
+        font-style: italic;
+      }
+    }
+
+    .item__description {
+      font-size: 2.5rem;
+      padding: 1rem 5rem;
+      width: 100%;
+      border: none;
+      resize: none;
+      caret-color: #000000;
+      background: transparent;
+      text-align: left;
+      color: #401700;
+      font-style: italic;
+
+      &:focus {
+        outline: none;
+        background-color: transparent !important;
+      }
+
+      &::placeholder {
+        color: rgba(50, 40, 63, 0.563);
+        font-size: 3rem;
+        text-align: center;
+      }
+    }
   }
-} */
+
+  .card__item-data {
+    @include vertical-flex;
+
+    @include center-flex;
+
+    .item-data {
+      font-size: 2rem;
+      padding: 0.5rem;
+      font-weight: 600;
+      color: rgba(50, 40, 63, 0.563);
+
+      &.item-data--label {
+        margin-top: 1rem;
+        color: rgb(77, 146, 146);
+        border-bottom: solid 1px rgba(50, 40, 63, 0.162);
+      }
+      &:nth-child(2) {
+        border: none;
+        padding: 0.5rem 0rem 0rem 0rem;
+      }
+      &.item-data--time-slot {
+        color: rgb(190, 100, 36);
+      }
+    }
+  }
+  .card__controls {
+    width: 100%;
+    padding: 1rem;
+    height: max-content;
+    position: relative;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 100%;
+
+    .btn {
+      width: max-content;
+      height: 5rem;
+      padding: 0rem 1.5rem;
+
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      color: #2c3e50;
+
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      justify-self: right;
+
+      &:hover {
+        box-shadow: 0rem 0.2rem 0.6rem rgba(128, 128, 128, 0.434);
+      }
+
+      &.btn--item-submit {
+        border: solid 2px rgb(7, 216, 175);
+        border-bottom: solid 3px rgb(16, 201, 177);
+        background: rgb(190, 255, 241);
+        transform: translateX(50%);
+
+        &:hover {
+          color: rgb(255, 36, 94);
+          background: transparent;
+          border: solid 2px rgb(255, 59, 69);
+          border-bottom: solid 3px rgb(255, 36, 94);
+        }
+      }
+
+      &.btn--back-action {
+        background: transparent;
+        border: none;
+
+        &:hover {
+          color: rgb(16, 201, 177);
+        }
+      }
+    }
+  }
+}
 </style>

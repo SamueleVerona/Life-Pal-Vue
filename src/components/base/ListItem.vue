@@ -1,61 +1,83 @@
 <template>
-  <div class="goal-content" :class="classes">
-    <h2 class="goal-title">
-      {{
-        props.item.title[0].toUpperCase() +
-        props.item.title.slice(1).toLowerCase()
-      }}
-    </h2>
-    <div class="goal-info">
-      <p class="goal-description" v-if="props.item.desc">
+  <div class="item__container" :class="classes">
+    <section class="item__title">
+      <h2 class="item__title-text">
+        {{
+          props.item.title[0].toUpperCase() +
+          props.item.title.slice(1).toLowerCase()
+        }}
+      </h2>
+    </section>
+    <section class="item__info">
+      <p class="item__description" v-if="props.item.desc">
         {{
           props.item.desc[0].toUpperCase() +
           props.item.desc.slice(1).toLowerCase()
         }}
       </p>
-      <div class="goal-stats">
-        <h3 class="goal-date">
-          <span>{{ props.isRequest ? "Status: " : "Set for: " }}</span>
-          <span>
+      <div class="item__status">
+        <h3 class="item__status-text">
+          <span class="status-title">{{
+            props.isRequest ? "Status: " : "Set for: "
+          }}</span>
+          <span class="status-label">
             {{ props.item.itemLabel }}
           </span>
         </h3>
       </div>
-      <div class="request-reply" v-if="props.isRequest">
-        <span>Admin says:</span>
+      <div class="item__reply" v-if="props.isRequest">
+        <span class="item__reply-title">Admin says:</span>
         <button
           type="button"
+          class="item__reply-btn"
           v-if="isAdmin && props.userIsEditing"
           @mousedown="() => (adminIsReplying = !adminIsReplying)"
         >
           {{ props.item.reply ? "change reply" : "add reply" }}
         </button>
-        <p>{{ props.item.reply || "no reply yet" }}</p>
+        <p class="item__reply-text">{{ props.item.reply || "no reply yet" }}</p>
       </div>
       <div
-        class="admin-reply"
+        class="item__reply-admin"
         v-if="isAdmin && props.userIsEditing && adminIsReplying"
       >
         <textarea
           name="amdin-reply"
-          class="txtarea"
+          class="reply-admin__input"
           rows="3"
           cols="60"
           v-model="requestReply"
         ></textarea>
       </div>
+      <div class="item__progress" v-if="isProgressVisible && !props.isRequest">
+        <div
+          class="progress-bar"
+          :style="{ width: compRate(props.item.started, props.item.compDate) }"
+        >
+          <span class="progress-bar__text">
+            {{ timeLeft }}
+          </span>
+        </div>
+      </div>
+    </section>
+    <section
+      class="item__controls"
+      v-if="props.hasExpired || (isAdmin && props.userIsEditing)"
+    >
       <div
-        class="goal-toggle"
-        :class="{ comp: goalStatus && markFlag, fail: !goalStatus && markFlag }"
-        v-if="props.hasExpired || (isAdmin && props.userIsEditing)"
+        class="controls__toggle"
+        :class="{
+          'controls__toggle--positive': goalStatus && markFlag,
+          'controls__toggle--negative': !goalStatus && markFlag,
+        }"
       >
-        <h3 class="goal-toggle-text">
+        <h3 class="controls__toggle-text">
           {{ goalToggleText }}
         </h3>
-        <div class="button-wrapper">
+        <div class="controls__btn-container">
           <button
             type="button"
-            class="toggle-btn button-completed"
+            class="controls__btn controls__btn--completed"
             :class="{ selected: goalStatus && markFlag }"
             @click="markAs"
           >
@@ -63,7 +85,7 @@
           </button>
           <button
             type="button"
-            class="toggle-btn button-fail"
+            class="controls__btn controls__btn--failed"
             :class="{ selected: !goalStatus && markFlag }"
             @click="markAs"
           >
@@ -71,16 +93,7 @@
           </button>
         </div>
       </div>
-      <div class="progress-bar" v-if="isProgressVisible && !props.isRequest">
-        <div
-          :style="{ width: compRate(props.item.started, props.item.compDate) }"
-        >
-          <span class="progress-bar-text">
-            {{ timeLeft }}
-          </span>
-        </div>
-      </div>
-    </div>
+    </section>
     <div>
       <slot name="selector"></slot>
     </div>
@@ -112,7 +125,7 @@ const classes = computed(() => {
     week: props.item.type === "week",
     month: props.item.type === "month",
     year: props.item.type === "year",
-    dialog: props.hasExpired,
+    "in-dialog": props.hasExpired,
   };
 });
 
@@ -161,8 +174,8 @@ const reqStatus = ref();
 const adminIsReplying = ref(false);
 
 function markAs(e) {
-  const isButtonComp = e.target.classList.contains("button-completed");
-  const isButtonFail = e.target.classList.contains("button-fail");
+  const isButtonComp = e.target.classList.contains("controls__btn--completed");
+  const isButtonFail = e.target.classList.contains("controls__btn--failed");
 
   const itemId = props.item.databaseId;
   const userId = props.item.userId;
@@ -219,256 +232,35 @@ watch(props.item, () => {
 });
 </script>
 
-<style scoped>
-.goal-content {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  margin: 0.8rem 0rem;
-  padding: 1rem;
-
-  max-height: max-content;
-  width: 100%;
-
-  border-radius: 40px;
-  box-shadow: var(--basic-shadow);
+<style lang="scss" scoped>
+* {
+  font-family: "Poppins", sans-serif;
 }
 
-.goal-content .dialog {
-  min-height: 40%;
-  width: 90%;
-  margin: 0.5rem auto;
-}
-.goal-title {
-  min-height: max-content;
-  width: 100%;
-
-  padding: 0rem 1.5rem 0.5rem 1.5rem;
-  margin: 0.5rem 0rem;
-  align-self: center;
-  border: none;
-
-  font-size: 3rem;
-  line-height: 3rem;
-  text-align: center;
-  font-weight: bolder;
-  font-style: italic;
-  /* text-overflow: clip; */
-}
-
-.goal-info {
-  display: flex;
-  flex-direction: column;
-  text-overflow: clip;
-  font-size: 3rem;
-}
-.goal-description {
-  width: 90%;
-  padding: 0.5rem 1.5rem 0.5rem 0.8rem;
-  border: none;
-  border-bottom: solid 2px rgba(92, 88, 97, 0.352);
-  align-self: center;
-  text-align: center;
-  font-weight: 500;
-  font-size: 2.2rem;
-}
-.goal-stats {
-  position: relative;
-  display: flex;
-  padding-top: 0.5rem;
-  margin: 0.5rem 0rem;
-  width: max-content;
-  text-align: center;
-
-  background: rgba(248, 255, 253, 0.164);
-  align-self: center;
-}
-
-.goal-date,
-.goal-date span,
-.request-reply span,
-.request-reply p {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-.goal-date span:last-child {
-  color: brown;
-}
-.goal-date span,
-.request-reply span {
-  color: rgb(0, 87, 187);
-}
-
-.request-reply {
-  border-top: solid 2px rgba(92, 88, 97, 0.177);
-  /* border: solid; */
-  width: max-content;
-  align-self: center;
-  overflow: visible;
-}
-
-.request-reply,
-.admin-reply {
+@mixin reply-format {
   text-align: center;
   margin-bottom: 1rem;
   position: relative;
 }
-.txtarea {
-  font-size: 1.5rem;
-  font-weight: 500;
-  resize: none;
-  width: 80%;
-}
-
-.goal-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  align-self: center;
-
-  width: 50%;
-  border-radius: 18px;
-  border: solid 2px rgb(183, 183, 183);
-  margin-bottom: 0.5rem;
-  text-align: center;
-  font-size: 1.8rem;
-  font-weight: bold;
-  padding: 0.5rem 0.8rem;
-}
-.goal-toggle-text {
-  flex: 2;
-  font-size: 1.5rem;
-  font-weight: bold;
-  justify-self: flex-start;
-}
-
-.button-wrapper {
-  display: flex;
-  flex: 1;
-
-  justify-content: center;
-  align-items: center;
-  border-radius: 18px;
-}
-
-.button-wrapper button,
-.request-reply button {
+@mixin item-btn-format {
   border: none;
   border-radius: 30px;
   padding: 0rem 0.5rem;
   font-size: 1.5rem;
   cursor: pointer;
 }
-.request-reply button {
-  position: absolute;
-  font-size: 1.3rem;
-  width: max-content;
-  color: red;
-}
-button:hover {
-  color: aqua;
-}
 
-.goal-toggle.comp {
-  border-color: rgb(4, 208, 109);
-}
-.toggle-btn {
-  margin: 0rem 0.2rem;
-}
-
-.button-completed.selected {
-  color: rgb(6, 255, 135);
-}
-.goal-toggle.fail {
-  border-color: rgb(255, 6, 102);
-}
-.button-fail.selected {
-  color: rgb(255, 6, 81);
-}
-
-.progress-bar {
-  height: 2rem;
-  width: 50%;
-  margin-bottom: 0.3rem;
-  border: solid 1px rgb(226, 226, 226);
-  /* border-bottom: solid 3px rgb(6, 82, 148); */
-
-  border-radius: 50px;
-  background: rgb(255, 255, 255);
-
-  align-self: center;
+.item__container {
   position: relative;
-  /* overflow: visible; */
-}
-.progress-bar div {
-  background: rgb(84, 162, 247);
-  border-radius: 30px;
-  border-right: solid 4px rgb(67, 199, 251);
-  border-top-right-radius: 50px;
-  border-bottom-right-radius: 50px;
+  display: flex;
+  flex-direction: column;
+  margin: 0.8rem 0rem;
+  padding: 1rem;
+  max-height: max-content;
+  width: 100%;
+  border-radius: 40px;
+  box-shadow: var(--basic-shadow);
 
-  height: 100%;
-  z-index: 100;
-}
-
-.progress-bar div:after {
-  content: "";
-  height: 100%;
-  width: inherit;
-  position: absolute;
-  /* border: solid; */
-  bottom: 0;
-  border-radius: 30px;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0),
-    rgb(146, 255, 199)
-  );
-  animation: progress-glow 3s cubic-bezier(0.86, 0, 0.07, 1) infinite;
-  box-shadow: 0rem 0rem 0.6rem 0.1rem rgb(67, 199, 251);
-  overflow: visible;
-}
-
-@keyframes progress-glow {
-  0% {
-    opacity: 0;
-    width: 0rem;
-  }
-  40% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
-    width: inherit;
-    box-shadow: 0rem 0rem 0.6rem 0rem rgb(67, 199, 251);
-  }
-
-  100% {
-    opacity: 0;
-    /* width: inherit;
-    box-shadow: 0rem 0rem 0.6rem 0rem rgb(67, 199, 251); */
-  }
-}
-.progress-bar-text {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: max-content;
-
-  text-align: center;
-  font-size: 1.2rem;
-  line-height: 1.8rem;
-  font-weight: 500;
-  text-transform: lowercase;
-
-  color: inherit;
-  background: none;
-}
-.label {
-  font-size: 1.5rem;
-}
-.goal-content {
   border: solid 3px rgb(230, 230, 230);
   border-bottom: solid 10px rgba(157, 157, 157, 0.978);
   border-bottom: solid 10px rgba(176, 176, 176, 0.978);
@@ -482,43 +274,288 @@ button:hover {
     rgba(234, 231, 224, 0.345) 15%,
     transparent 95%
   );
-}
 
-.goal-content.day {
-  border: solid 1px var(--item-goal-day);
+  &.in-dialog {
+    min-height: 40%;
+    width: 95%;
+    margin: 0.5rem auto;
+  }
 
-  background: radial-gradient(
-    ellipse at bottom right,
-    var(--item-goal-day) 1%,
-    rgba(169, 255, 219, 0.659) 35%,
-    rgba(209, 244, 231, 0.345) 18%,
-    rgba(224, 234, 230, 0.345) 20%,
-    transparent 95%
-  );
-}
-.goal-content.day .goal-title {
-  color: var(--item-goal-day);
-}
-.goal-content.week {
-  border: solid 1px var(--item-goal-week);
-  background: radial-gradient(
-    ellipse at bottom right,
-    rgba(255, 73, 60, 0.742) 1%,
-    rgba(236, 169, 255, 0.348) 35%,
-    rgba(209, 244, 231, 0.345) 18%,
-    rgba(224, 234, 230, 0.345) 20%,
-    transparent 25%
-  );
-}
-.goal-content.month {
-  border: solid 1px var(--item-goal-month);
-  background: radial-gradient(
-    ellipse at bottom right,
-    var(--item-goal-month) 1%,
-    rgba(255, 199, 169, 0.348) 35%,
-    rgba(209, 244, 231, 0.345) 18%,
-    rgba(224, 234, 230, 0.345) 20%,
-    transparent 25%
-  );
+  &.day {
+    border: solid 1px var(--item-goal-day);
+    background: radial-gradient(
+      ellipse at bottom right,
+      var(--item-goal-day) 1%,
+      rgba(169, 255, 219, 0.659) 35%,
+      rgba(209, 244, 231, 0.345) 18%,
+      rgba(224, 234, 230, 0.345) 20%,
+      transparent 95%
+    );
+
+    .item__title-text {
+      color: var(--item-goal-day);
+    }
+  }
+
+  &.week {
+    border: solid 1px var(--item-goal-week);
+    background: radial-gradient(
+      ellipse at bottom right,
+      rgba(255, 73, 60, 0.742) 1%,
+      rgba(236, 169, 255, 0.348) 35%,
+      rgba(209, 244, 231, 0.345) 18%,
+      rgba(224, 234, 230, 0.345) 20%,
+      transparent 25%
+    );
+
+    .item__title-text {
+      color: var(--item-goal-week);
+    }
+  }
+
+  &.month {
+    border: solid 1px var(--item-goal-month);
+    background: radial-gradient(
+      ellipse at bottom right,
+      var(--item-goal-month) 1%,
+      rgba(255, 199, 169, 0.348) 35%,
+      rgba(209, 244, 231, 0.345) 18%,
+      rgba(224, 234, 230, 0.345) 20%,
+      transparent 25%
+    );
+
+    .item__title-text {
+      color: var(--item-goal-month);
+    }
+  }
+
+  .item__title {
+    min-height: max-content;
+    width: 100%;
+
+    .item__title-text {
+      padding: 0rem 1.5rem 0.5rem 1.5rem;
+      margin: 0.5rem 0rem;
+      align-self: center;
+      border: none;
+
+      font-size: 3rem;
+      line-height: 3rem;
+      text-align: center;
+      font-weight: bolder;
+    }
+  }
+  .item__info {
+    display: flex;
+    flex-direction: column;
+    text-overflow: clip;
+    font-size: 3rem;
+
+    .item__description {
+      width: 90%;
+      padding: 0.5rem 1.5rem 0.5rem 0.8rem;
+      border: none;
+      border-bottom: solid 2px rgba(92, 88, 97, 0.352);
+      align-self: center;
+      text-align: center;
+      font-weight: 500;
+      font-size: 2.2rem;
+    }
+    .item__status {
+      position: relative;
+      display: flex;
+      padding-top: 0.5rem;
+      margin: 0.5rem 0rem;
+      width: max-content;
+      text-align: center;
+
+      background: rgba(248, 255, 253, 0.164);
+      align-self: center;
+
+      .item__status-text {
+        font-size: 1.5rem;
+        font-weight: bold;
+
+        .status-label {
+          color: brown;
+        }
+
+        .status-title {
+          color: rgb(0, 87, 187);
+        }
+      }
+    }
+    .item__reply {
+      border-top: solid 2px rgba(92, 88, 97, 0.177);
+      width: max-content;
+      align-self: center;
+      overflow: visible;
+      @include reply-format;
+
+      .item__reply-title,
+      .item__reply-text {
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+
+      .item__reply-title {
+        color: rgb(0, 87, 187);
+      }
+
+      .item__reply-btn {
+        position: absolute;
+        font-size: 1.3rem;
+        width: max-content;
+        color: red;
+        background: transparent;
+
+        @include item-btn-format;
+      }
+    }
+
+    .item__reply-admin {
+      @include reply-format;
+
+      .reply-admin__input {
+        font-size: 1.5rem;
+        font-weight: 500;
+        resize: none;
+        width: 80%;
+      }
+    }
+
+    .item__progress {
+      height: 2rem;
+      width: 50%;
+      margin-bottom: 0.3rem;
+      border: solid 1px rgb(226, 226, 226);
+      border-radius: 50px;
+      background: rgb(255, 255, 255);
+      align-self: center;
+      position: relative;
+
+      .progress-bar {
+        background: rgb(84, 162, 247);
+        border-radius: 30px;
+        border-right: solid 4px rgb(67, 199, 251);
+        border-top-right-radius: 50px;
+        border-bottom-right-radius: 50px;
+
+        height: 100%;
+        z-index: 100;
+
+        &:after {
+          content: "";
+          height: 100%;
+          width: inherit;
+          position: absolute;
+          bottom: 0;
+          border-radius: 30px;
+          background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0),
+            rgb(146, 255, 199)
+          );
+          animation: progress-glow 3s cubic-bezier(0.86, 0, 0.07, 1) infinite;
+          box-shadow: 0rem 0rem 0.6rem 0.1rem rgb(67, 199, 251);
+          overflow: visible;
+
+          @keyframes progress-glow {
+            0% {
+              opacity: 0;
+              width: 0rem;
+            }
+            40% {
+              opacity: 0.8;
+            }
+            50% {
+              opacity: 1;
+              width: inherit;
+              box-shadow: 0rem 0rem 0.6rem 0rem rgb(67, 199, 251);
+            }
+
+            100% {
+              opacity: 0;
+            }
+          }
+        }
+        .progress-bar__text {
+          position: absolute;
+          left: 50%;
+          bottom: 0;
+          transform: translateX(-50%);
+          width: max-content;
+
+          text-align: center;
+          font-size: 1.2rem;
+          line-height: 1.8rem;
+          font-weight: 600;
+          text-transform: lowercase;
+
+          color: inherit;
+          background: none;
+        }
+      }
+    }
+  }
+  .item__controls {
+    align-items: center;
+
+    .controls__toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      align-self: center;
+      margin: auto;
+
+      width: 50%;
+      border-radius: 18px;
+      border: solid 2px rgb(183, 183, 183);
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      padding: 0.5rem 0.8rem;
+
+      .controls__toggle-text {
+        flex: 2;
+        font-size: 1.5rem;
+        font-weight: bold;
+        justify-self: flex-start;
+      }
+
+      .controls__btn-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+        border-radius: 18px;
+
+        .controls__btn {
+          @include item-btn-format;
+          margin: 0rem 0.2rem;
+
+          &:hover {
+            color: aqua;
+          }
+
+          &.selected {
+            & .controls__btn--completed {
+              color: rgb(6, 255, 135);
+            }
+            & .controls__btn--failed {
+              color: rgb(255, 6, 81);
+            }
+          }
+        }
+      }
+
+      &.controls__toggle--positive {
+        border-color: rgb(4, 208, 109);
+      }
+      &.controls__toggle--negative {
+        border-color: rgb(255, 6, 102);
+      }
+    }
+  }
 }
 </style>

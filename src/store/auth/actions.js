@@ -128,7 +128,7 @@ export default {
     });
     if (dataDeleted) {
       const delRequest = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:delete?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTH",
+        "https://identitytoolkit.googleapis.com/v1/accounts:delete?key=AIzaSyBBOAHr41imvdiIj9qPxRR0Ek2AZr_iTHk",
         {
           method: "POST",
           headers: {
@@ -147,7 +147,7 @@ export default {
         );
       }
 
-      context.commit("logout");
+      context.dispatch("logout");
     }
   },
 };

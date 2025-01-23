@@ -1,108 +1,100 @@
 <template>
   <section
-    id="dash-element"
-    class="has-goals"
+    class="section"
     :class="{
-      'no-goals': !itemsArray.length,
-      completed: primaryOptionSelected === 'completed',
-      failed: primaryOptionSelected === 'failed',
+      'section--not-empty': itemsArray.length > 0,
+      'section--completed': primaryOptionSelected === 'completed',
+      'section--failed': primaryOptionSelected === 'failed',
     }"
   >
-    <section id="section-items-display">
-      <header id="header-items-display" @mousedown="handleMousedown">
-        <div id="container-filters">
-          <div id="selector-primary-filter" class="selector">
-            <div
-              id="selector-primary-list"
-              class="selector-list"
+    <section class="section__dashboard">
+      <section class="section__controls--top" @mousedown="handleTopControls">
+        <div class="selectors-container">
+          <div class="selector selector--primary">
+            <ul
+              class="selector__list selector__list--primary"
               v-if="primaryFilterToggle"
             >
-              <div
+              <li
                 v-for="option in primaryFilterOptions"
                 :key="option"
-                class="option selector-option option-primary"
+                class="selector__option selector__option--primary"
               >
                 {{ option }}
-              </div>
-            </div>
-            <span class="selector-option selected" inert
+              </li>
+            </ul>
+            <span class="selector__option selector__option--selected" inert
               >{{ primaryOptionSelected }}
             </span>
           </div>
-
           <div
-            id="selector-secondary-filter"
-            class="selector"
+            class="selector selector--secondary"
             v-if="secondaryFilterOptions.length > 1"
           >
-            <div
-              id="selector-secondary-list"
-              class="selector-list"
+            <ul
+              class="selector__list selector__list--secondary"
               v-if="secondaryFilterToggle"
             >
-              <div
-                class="selector-secondary-option selector-option option-secondary option"
-              >
-                all
-              </div>
-              <div
+              <li class="selector__option selector__option--secondary">all</li>
+              <li
                 v-for="el in secondaryFilterOptions"
                 :value="el"
                 :key="el"
-                class="selector-secondary-option selector-option option-secondary option"
+                class="selector__option selector__option--secondary"
               >
                 {{ el }}
-              </div>
-            </div>
-            <span class="selector-option selected" inert>{{
+              </li>
+            </ul>
+            <span class="selector__option selector__option--selected" inert>{{
               secondaryOptionSelected
             }}</span>
           </div>
         </div>
         <button
-          id="button-new"
-          class="button-dash-secondary"
+          type="button"
+          class="btn btn--new-item"
           v-if="
             props.profileModeActive &&
             !props.userIsAdmin &&
             itemsArray.length > 0
           "
-          @mousedown="() => emits('openNewItem')"
         >
           add
         </button>
         <button
-          id="button-dash-stats"
-          class="button-dash-secondary"
+          type="button"
+          class="btn btn--stats"
           v-if="!props.userIsAdmin && !props.profileModeActive"
-          @mousedown="toggleStats"
         >
           stats
         </button>
-      </header>
-      <section id="items-container">
-        <div v-if="!itemsArray.length" class="empty-list">
+      </section>
+      <section class="list__container">
+        <div v-if="!itemsArray.length" class="list__placeholder">
           <h2 v-if="!userIsAdding">
             {{
-              props.profileModeActive ? "No requests here!" : "No goals yet!"
+              props.profileModeActive || props.userIsAdmin
+                ? "No requests here!"
+                : "No goals here!"
             }}
           </h2>
           <button
             type="button"
-            @mousedown="handleStart"
-            class="button-start"
-            v-if="!userIsAdding"
+            class="btn--fallback"
+            @mousedown="handleNewItemAction"
+            v-if="!userIsAdding && !props.userIsAdmin"
           >
-            {{ props.profileModeActive ? "Send one" : "Start planning" }}
+            {{ props.profileModeActive ? "Send a new one" : "Start planning" }}
           </button>
         </div>
         <transition-group
           tag="ul"
-          name="items-list"
+          name="list"
+          class="list"
           mode="out-in"
           v-else-if="itemsArray.length"
         >
-          <li v-for="item in itemsArray" :key="item.id">
+          <li v-for="item in itemsArray" :key="item.id" class="list__item">
             <list-item
               :item="item"
               :isRequest="props.profileModeActive || props.userIsAdmin"
@@ -118,7 +110,7 @@
             >
               <template #selector>
                 <input
-                  class="remove-checkbox"
+                  class="item__checkbox"
                   type="checkbox"
                   :key="item.id"
                   :name="item.id"
@@ -134,11 +126,11 @@
           </li>
         </transition-group>
       </section>
-      <div id="dash-footer" @mousedown="handleListEdit">
+      <section class="section__controls--bottom" @mousedown="handleListEdit">
         <button
           type="button"
-          id="button-save-change"
-          class="button-dash-secondary"
+          data-button-id="save-change"
+          class="btn"
           v-if="userIsEditing && props.userIsAdmin && !userIsDeleting"
         >
           save
@@ -146,56 +138,55 @@
 
         <button
           type="button"
-          id="button-confirm"
-          class="button-dash-secondary"
+          data-button-id="confirm"
+          class="btn"
           v-if="userIsEditing && userIsDeleting && selectedItems.length"
         >
           confirm
         </button>
         <button
           type="button"
-          id="button-select-all"
-          class="button-dash-secondary"
-          v-if="userIsEditing && userIsDeleting"
+          data-button-id="select-all"
+          class="btn bt--action-select-all"
+          v-if="userIsEditing && userIsDeleting && itemsArray.length"
         >
           select all
         </button>
         <button
           type="button"
-          id="button-rem"
-          class="button-dash-secondary"
+          data-button-id="remove"
+          class="btn btn--action-remove"
           v-if="userIsEditing && props.userIsAdmin"
         >
           delete
         </button>
-
         <button
           type="button"
-          id="button-edit"
-          class="button-dash-secondary"
+          data-button-id="edit"
+          class="btn btn--action-edit"
+          :class="{ 'btn--action-edit-active': userIsEditing }"
           v-if="!userIsAdding && itemsArray.length"
         >
           {{ props.userIsAdmin ? "edit" : userIsEditing ? "close" : "delete" }}
         </button>
-      </div>
+      </section>
     </section>
     <transition name="stats">
-      <section id="section-stats" v-if="statsSectionVisible">
-        <!-- <section id="section-stats-content"> -->
+      <section class="section__stats" v-if="statsToggled">
         <div class="stat">
-          <h3 class="progress-bar-text">
+          <h3 class="stat__text">
             All time goals:
             {{ props.allGoals.length }}
           </h3>
         </div>
         <div class="stat">
-          <h3 class="progress-bar-text">
+          <h3 class="stat__text">
             Ongoing:
             {{ userStats.stringRate }}
           </h3>
-          <div class="progress-bar">
+          <div class="stat__bar">
             <div
-              class="progress-bar-inner"
+              class="stat__bar--inner"
               :style="{
                 width: userStats.ongoingRate,
               }"
@@ -203,13 +194,13 @@
           </div>
         </div>
         <div class="stat">
-          <h3 class="progress-bar-text">
+          <h3 class="stat__text">
             Completed:
             {{ userStats.successRate }}
           </h3>
-          <div class="progress-bar">
+          <div class="stat__bar">
             <div
-              class="progress-bar-inner completed"
+              class="stat__bar--inner stat__bar--completed"
               :style="{
                 width: userStats.successRate,
               }"
@@ -217,24 +208,23 @@
           </div>
         </div>
         <div class="stat">
-          <h3 class="progress-bar-text">
+          <h3 class="stat__text">
             Failed:
             {{ userStats.failRate }}
           </h3>
-          <div class="progress-bar">
+          <div class="stat__bar">
             <div
-              class="progress-bar-inner failed"
+              class="stat__bar--inner stat__bar--failed"
               :style="{
                 width: userStats.failRate,
               }"
             ></div>
           </div>
         </div>
-        <!-- </section> -->
       </section>
     </transition>
     <base-dialog
-      class="dialog-dash"
+      class="dialog"
       :show="userIsConfirming || errorMessage"
       :errorMessage="
         errorMessage ||
@@ -405,20 +395,22 @@ function toggleListEdit() {
 function addNewItem() {
   emits("openNewItem");
 }
-function handleStart() {
+function handleNewItemAction() {
   props.profileModeActive ? addNewItem() : emits("openCalendar");
 }
 
 const primaryFilterToggle = ref(false);
 const secondaryFilterToggle = ref(false);
 
-function handleMousedown(e) {
+function handleTopControls(e) {
   const target = e.target;
   const validTarget = target.classList.contains("selector");
+  const isPrimFilter = target.classList.contains("selector--primary");
+  const isSecFilter = target.classList.contains("selector--secondary");
+  const isFilteroption = target.classList.contains("selector__option");
+  const isBtnNewItem = target.classList.contains("btn--new-item");
+  const isBtnStats = target.classList.contains("btn--stats");
 
-  const isPrimFilter = target.id.includes("primary-filter");
-  const isSecFilter = target.id.includes("secondary-filter");
-  const isFilteroption = target.classList.contains("option");
   const isRequestBtn = target.id.includes("request");
 
   if (!validTarget) {
@@ -435,6 +427,12 @@ function handleMousedown(e) {
   if (isFilteroption) {
     selectFilterOption(target);
   }
+  if (isBtnNewItem) {
+    emits("openNewItem");
+  }
+  if (isBtnStats) {
+    statsToggled.value = !statsToggled.value;
+  }
   if (isRequestBtn) {
     addNewItem();
   }
@@ -443,23 +441,22 @@ function handleMousedown(e) {
 function selectFilterOption(target) {
   userIsEditing.value = false;
   selectedItems.value = [];
-  const isPrimary = target.classList.contains("option-primary");
-  const isSecondary = target.classList.contains("option-secondary");
+  const isPrimaryOption = target.classList.contains(
+    "selector__option--primary"
+  );
+
+  const isSecondaryOption = target.classList.contains(
+    "selector__option--secondary"
+  );
   const optionText = target.textContent.trim();
-  if (isPrimary) {
+  if (isPrimaryOption) {
     primaryOptionSelected.value = optionText;
     secondaryOptionSelected.value = "all";
   }
-  if (isSecondary) secondaryOptionSelected.value = optionText;
+  if (isSecondaryOption) secondaryOptionSelected.value = optionText;
 }
 
-const statsSectionVisible = ref(false);
-
-function toggleStats() {
-  statsSectionVisible.value = !statsSectionVisible.value;
-  // const section = document.querySelector("#section-stats");
-  // section.classList.toggle("maximized");
-}
+const statsToggled = ref(false);
 
 const userStats = computed(() => {
   const totalGoals = props.allGoals.length;
@@ -512,12 +509,12 @@ const userIsDeleting = ref(false);
 const userIsConfirming = ref(false);
 
 function handleListEdit(e) {
-  const targetButton = e.target.id.slice(7);
+  const targetButton = e.target.dataset.buttonId;
   switch (targetButton) {
     case "edit":
       toggleListEdit();
       break;
-    case "rem":
+    case "remove":
       userIsDeleting.value = !userIsDeleting.value;
       break;
     case "select-all":
@@ -575,12 +572,12 @@ onMounted(() => {
 onUnmounted(() => clearInterval(timer));
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 * {
-  font-family: "Afacad Flux", Sans-serif;
+  font-family: "Afacad Flux Black ", sans-serif;
 }
 
-#dash-element {
+.section {
   position: relative;
   display: flex;
   flex-direction: row;
@@ -588,481 +585,463 @@ onUnmounted(() => clearInterval(timer));
 
   border: solid 2px rgb(218, 218, 218);
   border-bottom: solid 3px rgb(218, 218, 218);
-}
-.has-goals {
-  background: linear-gradient(70deg, #d9eef81b 40%, #e7dfffdb 100%);
-}
-.no-goals {
   background: transparent;
-}
-
-#dash-element.completed {
-  border: solid 2px var(--glow-dash-comp-dark);
-  border-bottom: solid 3px var(--glow-dash-comp-dark);
-  animation: shadow-glow-comp 3s infinite;
-}
-
-#dash-element.failed {
-  border: solid 2px var(--glow-dash-fail-dark);
-  border-bottom: solid 3px var(--glow-dash-fail-dark);
-  animation: shadow-glow-fail 3s infinite ease-out;
-}
-
-@keyframes shadow-glow-comp {
-  0% {
-    box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
-      0rem 5rem 10rem 3rem var(--glow-dash-comp-dark);
+  &.section--not-empty {
+    background: linear-gradient(70deg, #d9eef81b 40%, #e7dfffdb 100%);
+  }
+  &.section--completed {
+    border: solid 2px var(--glow-dash-comp-dark);
+    border-bottom: solid 3px var(--glow-dash-comp-dark);
+    animation: shadow-glow-comp 3s infinite;
   }
 
-  50% {
-    box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
-      0rem 5rem 10rem 8rem var(--glow-dash-comp-light);
+  &.section--failed {
+    border: solid 2px var(--glow-dash-fail-dark);
+    border-bottom: solid 3px var(--glow-dash-fail-dark);
+    animation: shadow-glow-fail 3s infinite ease-out;
   }
+  @keyframes shadow-glow-comp {
+    0% {
+      box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
+        0rem 5rem 10rem 3rem var(--glow-dash-comp-dark);
+    }
 
-  100% {
-    box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
-      0rem 5rem 10rem 3rem var(--glow-dash-comp-dark);
+    50% {
+      box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
+        0rem 5rem 10rem 8rem var(--glow-dash-comp-light);
+    }
+
+    100% {
+      box-shadow: 0rem 1rem 3rem var(--glow-dash-comp-dark),
+        0rem 5rem 10rem 3rem var(--glow-dash-comp-dark);
+    }
   }
-}
-@keyframes shadow-glow-fail {
-  0% {
-    box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
-      0rem 5rem 10rem 3rem var(--glow-dash-fail-dark);
+  @keyframes shadow-glow-fail {
+    0% {
+      box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
+        0rem 5rem 10rem 3rem var(--glow-dash-fail-dark);
+    }
+
+    50% {
+      box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
+        0rem 5rem 10rem 8rem var(--glow-dash-fail-light);
+    }
+
+    100% {
+      box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
+        0rem 5rem 10rem 3rem var(--glow-dash-fail-dark);
+    }
   }
-
-  50% {
-    box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
-      0rem 5rem 10rem 8rem var(--glow-dash-fail-light);
-  }
-
-  100% {
-    box-shadow: 0rem 1rem 3rem var(--glow-dash-fail-dark),
-      0rem 5rem 10rem 3rem var(--glow-dash-fail-dark);
-  }
-}
-
-#section-items-display {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex: 1;
-}
-
-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 1rem 1rem;
-  overflow: visible;
-  text-align: center;
-  align-items: center;
-  justify-content: start;
-  z-index: 1;
-  height: max-content;
-}
-
-#container-filters {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  overflow: visible;
-}
-
-.selector {
-  min-width: 10rem;
-  max-width: max-content;
-  padding: 0rem 1.2rem;
-  height: 5rem;
-  position: relative;
-  overflow: visible;
-
-  background: transparent;
-  border: none;
-  border-right: solid 1px rgba(128, 128, 128, 0.363);
-  align-content: center;
-  font-size: 3rem;
-  text-align: center;
-  cursor: pointer;
-}
-
-.button-dash-secondary {
-  position: relative;
-  height: 5rem;
-  margin: 0rem 0.3rem;
-  padding: 0rem 1.5rem;
-  text-align: center;
-  font-size: 2.5rem;
-  font-weight: 400;
-  background: white;
-  border: solid 2px rgba(128, 128, 128, 0.363);
-  border-radius: 30px;
-  box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);
-  cursor: pointer;
-}
-.selector:last-child {
-  border: none;
-}
-
-.selector:has(.selected):hover .selected {
-  color: #13c7d7;
-}
-
-.open {
-  box-shadow: none;
-}
-
-#selector-secondary-filter {
-  margin-left: 0.5rem;
-}
-.selector-list {
-  position: absolute;
-  padding-top: 0.25rem;
-  top: 5.5rem;
-  left: 0;
-  background: transparent;
-  backdrop-filter: blur(4px);
-  border-right: solid 1px;
-  border-bottom: solid 1px;
-  border-bottom-right-radius: 30px;
-  /* border: none; */
-  width: 100%;
-}
-
-#selector-primary-list {
-  border-color: rgb(0, 213, 206);
-}
-#selector-secondary-list {
-  border-color: rgb(158, 3, 255);
-  width: max-content;
-}
-
-.selector-option {
-  font-size: 2.2rem;
-  padding: 0rem 1rem 0.5rem 1.5rem;
-  text-align: left;
-  cursor: pointer;
-  border-bottom: solid 2px rgb(0, 213, 206);
-  border: none;
-}
-.selector-option.selected {
-  font-size: 3rem;
-}
-
-.selector-option:last-child {
-  border: none;
-}
-
-#selector-secondary-list .selector-option {
-  border-color: rgb(158, 3, 255);
-}
-
-.selected {
-  color: #000000;
-  font-weight: 600;
-}
-.selector-option.selected::after {
-  content: "";
-  background-image: url("/src/assets/down-arrow.png");
-  background-size: cover; /* Oppure "contain" o altre opzioni */
-  background-position: center;
-  display: inline-block;
-  margin-left: 1rem;
-  width: 2rem;
-  height: 2rem;
-  transform: translateY(10%);
-  justify-items: center;
-  transition: transform 0.2s ease;
-}
-.selector:has(.selector-list) .selector-option.selected::after {
-  transform: rotate(180deg);
-}
-
-.selector-option:hover {
-  color: #13acd7;
-}
-
-.is-hidden {
-  display: none;
-}
-
-#items-container {
-  padding: 1rem 1rem;
-  height: 100%;
-  scrollbar-gutter: stable both-edges;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
-  overflow-y: auto;
-  overflow-x: visible;
-  z-index: 0;
-}
-
-#items-container ul {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: auto;
-
-  grid-template-areas: "li li";
-  gap: 0;
-}
-#items-container ul li {
-  margin: 0rem 0.5rem;
-  overflow: visible;
-  z-index: 1;
-
-  /* border: solid; */
-}
-
-#dash-footer {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  min-height: max-content;
-  width: 100%;
-  padding: 1rem 1rem;
-  justify-self: bottom;
-  overflow: visible;
-  position: absolute;
-  bottom: 0;
-  z-index: 1;
-}
-
-#button-edit {
-  background: rgb(255, 76, 66);
-  border-color: rgb(249, 83, 83);
-  color: white;
-  font-weight: 500;
-}
-
-.button-dash-secondary:hover {
-  color: rgb(9, 247, 255);
-  box-shadow: 0rem 0.2rem 0.5rem rgba(128, 128, 128, 0.434);
-}
-
-#button-rem {
-  background: rgba(173, 66, 66, 0.995);
-  border: none;
-  color: white;
-}
-#button-rem:hover {
-  color: rgb(117, 250, 255);
-  background: rgba(255, 77, 77, 0.995);
-}
-
-#button-select-all {
-  border: solid 1px rgba(35, 212, 243, 0.704);
-}
-
-li {
-  display: flex;
-  flex-direction: column;
-  margin: 1rem 0;
-  border-radius: 10px;
-}
-
-.empty-list {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-h2,
-.button-start {
-  font-size: 3rem;
-  padding: 0.5rem 1.5rem;
-}
-
-.button-start {
-  background: none;
-  border: none;
-  font-weight: bold;
-  color: rgb(255, 0, 85);
-}
-.button-start:hover {
-  color: rgb(21, 203, 167);
-  cursor: pointer;
-}
-
-.remove-checkbox {
-  appearance: none;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-
-  position: absolute;
-  bottom: 0rem;
-  right: 0;
-  border-style: none;
-  border: solid 1px rgb(0, 255, 157);
-
-  border-radius: 40px;
-  backdrop-filter: brightness(90%);
-  transition: all 0.2s ease;
-}
-
-.remove-checkbox:checked {
-  background: linear-gradient(
-    to bottom right,
-    rgba(255, 10, 22, 0.711),
-    transparent 60%
-  );
-  border-color: red;
-  backdrop-filter: brightness(100%);
-}
-
-#section-stats {
-  width: 40%;
-  position: absolute;
-  backdrop-filter: blur(15px);
-  right: 0;
-  top: 5%;
-  height: 90%;
-  /* transform: translateX(0) translateY(5%); */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  border-left: solid 1px #1dffa8e3;
-}
-
-#section-stats-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  border: none;
-
-  background: transparent;
-  padding: 0rem;
-  width: 100%;
-
-  justify-content: center;
-  align-items: center;
-}
-
-.stats-enter-from,
-.stats-leave-to {
-  opacity: 0;
-  transform: translateX(200px);
-}
-
-.stats-enter-active,
-.stats-leave-active {
-  transition: all 0.5s ease-in-out;
-}
-
-.stats-leave-from,
-.stats-enter-to {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-#dash-header-stats {
-  padding: 1rem 0.5rem 1rem 0.2rem;
-}
-
-#button-dash-stats {
-  border-color: #00e4b6;
-  border: none;
-  position: absolute;
-  right: 1rem;
-}
-
-.stat {
-  border: solid 1px rgb(9, 249, 205);
-  border-radius: 30px;
-  width: 80%;
-  padding: 1rem;
-  margin: 1rem 0rem;
-  box-shadow: 0.2rem 0.3rem 0.5rem rgb(186, 186, 186);
-}
-
-.progress-bar {
-  border: solid 1px;
-  border-radius: 30px;
-  height: 1rem;
-  width: 60%;
-  justify-self: center;
-}
-.progress-bar-inner {
-  height: 100%;
-  background: rgb(158, 233, 252);
-}
-
-.progress-bar-text {
-  text-align: center;
-  font-size: 2rem;
-  padding: 0.5rem 0rem;
-}
-
-.progress-bar-inner.completed {
-  background: rgb(47, 255, 147);
-}
-.progress-bar-inner.failed {
-  background: rgb(154, 47, 255);
-}
-
-.dialog-dash {
-  z-index: 200;
-}
-
-.dialog-button {
-  color: white;
-}
-
-.items-list-enter-from,
-.items-list-leave-to {
-  opacity: 0;
-  transform: scale(0.1);
-  transform-origin: center;
-}
-.items-list-enter-active:nth-child(even) {
-  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-}
-.items-list-enter-active:nth-child(odd) {
-  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) 0.2s;
-}
-.items-list-leave-active {
-  transition: all 0.5s ease-out;
-  position: absolute;
-}
-.items-list-leave-active:nth-child(odd) {
-  transition: all 0.5s ease-out 0.05s;
-  position: absolute;
-}
-.items-list-enter-to,
-.items-list-leave-from {
-  transform: scale(1);
-
-  opacity: 1;
-  transform-style: preserve-3d;
-}
-
-.items-list-move {
-  transition: all 0.5s ease;
-}
-
-@media screen and (max-width: 748px) {
-  #items-container ul {
-    grid-template-columns: 50% 1fr;
-    grid-auto-rows: auto;
-    grid-template-areas: "li li";
-  }
-}
-
-@media screen and (max-width: 600px) {
-  #items-container ul {
+  .section__dashboard {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    /* grid-auto-columns: auto;
-    grid-auto-rows: auto;
+    justify-content: space-between;
+    flex: 1;
 
-    gap: 0; */
+    .section__controls--top {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 1rem 1rem;
+      overflow: visible;
+      text-align: center;
+      align-items: center;
+      justify-content: start;
+      z-index: 1;
+      height: max-content;
+      position: relative;
+
+      .btn--stats {
+        border-color: #00e4b6;
+        border: none;
+        position: absolute;
+        right: 1rem;
+      }
+      .selectors-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        overflow: visible;
+
+        .selector {
+          min-width: 10rem;
+          max-width: max-content;
+          padding: 0rem 1.2rem;
+          height: 5rem;
+          position: relative;
+          overflow: visible;
+
+          background: transparent;
+          border: none;
+          border-right: solid 1px rgba(128, 128, 128, 0.363);
+          align-content: center;
+          font-size: 3rem;
+          text-align: center;
+          cursor: pointer;
+
+          &:not(:has(.selector__list)):hover {
+            .selector__option--selected {
+              color: #13acd7;
+            }
+          }
+
+          &:last-child {
+            border: none;
+          }
+
+          &.selector--secondary {
+            margin-left: 0.5rem;
+          }
+
+          .selector__list {
+            position: absolute;
+            padding-top: 0.25rem;
+            top: 5.5rem;
+            left: 0;
+            background: transparent;
+            backdrop-filter: blur(15px);
+            border-right: solid 1px;
+            border-bottom: solid 1px;
+            border-color: rgb(206, 206, 206);
+            border-bottom-right-radius: 30px;
+            min-width: 100%;
+            width: max-content;
+            animation: slide-in-top 0.4s ease forwards;
+
+            @keyframes slide-in-top {
+              0% {
+                opacity: 0;
+                transform: translateY(-50px);
+              }
+              100% {
+                opacity: 1;
+
+                transform: translateY(0px);
+              }
+            }
+
+            .selector__option {
+              font-size: 2.2rem;
+              padding: 0rem 1rem 0.5rem 1.5rem;
+              text-align: left;
+              cursor: pointer;
+              border: none;
+
+              &:hover,
+              &.selector__option--selected:hover {
+                color: #13acd7;
+              }
+            }
+          }
+
+          .selector__option--selected {
+            font-size: 3rem;
+            font-weight: 500;
+
+            &::after {
+              content: "";
+              background-image: url("/src/assets/down-arrow.png");
+              background-size: cover;
+              background-position: center;
+              display: inline-block;
+              margin-left: 1rem;
+              width: 2rem;
+              height: 2rem;
+              transform: translateY(10%);
+              justify-items: center;
+              transition: transform 0.2s ease;
+            }
+          }
+
+          &:has(.selector__list) {
+            .selector__option--selected {
+              &::after {
+                transform: rotate(180deg);
+              }
+            }
+          }
+        }
+      }
+    }
+    .list__container {
+      padding: 1rem 1rem;
+      height: 100%;
+      scrollbar-gutter: stable both-edges;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
+      overflow-y: auto;
+      overflow-x: visible;
+      z-index: 0;
+
+      .list__placeholder {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        h2,
+        .btn--fallback {
+          font-size: 3rem;
+          padding: 0.5rem 1.5rem;
+        }
+        .btn--fallback {
+          background: none;
+          border: none;
+          font-weight: bold;
+          color: rgb(255, 0, 85);
+          &:hover {
+            color: rgb(21, 203, 167);
+            cursor: pointer;
+          }
+        }
+      }
+
+      .list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: auto;
+        grid-template-areas: "li li";
+        gap: 0;
+        list-style: none;
+
+        .list__item {
+          margin: 0rem 0.5rem;
+          overflow: visible;
+          z-index: 1;
+
+          .item__checkbox {
+            appearance: none;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+
+            position: absolute;
+            bottom: 0rem;
+            right: 0;
+            border-style: none;
+            border: solid 1px rgb(0, 255, 157);
+
+            border-radius: 40px;
+            backdrop-filter: brightness(90%);
+            transition: all 0.2s ease;
+            &:checked {
+              background: linear-gradient(
+                to bottom right,
+                rgba(255, 10, 22, 0.711),
+                transparent 60%
+              );
+              border-color: red;
+              backdrop-filter: brightness(100%);
+            }
+          }
+        }
+
+        .list-enter-from,
+        .list-leave-to {
+          opacity: 0;
+          transform: scale(0.1);
+          transform-origin: center;
+        }
+        .list-enter-active:nth-child(even) {
+          transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .list-enter-active:nth-child(odd) {
+          transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) 0.2s;
+        }
+        .list-leave-active {
+          transition: all 0.5s ease-out;
+          position: absolute;
+        }
+        .list-leave-active:nth-child(odd) {
+          transition: all 0.5s ease-out 0.05s;
+          position: absolute;
+        }
+        .list-enter-to,
+        .list-leave-from {
+          transform: scale(1);
+          opacity: 1;
+          transform-style: preserve-3d;
+        }
+
+        .list-move {
+          transition: transform 0.5s ease;
+        }
+
+        @media screen and (min-width: 1025px) {
+          grid-template-columns: 1fr 1fr 1fr;
+          grid-auto-rows: auto;
+          grid-template-areas: "li li li";
+        }
+
+        @media screen and (max-width: 1024px) {
+          grid-template-columns: 50% 1fr;
+          grid-auto-rows: auto;
+          grid-template-areas: "li li";
+        }
+
+        @media screen and (max-width: 600px) {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+
+          .list__item {
+            width: 90%;
+          }
+        }
+      }
+    }
+    .section__controls--bottom {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      min-height: max-content;
+      width: 100%;
+      padding: 1rem;
+      justify-self: bottom;
+      overflow: visible;
+      position: absolute;
+      bottom: 0;
+      z-index: 1;
+
+      .btn--action-edit {
+        background: var(--dialog-button-color-default-earth);
+        border-color: var(--dialog-button-color-default-earth);
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+
+        &.btn--action-edit-active {
+          background: rgb(255, 76, 66);
+          border-color: rgb(249, 83, 83);
+        }
+      }
+      .btn--action-remove {
+        background: rgba(173, 66, 66, 0.995);
+        border: none;
+        color: white;
+
+        &:hover {
+          color: rgb(117, 250, 255);
+          background: rgba(255, 77, 77, 0.995);
+        }
+      }
+      .bt--action-select-all {
+        border: solid 1px rgba(35, 212, 243, 0.704);
+      }
+    }
+  }
+  .section__stats {
+    width: 40%;
+    position: absolute;
+    backdrop-filter: blur(15px);
+    right: 0;
+    top: 5%;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-left: solid 1px #1dffa8e3;
+
+    &.stats-enter-from,
+    &.stats-leave-to {
+      opacity: 0;
+      transform: translateX(200px);
+    }
+
+    &.stats-enter-active,
+    &.stats-leave-active {
+      transition: all 0.4s ease;
+    }
+
+    &.stats-leave-from,
+    &.stats-enter-to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .stat {
+      border: solid 1px rgb(9, 249, 205);
+      border-radius: 30px;
+      width: 80%;
+      padding: 1rem;
+      margin: 1rem 0rem;
+      box-shadow: 0.2rem 0.3rem 0.5rem rgb(186, 186, 186);
+      animation: pop-out 0.35s cubic-bezier(0.6, -0.28, 0.735, 0.045) backwards;
+      &:nth-child(1) {
+        animation-delay: 0.3s;
+      }
+      &:nth-child(2) {
+        animation-delay: 0.4s;
+      }
+      &:nth-child(3) {
+        animation-delay: 0.5s;
+      }
+      &:nth-child(4) {
+        animation-delay: 0.6s;
+      }
+      @keyframes pop-out {
+        0% {
+          opacity: 0;
+        }
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1) translateY(5px);
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .stat__text {
+        text-align: center;
+        font-size: 2rem;
+        padding: 0.5rem 0rem;
+      }
+      .stat__bar {
+        border: solid 1px rgb(186, 186, 186);
+        border-radius: 30px;
+        height: 1rem;
+        width: 60%;
+        justify-self: center;
+
+        .stat__bar--inner {
+          height: 100%;
+          background: rgb(158, 233, 252);
+          &.stat__bar--completed {
+            background: rgb(47, 255, 147);
+          }
+          &.stat__bar--failed {
+            background: rgb(255, 47, 92);
+          }
+        }
+      }
+    }
   }
 
-  #items-container ul li {
-    width: 90%;
+  .dialog {
+    z-index: 200;
+  }
+  .btn {
+    height: 5rem;
+    padding: 0rem 1.5rem;
+    margin: 0rem 0.3rem;
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 400;
+    background: white;
+    border: solid 2px rgba(128, 128, 128, 0.363);
+    border-radius: 30px;
+    box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    &:hover {
+      color: rgb(9, 247, 255);
+      box-shadow: 0rem 0.2rem 0.5rem rgba(128, 128, 128, 0.434);
+    }
   }
 }
 </style>

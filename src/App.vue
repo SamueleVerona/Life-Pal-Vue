@@ -17,6 +17,7 @@ export default {
 </script> -->
 
 <style>
+@import "@/assets/styles/fonts.css";
 :root {
   --fc-neutral-bg-color: rgba(200, 177, 246, 0.526);
   --glow-item-card-light: rgba(252, 178, 31, 0.336);
@@ -50,10 +51,10 @@ export default {
   --sign-option-signup: rgb(144, 224, 174);
   --sign-option-signup-darker: rgb(91, 176, 123);
 }
+
 #app {
-  font-family: "Afacad Flux", Sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* font-family: "Afacad Flux", Sans-serif; */
+
   color: #2c3e50;
   font-size: 62.5%;
 }

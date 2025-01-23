@@ -1,0 +1,29 @@
+@font-face {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: "Afacad Flux";
+  src: url("/src/assets/fonts/Afacad-Flux-Optimized/afacadflux-variablefont_slntwght-webfont.woff")
+      format("woff"),
+    url("/src/assets/fonts/Afacad-Flux-Optimized/afacadflux-variablefont_slntwght-webfont.woff2")
+      format("woff2");
+}
+
+@font-face {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: "Roboto";
+  src: url("/src/assets/fonts/Roboto-Optimized/roboto-variablefont_wdthwght-webfont.woff")
+      format("woff"),
+    url("/src/assets/fonts/Roboto-Optimized/roboto-variablefont_wdthwght-webfont.woff2")
+      format("woff2");
+}
+
+@font-face {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: "Poppins";
+  src: url("/src/assets/fonts/Poppins-Optimized/poppins-regular-webfont.woff")
+      format("woff"),
+    url("/src/assets/fonts/Poppins-Optimized/poppins-regular-webfont.woff2")
+      format("woff2");
+}

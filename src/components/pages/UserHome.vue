@@ -71,7 +71,7 @@
       :wrapperBackground="dialogBkgColor"
       :buttonBackground="dialogBtnColor"
     >
-      <template #title>
+      <template #content>
         <list-item
           v-for="goal in expiredGoals"
           :item="goal"
@@ -176,14 +176,14 @@ const navButtonClicked = ref("calendar");
 const toggleProfile = ref(false);
 
 function handleNavigation(e) {
-  if (!e.target.id.includes("button")) return;
+  if (!e.target.classList.contains("btn")) return;
 
   const targetButton = e.target.dataset.buttonId;
-  const isProfileButton = targetButton.includes("profile");
-  const isLogBtn = targetButton.includes("log");
-  const isUnsubBtn = targetButton.includes("unsub");
-  const isCalendarBtn = targetButton.includes("calendar");
-  const isDashboardBtn = targetButton.includes("dashboard");
+  const isProfileButton = targetButton === "profile";
+  const isLogBtn = targetButton === "logout";
+  const isUnsubBtn = targetButton === "unsub";
+  const isCalendarBtn = targetButton === "calendar";
+  const isDashboardBtn = targetButton === "dashboard";
 
   if (isLogBtn) {
     router.replace({
