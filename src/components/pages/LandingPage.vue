@@ -7,7 +7,7 @@
       >
     </section>
     <section class="section__bio">
-      <h3 class="bio__title">What's Life Pal?</h3>
+      <h3 class="bio__title">What's LifePal?</h3>
       <div class="bio__cards-container" @click="handleAnimation">
         <p class="bio__card bio__card--1">
           It's a interactive web app for setting and managing goals.
@@ -56,36 +56,36 @@
         </div>
       </transition>
       <div class="slideshow__btns-container">
-        <button
+        <div
           type="button"
           class="btn"
           :class="{ 'btn--active': slideCounter === 1 }"
-        ></button>
-        <button
+        ></div>
+        <div
           type="button"
           class="btn"
           :class="{ 'btn--active': slideCounter === 2 }"
-        ></button>
-        <button
+        ></div>
+        <div
           type="button"
           class="btn"
           :class="{ 'btn--active': slideCounter === 3 }"
-        ></button>
-        <button
+        ></div>
+        <div
           type="button"
           class="btn"
           :class="{ 'btn--active': slideCounter === 4 }"
-        ></button>
-        <button
+        ></div>
+        <div
           type="button"
           class="btn"
           :class="{ 'btn--active': slideCounter === 5 }"
-        ></button>
-        <button
+        ></div>
+        <div
           type="button"
           class="btn"
           :class="{ 'btn--active': slideCounter === 6 }"
-        ></button>
+        ></div>
       </div>
     </section>
     <button class="section__scrollto-btn" @mousedown="scrollSections"></button>
@@ -185,48 +185,67 @@ function handleScroll(e) {
 }
 .section {
   position: relative;
+  height: 100vh;
   overflow-y: auto;
   scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
   scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
-  height: 100vh;
-  background: linear-gradient(70deg, #d9eef81b 20%, #e7dfffdb 100%);
+  background: var(--theme-bkg);
 
   .section__hero {
-    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     position: relative;
-    overflow: visible;
     z-index: 1;
+    height: 100vh;
+    overflow: visible;
 
     .hero__logo {
+      position: relative;
+      margin-bottom: 1rem;
+      overflow: visible;
       font-size: 20rem;
+      font-family: "Comfortaa", sans-serif;
       line-height: 100%;
       text-align: center;
       white-space: break-spaces;
-      margin-bottom: 1rem;
-      position: relative;
-      overflow: visible;
       opacity: 1;
-      /* background: url("/src/assets/bkg3.png"); */
-      /* background-size: 200%;
-      background-position: center;
+
+      background: url("/src/assets/imgs/logo-bkg-full.png");
+      background-size: 500%;
+      background-position: bottom;
+      background-position-y: 25%;
+      -webkit-text-fill-color: transparent;
       -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent; */
+      background-repeat: no-repeat;
+      filter: brightness(95%);
+      animation: fade-in-top 2s ease;
+
+      @keyframes fade-in-top {
+        0% {
+          opacity: 0;
+          transform: translateY(-40px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0px);
+        }
+      }
+
       &:after {
-        content: "";
-        width: 30rem;
-        aspect-ratio: 1;
-        border-radius: 100%;
-        background: rgb(255, 255, 255);
-        backdrop-filter: invert(10%);
-        box-shadow: 0.3rem 0.5rem 0.8rem white;
         position: absolute;
         top: 0;
         left: 5%;
+        width: 30rem;
+        aspect-ratio: 1;
+
+        content: "";
+        border-radius: 100%;
+        background: rgb(255, 255, 255);
+        backdrop-filter: contrast(100%) brightness(85%);
+        box-shadow: 0.3rem 0.5rem 0.8rem white;
         offset-path: path("M.4 84.1s127.4 188 267.7 0 247.3 0 247.3 0");
         offset-distance: 0%;
         animation: bubble-out 2s ease forwards reverse;
@@ -247,14 +266,14 @@ function handleScroll(e) {
     .hero__link {
       position: absolute;
       bottom: 10%;
+
       font-size: 5rem;
-      color: var(--item-goal-day);
-      color: white;
       font-weight: 600;
+      color: white;
       text-decoration: none;
       filter: drop-shadow(-0rem -0.4rem 0.6rem rgb(162, 162, 162));
-      transition: all 0.2s ease;
       cursor: pointer;
+      transition: all 0.2s ease;
       animation: slide-in-bottom 2s ease forwards;
 
       &:hover {
@@ -274,10 +293,10 @@ function handleScroll(e) {
     }
   }
   .section__bio {
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
+    min-height: 100vh;
     overflow: visible;
 
     .bio__title {
@@ -287,33 +306,31 @@ function handleScroll(e) {
     }
 
     .bio__cards-container {
-      height: 70vh;
       position: relative;
+      height: 70vh;
       overflow: visible;
 
       .bio__card {
-        padding: 0rem 2rem;
-        margin: 0.5rem 0rem;
+        position: absolute;
         height: 50%;
         width: 50%;
+        padding: 0rem 2rem;
+        margin: 0.5rem 0rem;
+        overflow: visible;
+
+        align-content: center;
         font-size: 2.2rem;
+        font-weight: 500;
+        text-align: center;
+        color: inherit;
+
         border-radius: 40px;
         box-shadow: 0.2rem 0.5rem 0.8rem rgb(169, 169, 169);
-
-        text-justify: auto;
-        text-overflow: ellipsis;
-        text-align: center;
-        font-weight: 500;
-        align-content: center;
-
         background: rgb(255, 255, 255);
         background: rgba(235, 227, 255, 0.037);
         backdrop-filter: blur(100px);
 
-        color: inherit;
         cursor: pointer;
-        position: absolute;
-        overflow: visible;
         transition: all 0.5s ease;
 
         &.bio__card--1 {
@@ -351,40 +368,40 @@ function handleScroll(e) {
     }
   }
   .section__slideshow {
-    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    position: relative;
+    height: 100vh;
     padding: 2rem 0rem;
 
     .slideshow__card-container {
-      width: 100%;
-      height: max-content;
-      height: 100%;
-
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: center;
+      width: 100%;
+      height: max-content;
+      height: 100%;
       overflow: visible;
     }
     .slideshow__card {
       display: flex;
       flex-direction: column;
-      text-align: center;
       justify-content: center;
       align-items: center;
-      margin: 0rem 1rem;
       min-width: 90%;
+      margin: 0rem 1rem;
+      text-align: center;
 
       .slideshow__img {
         width: 45rem;
         height: 45rem;
+        padding: 1rem;
         background-size: cover;
         background-position: center;
         border-radius: 40px;
-        padding: 1rem;
         box-shadow: 0.3rem 0.8rem 0.8rem rgba(128, 128, 128, 0.478);
         cursor: pointer;
         transition: all 0.5s ease;
@@ -394,58 +411,58 @@ function handleScroll(e) {
         }
 
         &.img--1 {
-          background-image: url("/src/assets/lifepal-slide-1.png");
+          background-image: url("/src/assets/imgs/lifepal-slide-1.webp");
         }
         &.img--2 {
-          background-image: url("/src/assets/lifepal-slide-2.png");
+          background-image: url("/src/assets/imgs/lifepal-slide-2.webp");
         }
         &.img--3 {
-          background-image: url("/src/assets/lifepal-slide-3.png");
+          background-image: url("/src/assets/imgs/lifepal-slide-3.webp");
         }
         &.img--4 {
-          background-image: url("/src/assets/lifepal-slide-4.png");
+          background-image: url("/src/assets/imgs/lifepal-slide-4.webp");
         }
         &.img--5 {
-          background-image: url("/src/assets/lifepal-slide-5.png");
+          background-image: url("/src/assets/imgs/lifepal-slide-5.webp");
         }
         &.img--6 {
-          background-image: url("/src/assets/lifepal-slide-6.png");
+          background-image: url("/src/assets/imgs/lifepal-slide-6.webp");
         }
       }
 
       .slideshow__text {
-        font-size: 2.5rem !important;
         margin-top: 2rem;
+        font-size: 2.5rem;
         font-weight: 500;
-        color: inherit;
         text-shadow: 0rem 0.2rem 0.5rem rgb(191, 191, 191);
+        color: inherit;
       }
     }
 
     .slideshow__btns-container {
-      position: relative;
-      text-align: center;
-      overflow: visible;
       display: flex;
       flex-direction: row;
       justify-content: space-around;
       align-items: center;
+      position: absolute;
       width: 10%;
-      margin-top: 2rem;
       height: 1.5rem;
+      margin-top: 2rem;
+      bottom: 10%;
+      overflow: visible;
+      text-align: center;
 
       .btn {
-        border: solid 1px rgb(206, 156, 103);
-        border: none;
         width: 1.1rem;
         aspect-ratio: 1;
         margin: 0px 2px;
+        border: none;
         border-radius: 50px;
 
         background: rgba(255, 255, 255, 0.389);
         box-shadow: 0rem 0.1rem 0.3rem grey;
         &.btn--active {
-          background: rgb(206, 156, 103);
+          background: var(--warning);
           transition: all 0.3s ease;
         }
       }
@@ -481,14 +498,14 @@ function handleScroll(e) {
     transform: translateX(-50%);
     width: 3rem;
     aspect-ratio: 1;
+    z-index: 5;
     border-radius: 100%;
     border: none;
-    background: url("/src/assets/down-arrow.png");
+    background: url("/src/assets/imgs/down-arrow.png");
     background-size: cover;
 
     background-position: center;
     cursor: pointer;
-    z-index: 5;
     transition: all 0.3s ease;
 
     &.rotated {

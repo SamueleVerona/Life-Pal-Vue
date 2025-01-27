@@ -80,17 +80,13 @@
             class="controls__btn controls__btn--completed"
             :class="{ selected: goalStatus && markFlag }"
             @click="markAs"
-          >
-            ✔
-          </button>
+          ></button>
           <button
             type="button"
             class="controls__btn controls__btn--failed"
             :class="{ selected: !goalStatus && markFlag }"
             @click="markAs"
-          >
-            ✖
-          </button>
+          ></button>
         </div>
       </div>
     </section>
@@ -238,29 +234,28 @@ watch(props.item, () => {
 }
 
 @mixin reply-format {
-  text-align: center;
-  margin-bottom: 1rem;
   position: relative;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 @mixin item-btn-format {
-  border: none;
-  border-radius: 30px;
   padding: 0rem 0.5rem;
   font-size: 1.5rem;
+  border: none;
+  border-radius: 30px;
   cursor: pointer;
 }
 
 .item__container {
-  position: relative;
   display: flex;
   flex-direction: column;
+  position: relative;
+  width: 100%;
+  max-height: max-content;
   margin: 0.8rem 0rem;
   padding: 1rem;
-  max-height: max-content;
-  width: 100%;
   border-radius: 40px;
   box-shadow: var(--basic-shadow);
-
   border: solid 3px rgb(230, 230, 230);
   border-bottom: solid 10px rgba(157, 157, 157, 0.978);
   border-bottom: solid 10px rgba(176, 176, 176, 0.978);
@@ -268,7 +263,7 @@ watch(props.item, () => {
 
   background: radial-gradient(
     ellipse at bottom left,
-    var(--dialog-button-color-default-earth) 1%,
+    var(--warning) 1%,
     rgba(255, 225, 161, 0.659) 20%,
     rgba(244, 236, 209, 0.345) 13%,
     rgba(234, 231, 224, 0.345) 15%,
@@ -282,10 +277,10 @@ watch(props.item, () => {
   }
 
   &.day {
-    border: solid 1px var(--item-goal-day);
+    border: solid 1px var(--theme-day);
     background: radial-gradient(
       ellipse at bottom right,
-      var(--item-goal-day) 1%,
+      var(--theme-day) 1%,
       rgba(169, 255, 219, 0.659) 35%,
       rgba(209, 244, 231, 0.345) 18%,
       rgba(224, 234, 230, 0.345) 20%,
@@ -293,12 +288,12 @@ watch(props.item, () => {
     );
 
     .item__title-text {
-      color: var(--item-goal-day);
+      color: var(--theme-day);
     }
   }
 
   &.week {
-    border: solid 1px var(--item-goal-week);
+    border: solid 1px var(--theme-week);
     background: radial-gradient(
       ellipse at bottom right,
       rgba(255, 73, 60, 0.742) 1%,
@@ -309,15 +304,15 @@ watch(props.item, () => {
     );
 
     .item__title-text {
-      color: var(--item-goal-week);
+      color: var(--theme-week);
     }
   }
 
   &.month {
-    border: solid 1px var(--item-goal-month);
+    border: solid 1px var(--theme-month);
     background: radial-gradient(
       ellipse at bottom right,
-      var(--item-goal-month) 1%,
+      var(--theme-month) 1%,
       rgba(255, 199, 169, 0.348) 35%,
       rgba(209, 244, 231, 0.345) 18%,
       rgba(224, 234, 230, 0.345) 20%,
@@ -325,71 +320,70 @@ watch(props.item, () => {
     );
 
     .item__title-text {
-      color: var(--item-goal-month);
+      color: var(--theme-month);
     }
   }
 
   .item__title {
-    min-height: max-content;
     width: 100%;
+    min-height: max-content;
 
     .item__title-text {
+      align-self: center;
       padding: 0rem 1.5rem 0.5rem 1.5rem;
       margin: 0.5rem 0rem;
-      align-self: center;
-      border: none;
 
       font-size: 3rem;
+      font-weight: bolder;
       line-height: 3rem;
       text-align: center;
-      font-weight: bolder;
+      border: none;
     }
   }
   .item__info {
     display: flex;
     flex-direction: column;
-    text-overflow: clip;
     font-size: 3rem;
+    text-overflow: clip;
 
     .item__description {
+      align-self: center;
       width: 90%;
       padding: 0.5rem 1.5rem 0.5rem 0.8rem;
-      border: none;
-      border-bottom: solid 2px rgba(92, 88, 97, 0.352);
-      align-self: center;
-      text-align: center;
       font-weight: 500;
       font-size: 2.2rem;
+      text-align: center;
+      border: none;
+      border-bottom: solid 2px rgba(92, 88, 97, 0.352);
     }
     .item__status {
-      position: relative;
       display: flex;
-      padding-top: 0.5rem;
-      margin: 0.5rem 0rem;
-      width: max-content;
-      text-align: center;
-
-      background: rgba(248, 255, 253, 0.164);
       align-self: center;
+      position: relative;
+      width: max-content;
+      margin: 0.5rem 0rem;
+      padding-top: 0.5rem;
+      text-align: center;
+      background: rgba(248, 255, 253, 0.164);
 
       .item__status-text {
         font-size: 1.5rem;
         font-weight: bold;
-
-        .status-label {
-          color: brown;
-        }
+        line-height: 1.5rem;
 
         .status-title {
           color: rgb(0, 87, 187);
         }
+        .status-label {
+          color: brown;
+        }
       }
     }
     .item__reply {
-      border-top: solid 2px rgba(92, 88, 97, 0.177);
-      width: max-content;
       align-self: center;
+      width: max-content;
       overflow: visible;
+      border-top: solid 2px rgba(92, 88, 97, 0.177);
       @include reply-format;
 
       .item__reply-title,
@@ -399,17 +393,19 @@ watch(props.item, () => {
       }
 
       .item__reply-title {
+        position: relative;
         color: rgb(0, 87, 187);
       }
 
       .item__reply-btn {
         position: absolute;
-        font-size: 1.3rem;
         width: max-content;
-        color: red;
-        background: transparent;
-
         @include item-btn-format;
+        font-weight: 600;
+        line-height: 2rem;
+        color: rgb(255, 0, 43);
+        background: transparent;
+        transform: translateY(48%);
       }
     }
 
@@ -417,48 +413,50 @@ watch(props.item, () => {
       @include reply-format;
 
       .reply-admin__input {
+        width: 80%;
         font-size: 1.5rem;
         font-weight: 500;
         resize: none;
-        width: 80%;
       }
     }
 
     .item__progress {
-      height: 2rem;
-      width: 50%;
-      margin-bottom: 0.3rem;
-      border: solid 1px rgb(226, 226, 226);
-      border-radius: 50px;
-      background: rgb(255, 255, 255);
       align-self: center;
       position: relative;
+      width: 50%;
+      height: 2rem;
+      margin-bottom: 0.3rem;
+      border-radius: 50px;
+      background: rgb(255, 255, 255);
 
       .progress-bar {
-        background: rgb(84, 162, 247);
+        height: 100%;
+        z-index: 100;
+        background: linear-gradient(
+          to right,
+          rgb(183, 255, 242),
+          rgb(152, 216, 253)
+        );
         border-radius: 30px;
-        border-right: solid 4px rgb(67, 199, 251);
+        border-right: solid 4px rgb(125, 224, 196);
         border-top-right-radius: 50px;
         border-bottom-right-radius: 50px;
 
-        height: 100%;
-        z-index: 100;
-
         &:after {
-          content: "";
-          height: 100%;
-          width: inherit;
           position: absolute;
           bottom: 0;
+          width: inherit;
+          height: 100%;
+          overflow: visible;
+          content: "";
+          box-shadow: 0rem 0rem 0.6rem 0.1rem rgb(67, 199, 251);
           border-radius: 30px;
           background: linear-gradient(
             to right,
             rgba(255, 255, 255, 0),
-            rgb(146, 255, 199)
+            rgb(115, 232, 255)
           );
           animation: progress-glow 3s cubic-bezier(0.86, 0, 0.07, 1) infinite;
-          box-shadow: 0rem 0rem 0.6rem 0.1rem rgb(67, 199, 251);
-          overflow: visible;
 
           @keyframes progress-glow {
             0% {
@@ -469,8 +467,8 @@ watch(props.item, () => {
               opacity: 0.8;
             }
             50% {
-              opacity: 1;
               width: inherit;
+              opacity: 1;
               box-shadow: 0rem 0rem 0.6rem 0rem rgb(67, 199, 251);
             }
 
@@ -486,12 +484,11 @@ watch(props.item, () => {
           transform: translateX(-50%);
           width: max-content;
 
-          text-align: center;
           font-size: 1.2rem;
-          line-height: 1.8rem;
           font-weight: 600;
+          text-align: center;
+          line-height: 1.8rem;
           text-transform: lowercase;
-
           color: inherit;
           background: none;
         }
@@ -506,21 +503,20 @@ watch(props.item, () => {
       align-items: center;
       justify-content: space-evenly;
       align-self: center;
-      margin: auto;
-
       width: 50%;
-      border-radius: 18px;
-      border: solid 2px rgb(183, 183, 183);
-      text-align: center;
+      margin: auto;
+      padding: 0.5rem 0.8rem;
+
       font-size: 1.8rem;
       font-weight: bold;
-      padding: 0.5rem 0.8rem;
+      text-align: center;
+      border-radius: 18px;
+      border: solid 2px rgb(183, 183, 183);
 
       .controls__toggle-text {
         flex: 2;
         font-size: 1.5rem;
         font-weight: bold;
-        justify-self: flex-start;
       }
 
       .controls__btn-container {
@@ -532,18 +528,47 @@ watch(props.item, () => {
 
         .controls__btn {
           @include item-btn-format;
+          align-items: center;
+          width: 1.5rem;
+          aspect-ratio: 1;
           margin: 0rem 0.2rem;
+          font-size: 0.8em;
+          text-align: center;
+          transition: all 0.1s ease;
 
-          &:hover {
-            color: aqua;
+          @mixin btn-bkg {
+            background-size: contain;
+            background-position-y: -2px;
+            background-repeat: no-repeat;
+          }
+
+          &:first-of-type {
+            background: url("/src/assets/imgs/check-mark.png");
+            @include btn-bkg;
+            &:hover {
+              background: url("/src/assets/imgs/check-mark-checked.png");
+              @include btn-bkg;
+            }
+          }
+
+          &:last-of-type {
+            background: url("/src/assets/imgs/cross-mark.png");
+            @include btn-bkg;
+
+            &:hover {
+              background: url("/src/assets/imgs/cross-mark-checked.png");
+              @include btn-bkg;
+            }
           }
 
           &.selected {
-            & .controls__btn--completed {
-              color: rgb(6, 255, 135);
+            &.controls__btn--completed {
+              background: url("/src/assets/imgs/check-mark-checked.png");
+              @include btn-bkg;
             }
-            & .controls__btn--failed {
-              color: rgb(255, 6, 81);
+            &.controls__btn--failed {
+              background: url("/src/assets/imgs/cross-mark-checked.png");
+              @include btn-bkg;
             }
           }
         }

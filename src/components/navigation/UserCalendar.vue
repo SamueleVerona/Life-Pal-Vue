@@ -47,25 +47,6 @@ const tomorrow = ref(new Date(today.value.getTime() + 86400000));
 
 viewInfo.value = today.value;
 
-function setEvents(goals) {
-  const parsed = goals.map((goal) => {
-    return {
-      id: goal.id,
-      title: goal.title,
-      start: new Date(goal.compDate).toISOString().slice(0, 10),
-      type: goal.type,
-      borderColor: "white",
-      backgroundColor: "transparent",
-    };
-  });
-
-  calendarOptions.value.events = parsed;
-}
-
-watch(props, () => {
-  setEvents(props.userGoals);
-});
-
 function getThisWeekDay(dayOfWeek) {
   const MS_PER_DAY = 86400000;
 
@@ -195,7 +176,6 @@ const calendarOptions = ref({
     }
   },
   viewDidMount: (info) => {
-    setEvents(props.userGoals);
     viewInfo.value = info;
     currentView.value = info.view.type;
   },
@@ -310,8 +290,6 @@ function setMonthGoals(calendarView) {
   let timeSlots = calendarView.el.childNodes;
 
   timeSlots.forEach((slot) => {
-    // slot.setAttribute("style", "");
-
     const slotInternalDate = slot.dataset.date;
     const firstOfMonth = slotInternalDate + "-01";
 
@@ -389,12 +367,13 @@ function setDayGoals(dayView) {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 * {
   text-decoration: none;
-
-  /* font-weight: 800; */
 }
+
+$active-dark: rgb(4, 167, 172);
+$active-bright: rgb(1, 217, 229);
 
 :deep(.is-hidden) {
   display: none;
@@ -405,29 +384,32 @@ function setDayGoals(dayView) {
 }
 
 :deep(.fc) {
-  font-family: "Roboto Regular", sans-serif;
-
+  display: flex;
   height: 100%;
   width: 100%;
   padding: 1rem;
-  display: flex;
+  font-family: "Poppins", sans-serif;
+
+  font-variant-numeric: tabular-nums;
+  font-optical-sizing: auto;
+
   border-radius: 30px;
   border: solid 2px rgba(128, 128, 128, 0.308);
   border-bottom: solid 3px rgba(128, 128, 128, 0.308);
 }
 
 :deep(.fc .fc-toolbar.fc-header-toolbar) {
-  margin-bottom: 0;
-  min-height: max-content;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: none;
+  min-height: max-content;
+  margin-bottom: 0;
   padding: 1rem 0rem;
+  border: none;
 }
 :deep(.fc .fc-toolbar-title) {
-  font-size: 6rem;
   padding: 1rem;
+  font-size: 6rem;
   text-align: center;
   line-height: 6rem;
 }
@@ -443,13 +425,13 @@ function setDayGoals(dayView) {
 }
 
 :deep(.fc-multiMonthYear-view) {
-  border: none;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
   flex-basis: 200px;
-  height: max-content;
   align-self: center;
+  height: max-content;
+  padding: 1rem;
+  border: none;
 }
 
 :deep(td[role="gridcell"]) {
@@ -458,14 +440,13 @@ function setDayGoals(dayView) {
 
 :deep(.fc-dayGridMonth-view tbody[role="presentation"]),
 :deep(.fc-dayGridDay-view tbody[role="presentation"]) {
-  padding: 1rem 0rem;
-  justify-self: center;
   display: flex;
   justify-content: center;
   align-items: center;
-
+  justify-self: center;
   width: 100%;
   height: 100%;
+  padding: 1rem 0rem;
 }
 
 :deep(.fc-scrollgrid-sync-table) {
@@ -474,18 +455,18 @@ function setDayGoals(dayView) {
 
 :deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]),
 :deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
-  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 :deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
-  flex-wrap: wrap;
-  flex-direction: row;
-  flex-basis: 90%;
   align-items: center;
   justify-content: center;
   align-content: center;
+  flex-wrap: wrap;
+  flex-direction: row;
+  flex-basis: 90%;
   max-height: max-content;
 }
 
@@ -495,14 +476,12 @@ function setDayGoals(dayView) {
 :deep(.fc-dayGridMonth-view tbody[role="presentation"] td) {
   flex: 1 1 calc((100vw) / 5);
   max-width: calc((100vw) / 5);
-
   aspect-ratio: 1;
   padding: 0rem 0.2rem;
 }
 
 :deep(.fc-dayGridDay-view tbody[role="presentation"] td) {
   flex: 1 1 calc((100vw) / 10);
-
   max-width: calc((100vw) / 5);
   aspect-ratio: 1;
   padding: 0rem 0.2rem;
@@ -513,9 +492,9 @@ function setDayGoals(dayView) {
 }
 
 :deep(.fc-daygrid-day-frame) {
-  font-weight: bolder;
   width: 100%;
   aspect-ratio: 1;
+  font-weight: bolder;
   color: #2c3e50;
   box-shadow: 0.2rem 0.5rem 0.5rem grey;
   border-radius: 30px;
@@ -523,37 +502,38 @@ function setDayGoals(dayView) {
 }
 
 :deep(.fc-multiMonthYear-view .fc-daygrid-day-frame) {
-  border: none;
   display: none;
+  border: none;
 }
 
 :deep(.fc-dayGridMonth-view .fc-daygrid-day-frame) {
-  border-color: rgb(255, 100, 188);
+  border-color: var(--theme-week);
 }
 :deep(.fc-dayGridDay-view .fc-daygrid-day .fc-daygrid-day-frame) {
-  border-color: rgb(76, 159, 255);
+  border-color: var(--theme-day);
 }
 
 :deep(.fc-daygrid-week-number) {
-  background: none;
-  color: inherit;
+  width: 100%;
+  padding-top: 1rem;
   font-size: 2.5rem;
   text-align: center;
-  width: 100%;
-  padding-top: 0.5rem;
+  color: inherit;
+  background: none;
 }
 
 :deep(td.fc-day.fc-daygrid-day.fc-day-disabled) {
-  background: transparent;
-  overflow: visible;
   display: none;
+  overflow: visible;
+  background: transparent;
 }
 
 :deep(.fc-daygrid-day-top a) {
-  font-size: 2.6rem;
-  color: inherit;
-  text-align: center;
   width: 100%;
+  padding-top: 1rem;
+  font-size: 2.6rem;
+  text-align: center;
+  color: inherit;
 }
 
 :deep(.fc-daygrid-day:hover) {
@@ -562,56 +542,52 @@ function setDayGoals(dayView) {
 
 :deep(.fc .fc-button-primary) {
   padding: 0.5rem 1.5rem;
+  font-family: "Roboto", sans-serif;
   font-size: 2rem;
   line-height: 3rem;
+  color: inherit;
   border: none;
   background: none;
-  border: solid 2px rgb(218, 218, 218);
-  border-bottom: solid 3px rgb(218, 218, 218);
+  border: solid 1px rgb(218, 218, 218);
+  border-bottom: solid 2px rgb(218, 218, 218);
   border-radius: 30px;
-  color: inherit;
-}
 
-:deep(.fc .fc-button-primary:disabled),
-:deep(.fc .fc-button-primary:disabled:active),
-:deep(.fc .fc-button-primary:disabled:hover) {
-  background: rgba(218, 218, 218, 0.204);
-  border: solid 2px rgb(218, 218, 218);
-  border-bottom: solid 3px rgb(218, 218, 218);
-  color: #2c3e50;
-}
-:deep(.fc .fc-button-primary:hover) {
-  color: rgb(0, 189, 196);
+  &:hover {
+    z-index: 0;
+    color: var(--hover-default);
+  }
 }
 
 :deep(.fc .fc-button-primary:focus),
 :deep(.fc .fc-button-primary:not(:disabled):focus) {
   box-shadow: none;
-  border: solid 1px rgb(1, 217, 229);
+  border: solid 1px $active-bright;
+  border-bottom: solid 2px $active-bright;
 }
 
 :deep(.fc .fc-button-primary:active),
 :deep(.fc .fc-button-primary:not(:disabled).fc-button-active) {
+  z-index: 1;
+  color: $active-dark;
   background: none;
-  border: solid 1px rgb(1, 217, 229);
-  /* border-bottom: solid 2px rgb(0, 242, 255); */
-  color: rgb(4, 167, 172);
+  border: solid 1px $active-bright;
+  border-bottom: solid 2px $active-bright;
 }
 
 :deep(.fc .fc-add-button) {
   width: max-content;
-  padding: 0.5rem 1.5rem;
-  border-radius: 30px;
   margin: 0rem 0.5rem;
+  padding: 0.5rem 1.5rem;
+  font-family: "Roboto ", sans-serif;
   font-size: 2rem;
-  font-family: inherit;
   font-weight: 500;
+  border-radius: 30px;
   background: none;
-  color: rgb(4, 167, 172);
+  color: $active-dark;
 }
 
 :deep(.fc .fc-add-button:hover) {
-  color: var(--dialog-button-color-default-earth);
+  color: orange;
 }
 
 :deep(.fc-scrollgrid),
@@ -622,7 +598,6 @@ function setDayGoals(dayView) {
   border: none;
 }
 
-/* :deep(.fc-multimonth-title), */
 :deep(.fc-day-today),
 :deep(.fc-multiMonthYear-view .fc-multimonth-daygrid-table),
 :deep(thead),
@@ -635,27 +610,27 @@ function setDayGoals(dayView) {
 }
 
 :deep(.fc-multimonth-header) {
-  position: absolute;
   display: contents;
+  position: absolute;
   top: 0;
   padding: 0;
   z-index: -1000;
 }
 
 :deep(.fc-multimonth-title) {
+  align-self: center;
   width: 100%;
+  padding: 0;
   font-size: 2.5rem;
   font-weight: bold;
   text-align: center;
-  padding: 0;
-  align-self: center;
 }
 
 :deep(.fc-multimonth-month) {
-  position: relative;
   justify-content: center;
-  max-width: 13vw;
+  position: relative;
   width: 13vw;
+  max-width: 13vw;
   height: 13vw;
   padding-top: 1rem;
   margin: 0.3rem;
@@ -665,7 +640,7 @@ function setDayGoals(dayView) {
   text-align: center;
 
   border-radius: 1em;
-  border: solid rgb(62, 209, 128) 3px;
+  border: solid var(--theme-month) 3px;
   background: transparent;
   box-shadow: 0.2rem 0.5rem 0.5rem grey;
   transition: transform 0.3s ease;
@@ -684,10 +659,12 @@ function setDayGoals(dayView) {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: calc(2rem + 0.5vw);
-  cursor: pointer;
-  color: rgb(0, 149, 255);
   z-index: 100;
+  font-family: "Poppins ExtraBold", sans-serif;
+  font-size: calc(2rem + 0.5vw);
+  font-weight: 600;
+  color: rgb(0, 149, 255);
+  cursor: pointer;
 }
 
 :deep(.slot-events-index:hover) {
@@ -710,23 +687,20 @@ function setDayGoals(dayView) {
     scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
   }
 
-  /* fc-day fc-day-mon fc-day-future */
-
   :deep(.fc-multiMonthYear-view) {
-    flex-direction: column;
-    flex-wrap: nowrap;
-
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+    flex-wrap: nowrap;
     width: 100%;
     min-height: max-content;
   }
   :deep(.fc-multimonth-month) {
+    min-width: 40vw;
     min-height: 15rem;
     min-height: 40vw;
-
-    min-width: 40vw;
     aspect-ratio: 1;
+
     margin: 2px 0px;
     margin-bottom: 0.5rem;
     border-radius: 30px;
@@ -736,46 +710,43 @@ function setDayGoals(dayView) {
   }
 
   :deep(.fc-scroller.fc-scroller-liquid-absolute) {
-    scrollbar-gutter: stable both-edges;
     height: 100%;
+    scrollbar-gutter: stable both-edges;
     scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
   }
   :deep(.fc-daygrid-body.fc-daygrid-body-balanced),
   :deep(.fc-daygrid-body.fc-daygrid-body-unbalanced) {
+    justify-items: center;
     width: 100% !important;
     text-align: center;
-    justify-items: center;
   }
 
   :deep(.fc-scrollgrid-sync-table) {
     table-layout: auto;
-    scrollbar-gutter: stable both-edges;
     align-items: center;
     justify-content: center;
     overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
   }
 
   :deep(.fc-dayGridMonth-view tbody[role="presentation"]),
   :deep(.fc-dayGridDay-view tbody[role="presentation"]) {
-    padding: 0rem;
-
     flex-direction: column;
     justify-content: center;
-
     align-items: center;
     width: max-content;
     height: 100%;
+    padding: 0rem;
     overflow: visible;
   }
 
   :deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]),
   :deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
-    overflow: visible;
     display: flex;
     flex-direction: column;
-
-    padding: 0;
     margin: 0.5rem 0rem;
+    padding: 0;
+    overflow: visible;
   }
 
   :deep(

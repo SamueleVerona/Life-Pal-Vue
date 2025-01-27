@@ -1,19 +1,23 @@
 <template>
-  <section id="content">
+  <section class="user-content">
+    <div class="logo">
+      <h2>LifePal</h2>
+    </div>
+
     <user-nav
       v-if="!hasSomeExpired"
-      id="nav"
+      class="navbar"
       @mousedown="handleNavigation"
       :toggleProfile="toggleProfile"
       :isAdmin="isAdmin"
-      :isLocked="isLocked"
+      :isLocked="isLockedUser"
     ></user-nav>
-    <section id="user-home-element">
-      <transition name="home" mode="out-in">
+    <section class="elements-section">
+      <transition name="elements" mode="out-in">
         <user-calendar
-          id="calendar-element"
+          class="elements__calendar"
           v-if="navButtonClicked === 'calendar' && !isAdmin"
-          :userGoals="userData"
+          :userGoals="userGoals"
           @send-time-id="
             (timeId) => {
               dashboardBackup = timeId;
@@ -33,9 +37,9 @@
         ></user-calendar>
         <user-dash
           v-else-if="navButtonClicked === 'dashboard'"
-          id="dash-element"
+          class="elements__dashboard"
           :calendarTimeOpt="timeSelection"
-          :allGoals="userData"
+          :allGoals="userGoals"
           :finished="finished"
           :unfinished="unfinished"
           :profileModeActive="toggleProfile"
@@ -56,7 +60,7 @@
           :itemLabel="dateLabel"
           :goalType="timeSelection"
           :isRequest="toggleProfile"
-          id="goal-card-element"
+          class="elements__item-card"
           @goal-saved="resetNav"
           @back-action="handleBackAction"
         ></item-card>
@@ -83,12 +87,12 @@
       </template>
     </base-dialog>
     <base-dialog
-      :errorMessage="gottenError"
-      :show="!!gottenError"
+      :errorMessage="errorMessage"
+      :show="!!errorMessage"
       :submitText="unsubText"
       :allConfirmed="unsubFlag"
       :wrapperBackground="dialogBkgColor"
-      :buttonBackground="`var(--dialog-button-color-delete)`"
+      :buttonBackground="`var(--confirm-delete)`"
       @close="closeDialog"
       @confirm-action="deleteAccount"
     ></base-dialog>
@@ -96,9 +100,6 @@
 </template>
 
 <script setup>
-// v-if="navButtonClicked === 'dashboard' && !hasSomeExpired"
-// v-if="navButtonClicked === 'goal' && !hasSomeExpired"
-
 import { defineComponent, ref, computed, onMounted, provide, watch } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
@@ -122,11 +123,11 @@ const dateInfo = ref();
 const dateLabel = ref();
 
 const isAdmin = computed(() => store.getters.userIsAdmin);
-const isLocked = computed(() => store.getters.userIsLocked);
+const isLockedUser = computed(() => store.getters.userIsLocked);
 
 provide("isAdmin", isAdmin.value);
 
-const userData = computed(() => store.getters.userGoals);
+const userGoals = computed(() => store.getters.userGoals);
 const finished = computed(() => store.getters.finishedGoals);
 const unfinished = computed(() => store.getters.unfinishedGoals);
 
@@ -149,22 +150,22 @@ function handleMarkedGoals(goalObj) {
 
   if (allConfirmed.value) {
     dialogText.value = "Confirm ";
-    dialogBtnColor.value = "var(--dialog-button-color-default-green)";
+    dialogBtnColor.value = "var(--confirm-change)";
   }
 }
 
-const gottenError = ref(null);
+const errorMessage = ref(null);
 
 async function confirmMarkedGoals() {
   try {
     await store.dispatch("confirmExpired", markedGoals.value);
   } catch (err) {
-    gottenError.value = err;
+    errorMessage.value = err;
   }
 }
 
 function closeDialog() {
-  gottenError.value = false;
+  errorMessage.value = false;
 }
 
 const viewInfo = ref();
@@ -223,8 +224,8 @@ const unsubText = ref("delete account");
 const unsubFlag = ref(false);
 
 function unsub() {
-  dialogBkgColor.value = "var(--dialog-wrapper-color-delete)";
-  gottenError.value = `Thanks for using this app!\n Come back anytime`;
+  dialogBkgColor.value = "var(--danger-light)";
+  errorMessage.value = `Thanks for using this app!\n Come back anytime`;
   unsubFlag.value = true;
 }
 
@@ -237,10 +238,10 @@ async function deleteAccount() {
         path: "/landing",
       });
 
-      gottenError.value = false;
+      errorMessage.value = false;
     } catch (err) {
       navButtonClicked.value = "dashboard";
-      gottenError.value = err;
+      errorMessage.value = err;
     }
   }
   unsubFlag.value = false;
@@ -270,9 +271,9 @@ function handleNewItem(navOption) {
   if (navOption === "dashboard") navButtonClicked.value = "dashboard";
   else {
     if (hasMaxItems.value) {
-      dialogBkgColor.value = "var(--dialog-button-color-default-earth)";
+      dialogBkgColor.value = "var(--warning)";
       unsubText.value = "click outside";
-      gottenError.value =
+      errorMessage.value =
         "Max items reached for this slot.\n Try deleting some";
     } else {
       navButtonClicked.value = "goal";
@@ -280,8 +281,8 @@ function handleNewItem(navOption) {
   }
 }
 
-const dialogBkgColor = ref("black");
-const dialogBtnColor = ref("white");
+const dialogBkgColor = ref("transparent");
+const dialogBtnColor = ref("var(--confirm-default)");
 
 onMounted(() => {
   console.log("mounted");
@@ -291,90 +292,90 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-#content {
+<style lang="scss" scoped>
+.user-content {
   display: flex;
   flex-direction: column;
+  position: relative;
   width: 100vw;
   height: 100vh;
   padding: 2rem;
-}
-#nav {
-  margin: 0rem auto 1rem auto;
-  width: 100%;
 
-  padding: 0.5rem 1rem;
-  border: solid 1px rgba(128, 128, 128, 0.308);
-  min-height: 10vh;
-  display: flex;
-  justify-content: flex-end;
-  border: none;
-}
-
-#user-home-element {
-  display: contents;
-}
-
-#dash-element {
-  width: 100%;
-  height: 100%;
-}
-#goal-card-element {
-  width: 50rem;
-  height: 100%;
-
-  margin: 0rem auto;
-  transition: all 0.3s ease;
-}
-
-#calendar-element {
-  width: 100%;
-  height: 100%;
-}
-
-.home-enter-from {
-  opacity: 0;
-  transform: rotateY(-15deg);
-  transform-origin: right;
-}
-.home-leave-to {
-  opacity: 0;
-  transform: rotateY(-15deg);
-  transform-origin: left;
-}
-.home-enter-active,
-.home-leave-active {
-  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-}
-
-.home-enter-to,
-.home-leave-from {
-  opacity: 1;
-  transform: rotateY(0deg);
-}
-
-@media screen and (max-width: 1024px) {
-  #goal-card-element {
-    width: 40rem;
+  .logo {
+    position: absolute;
+    top: 1rem;
+    left: 1.5rem;
+    padding: 1rem;
+    font-family: "Comfortaa", sans-serif;
+    font-size: 1.6rem;
+    color: var(--theme-primary-dark);
   }
-}
-
-/* @media screen and (max-width: 768px) {
-  #goal-card-element {
-    width: 80%;
-  }
-} */
-
-@media screen and (max-width: 500px) {
-  #nav {
-    padding: 0.5rem 0rem;
-  }
-  #goal-card-element {
+  .navbar {
+    display: flex;
+    justify-content: flex-end;
+    min-height: 10vh;
     width: 100%;
+    margin: 0rem auto 1rem auto;
+    padding: 0.5rem 1rem;
+    border: solid 1px rgba(128, 128, 128, 0.308);
+    border: none;
+
+    @media screen and (max-width: 500px) {
+      padding: 0.5rem 0rem;
+    }
+  }
+}
+
+.elements-section {
+  display: contents;
+
+  .elements__dashboard {
+    width: 100%;
+    height: 100%;
+  }
+  .elements__item-card {
+    width: 45rem;
+    height: 100%;
+    margin: 0rem auto;
+    transition: all 0.3s ease;
+
+    @media screen and (max-width: 1024px) {
+      width: 40rem;
+    }
+
+    @media screen and (max-width: 500px) {
+      width: 50rem;
+    }
   }
 
-  #calendar-element {
-    max-height: 90dvh;
+  .elements__calendar {
+    width: 100%;
+    height: 100%;
+
+    @media screen and (max-width: 500px) {
+      max-height: 90dvh;
+    }
+  }
+
+  .elements-enter-from {
+    opacity: 0;
+    transform: rotateY(-15deg);
+    transform-origin: right;
+  }
+  .elements-leave-to {
+    opacity: 0;
+    transform: rotateY(-15deg);
+    transform-origin: left;
+  }
+  .elements-enter-active,
+  .elements-leave-active {
+    transition: all 0.4s ease;
+  }
+
+  .elements-enter-to,
+  .elements-leave-from {
+    opacity: 1;
+    transform: rotateY(0deg);
   }
 }
 </style>

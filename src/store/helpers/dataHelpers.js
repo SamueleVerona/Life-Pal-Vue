@@ -40,7 +40,7 @@ export function setDatabaseId(dataObject) {
 
   return parsedArray;
 }
-export function parseAdminRequests(dataObject) {
+export function extractRequests(dataObject) {
   const parsedArray = Object.entries(dataObject).flatMap((item) => {
     return item[1].requests
       ? Object.entries(item[1].requests).map((req) => {

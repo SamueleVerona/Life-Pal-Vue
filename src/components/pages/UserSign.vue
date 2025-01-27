@@ -81,8 +81,8 @@
       :errorMessage="errorMessage"
       :show="!!errorMessage"
       @close="closeDialog"
-      :wrapperBackground="`var(--dialog-button-color-default-earth)`"
-      :buttonBackground="`white`"
+      :wrapperBackground="`var(--warning)`"
+      :buttonBackground="`var(--confirm-default)`"
     ></base-dialog>
   </section>
 </template>
@@ -108,11 +108,13 @@ function closeDialog() {
 function handleControls(e) {
   const target = e.target;
 
-  const isValidTarget = target.classList.contains("toggle");
+  const isToggle = target.classList.contains("toggle");
   const isSubmitBtn = target.dataset.buttonId === "sign-submit";
   const isLogin = mode.value === "login";
 
-  if (isValidTarget) {
+  if (!isToggle && !isSubmitBtn) return;
+
+  if (isToggle) {
     target.firstElementChild.classList.toggle("switch-mode--signup");
 
     isLogin ? (mode.value = "signup") : (mode.value = "login");
@@ -144,7 +146,7 @@ async function submit() {
 
 <style lang="scss" scoped>
 * {
-  font-family: "Roboto Regular", sans-serif;
+  font-family: "Afacad Flux", sans-serif;
 }
 
 @property --angle {
@@ -154,43 +156,42 @@ async function submit() {
 }
 
 .section__disclaimer {
-  position: absolute;
-  width: 100%;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(70deg, #d9eef81b 20%, #ffdfe3db 100%);
+  position: absolute;
+  width: 100%;
   height: 100%;
+  padding: 2rem;
+  background: linear-gradient(70deg, #d9eef81b 20%, #ffdfe3db 100%);
 
   .disclaimer__title {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    padding: 1.5rem 3rem;
+
     font-size: 3.5rem;
     color: white;
-    padding: 1.5rem 3rem;
     background: rgb(255, 0, 64);
     border-radius: 40px;
     box-shadow: 0.2rem 0.5rem 0.5rem rgb(164, 75, 88);
-    position: relative;
     cursor: pointer;
 
     &:before {
-      content: "got it";
+      position: absolute;
       width: 100%;
       height: 100%;
+      align-content: center;
+      content: "got it";
       color: inherit;
+      text-align: center;
       background: inherit;
       border-radius: inherit;
-      position: absolute;
-      text-align: center;
-      align-content: center;
       opacity: 0;
       transition: all 0.2s ease;
-      transform: rotateX(0deg);
-      backface-visibility: hidden;
     }
 
     &:hover:before {
@@ -200,40 +201,42 @@ async function submit() {
   }
 
   .disclaimer__text-container {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
     display: flex;
     flex-direction: column;
-    overflow: visible;
-    align-self: center;
     align-items: center;
     justify-content: center;
+    align-self: center;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    overflow: visible;
 
     .disclaimer__text-card {
-      font-size: 1.8rem;
-      font-weight: 400;
+      position: relative;
+      overflow: visible;
       width: 60%;
       max-width: 60rem;
-      border-radius: 40px;
       padding: 2rem;
-      margin: 1rem 1rem;
-      background: rgb(254, 252, 255);
-      border: solid rgba(255, 255, 255, 0.7);
-
+      margin: 0.5rem 0rem;
+      font-size: 2.2rem;
+      font-weight: 500;
       text-align: center;
       hyphens: auto;
       line-clamp: 6;
       text-anchor: center;
       align-content: center;
       white-space-collapse: preserve-breaks;
-      position: relative;
-      overflow: visible;
+
+      border-radius: 40px;
+      background: rgb(254, 252, 255);
+      border: solid rgba(255, 255, 255, 0.7);
 
       &::before,
       &::after {
         position: absolute;
-        content: "";
         inset: -0.1rem;
+        z-index: -7;
+        content: "";
+        overflow: visible;
 
         border-radius: 40px;
         background: conic-gradient(
@@ -243,8 +246,6 @@ async function submit() {
         );
         background-size: 500% 500%;
         animation: border-glow 4s linear infinite;
-        z-index: -7;
-        overflow: visible;
 
         @keyframes border-glow {
           0% {
@@ -262,7 +263,7 @@ async function submit() {
       }
 
       .text--stressed {
-        font-size: 1.8rem;
+        font-size: 2.3rem;
         text-decoration: underline;
         font-size: 600;
         color: rgb(255, 0, 51);
@@ -272,52 +273,66 @@ async function submit() {
 }
 
 .section__sign {
-  background: linear-gradient(70deg, #d9eef81b 20%, #e7dfffdb 100%);
-  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  height: 100vh;
+  background: linear-gradient(70deg, #d9eef81b 20%, #e7dfffdb 100%);
 
   .section__logo {
-    font-size: 10rem;
+    position: absolute;
+    left: 3%;
+    top: 6%;
+    margin-bottom: 1rem;
+
+    font-family: "Comfortaa", sans-serif;
+
+    font-size: 12rem;
+    font-weight: 700;
     line-height: 100%;
     text-align: center;
     white-space: break-spaces;
-    margin-bottom: 1rem;
-    position: absolute;
-    left: 3%;
-    top: 3%;
     color: rgb(55, 51, 78);
     -webkit-box-reflect: bottom;
+    background: url("/src/assets/imgs/logo-bkg-full.png");
+    background-size: 500%;
+    background-position: bottom;
+    background-position-y: 25%;
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+    background-repeat: no-repeat;
+    filter: brightness(95%);
   }
 
   .section__3d-obj {
     position: absolute;
-    width: 3rem;
-    aspect-ratio: 1;
     top: 10%;
     right: 10%;
-    background: rgb(160, 149, 232);
-    color: rgb(132, 122, 194);
-    box-shadow: 0.2rem 0.1rem 0rem;
-    offset-path: path("M 200 0 A 200 200 0 1 0 -200 0 A 200 200 0 1 0 200 0");
-
-    animation: firefly 10s linear infinite;
-    transform-style: preserve-3d;
+    width: 3rem;
+    aspect-ratio: 1;
     z-index: 6;
     overflow: visible;
 
+    color: var(--theme-primary-dark);
+    background: var(--theme-primary-light);
+    box-shadow: 0.2rem 0.1rem 0rem;
+
+    offset-path: path("M 200 0 A 200 200 0 1 0 -200 0 A 200 200 0 1 0 200 0");
+    animation: firefly 10s linear infinite;
+    transform-style: preserve-3d;
+
     &::after {
       position: absolute;
-      content: "";
+      top: 100%;
       width: 3rem;
       height: 3rem;
-      top: 100%;
+
+      content: "";
+      color: var(--theme-secondary-dark);
       offset-path: path("M 100 0 A 100 100 0 1 0 -100 0 A 100 100 0 1 0 100 0");
 
-      background: var(--sign-option-signup);
-      color: var(--sign-option-signup-darker);
+      background: var(--theme-secondary-light);
       box-shadow: 0.2rem 0.1rem 0rem;
       animation: firefly 12s linear infinite backwards;
     }
@@ -340,65 +355,65 @@ async function submit() {
     justify-content: center;
     align-items: center;
     justify-self: center;
-
+    z-index: 5;
     padding: 6rem 0rem;
     border-radius: 80px;
     background: rgb(95, 48, 197);
     box-shadow: 0.6rem 0.6rem 0.6rem rgb(180, 171, 214);
-    z-index: 5;
-
     transition: all 0.5s ease;
 
     &.submit-mode--login {
-      background: var(--sign-option-login);
+      background: var(--theme-primary-mid);
     }
 
     &.submit-mode--signup {
-      background: var(--sign-option-signup);
+      background: var(--theme-secondary-mid);
     }
 
     .form__card {
-      width: 80vw;
-      max-width: 50rem;
       display: flex;
       flex-direction: column;
+      width: 80vw;
+      max-width: 50rem;
+      color: white;
       border: solid rgba(159, 142, 255, 0.736);
       border: none;
       border-radius: 40px;
       background: transparent;
       transition: border-color 0.3s ease;
-      color: white;
 
       .form__input-section {
         display: flex;
         flex-direction: column;
 
         .form__label {
-          font-size: 2.2rem;
+          padding: 0.8rem 0rem;
+          align-content: center;
+          font-size: 3rem;
           font-weight: 500;
           text-align: center;
-          align-content: center;
-          padding: 0.8rem 0rem;
         }
 
         .form__input {
-          margin: 0.6rem 0rem 1rem 0rem;
-          align-self: center;
           width: 60%;
+          height: 3.2rem;
+          margin: 0.6rem 0rem 1rem 0rem;
+          padding-left: 1rem;
+
+          align-self: center;
+          font-size: 2.3rem;
+          font-weight: 400;
+          color: white;
+          caret-shape: bar;
+          border: none;
           border-radius: 20px;
           background: transparent;
           outline: solid rgb(239, 239, 239);
-          border: none;
-          caret-shape: bar;
-          padding-left: 1rem;
-          font-size: 2rem;
-          color: white;
-          height: 3.2rem;
 
           &::placeholder {
-            color: rgb(232, 232, 232);
-            font-size: 2rem;
             justify-self: center;
+            color: rgb(232, 232, 232);
+            font-size: 2.3rem;
           }
 
           &:focus {
@@ -416,7 +431,7 @@ async function submit() {
           }
 
           &:invalid {
-            outline-color: var(--dialog-button-color-delete-darker);
+            outline-color: var(--confirm-delete-hover);
           }
         }
       }
@@ -428,14 +443,17 @@ async function submit() {
         padding: 1rem 11rem 0rem 11rem;
 
         .btn--action-submit {
+          flex: 1;
+          overflow: visible;
+          font-size: 5rem;
+          font-weight: bolder;
           text-decoration: none;
-          font-size: 3.5rem;
+          color: inherit;
+
           border: none;
           background: none;
-          font-weight: bolder;
-          flex: 1;
-          color: inherit;
           cursor: pointer;
+          transition: all 0.15s ease;
 
           &:hover {
             color: rgb(224, 26, 89);
@@ -447,32 +465,34 @@ async function submit() {
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          margin-left: 1rem;
           flex: 1;
+          margin-left: 1rem;
+          overflow: visible;
+          transform: translateY(25%);
 
           .toggle {
-            width: 5.7rem;
-            height: 3.2rem;
-            border-radius: 30px;
             align-items: center;
             justify-content: center;
+            width: 5.7rem;
+            height: 3.2rem;
             padding: 0.3rem;
+            border-radius: 30px;
             background: rgb(244, 244, 244);
 
             .toggle__switch {
+              position: relative;
+              left: 0%;
               height: 100%;
               aspect-ratio: 1;
               border-radius: 30px;
-              background-color: var(--sign-option-signup);
-              border-bottom: solid 3px var(--sign-option-signup-darker);
+              background-color: var(--theme-secondary-mid);
+              border-bottom: solid 3px var(--theme-secondary-dark);
               transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-              position: relative;
-              left: 0%;
 
               &.switch-mode--signup {
                 left: 50%;
-                background-color: var(--sign-option-login);
-                border-bottom: solid 3px var(--sign-option-login-darker);
+                background-color: var(--theme-primary-mid);
+                border-bottom: solid 3px var(--theme-primary-dark);
               }
             }
           }
@@ -481,29 +501,36 @@ async function submit() {
     }
   }
   .section__presets {
-    position: absolute;
-    bottom: 2%;
     display: flex;
     flex-direction: column;
     align-self: center;
+    position: absolute;
+    bottom: 1%;
     min-width: max-content;
     max-width: 50rem;
-    padding: 1rem 2rem;
+    padding: 1rem 5rem;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: inherit;
+
     border: solid rgba(159, 142, 255, 0.138);
     border-radius: 30px;
     background: transparent;
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: inherit;
-    offset-anchor: top;
     transition: all 0.3s ease;
-    & .presets__credential,
-    & .presets__title {
+    .presets__credential,
+    .presets__title {
       padding-inline: 1rem;
     }
 
-    &.presets__credential:nth-child(3) {
-      margin-bottom: 0.5rem;
+    .presets__credential {
+      line-height: 1.8rem;
+    }
+
+    .presets__credential:nth-child(3) {
+      margin-bottom: 1rem;
+    }
+    .presets__credential:nth-child(5) {
+      margin-top: 1rem;
     }
 
     @media screen and (max-width: 500px) {

@@ -168,9 +168,7 @@ export default {
           context.commit("loadRequests", requests);
         }
       } else {
-        let allUsersRequests = resData
-          ? helpers.parseAdminRequests(resData)
-          : [];
+        let allUsersRequests = resData ? helpers.extractRequests(resData) : [];
         context.commit("loadRequests", [...allUsersRequests]);
       }
     } catch (err) {
@@ -266,5 +264,3 @@ export default {
     context.commit("resetData");
   },
 };
-//SUGGESTION:
-//PATCHING THE LOCAL COPY DIRECTLY BEFORE REFETCHING (LAZY LOADING)

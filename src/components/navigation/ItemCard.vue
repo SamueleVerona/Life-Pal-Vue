@@ -15,7 +15,9 @@
         />
         <textarea
           class="item__description"
-          placeholder="Describe your goal"
+          :placeholder="
+            props.isRequest ? 'Describe your request' : 'Describe your goal'
+          "
           rows="5"
           cols="1"
           v-model="inputDesc"
@@ -52,8 +54,8 @@
       :show="errorMessage"
       :errorMessage="errorMessage"
       @close="closeDialog"
-      :wrapperBackground="'var(--dialog-button-color-default-earth)'"
-      :buttonBackground="'white'"
+      :wrapperBackground="'var(--warning)'"
+      :buttonBackground="'var(--confirm-default)'"
     ></base-dialog>
   </section>
 </template>
@@ -94,7 +96,7 @@ function handleSubmit(e) {
     else {
       compDate.value
         ? addGoal()
-        : (errorMessage.value = "You need a time slot also");
+        : (errorMessage.value = "You also need a time slot");
     }
   }
 }
@@ -163,46 +165,46 @@ async function addGoal() {
 }
 
 .section {
-  border-radius: 30px;
-  border: solid 2px var(--glow-item-card-dark);
-  box-shadow: 0rem 3rem 4rem var(--glow-item-card-dark),
-    0rem 6rem 5rem 5rem var(--glow-item-card-dark);
-
   position: relative;
-  animation: shadow-glow 2s infinite ease-in-out;
+  border-radius: 30px;
+  border: solid 2px var(--glow-default-dark);
+  box-shadow: 0rem 3rem 4rem var(--glow-default-dark),
+    0rem 6rem 5rem 5rem var(--glow-default-dark);
 
-  @keyframes shadow-glow {
+  animation: glow-default 2s infinite ease-in-out;
+
+  @keyframes glow-default {
     0% {
-      box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
-        0rem 5rem 10rem 5rem var(--glow-item-card-dark);
+      box-shadow: 0rem 3rem 6rem var(--glow-default-dark),
+        0rem 5rem 10rem 5rem var(--glow-default-dark);
     }
 
     50% {
-      box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
-        0rem 5rem 10rem 8rem var(--glow-item-card-light);
+      box-shadow: 0rem 3rem 6rem var(--glow-default-dark),
+        0rem 5rem 10rem 8rem var(--glow-default-light);
     }
 
     100% {
-      box-shadow: 0rem 3rem 6rem var(--glow-item-card-dark),
-        0rem 5rem 10rem 5rem var(--glow-item-card-dark);
+      box-shadow: 0rem 3rem 6rem var(--glow-default-dark),
+        0rem 5rem 10rem 5rem var(--glow-default-dark);
     }
   }
 }
 
 .section__card {
-  height: 100%;
-  position: relative;
-  background: linear-gradient(10deg, #d9eef81b 40%, #e7dfffdb 100%);
   @include vertical-flex;
   justify-content: space-between;
+  position: relative;
+  height: 100%;
+  background: linear-gradient(10deg, #d9eef81b 40%, #e7dfffdb 100%);
 
   .card__label {
+    margin-bottom: 5rem;
+    padding: 3rem 0rem;
     font-style: normal;
     font-size: 4rem;
-    padding: 3rem 0rem;
     text-align: center;
     color: rgb(190, 100, 36);
-    margin-bottom: 5rem;
   }
 
   .card__form {
@@ -211,14 +213,14 @@ async function addGoal() {
 
     padding: 1rem 0rem;
     .item__title {
-      height: max-content;
       font-size: 3rem;
+      line-height: 3.5rem;
+      text-align: center;
+      color: #401700;
       border: none;
       background: transparent;
       border-bottom: solid 1px rgba(50, 40, 63, 0.162);
       box-shadow: 0rem 0.1rem 0rem 0rem rgba(200, 198, 203, 0.563);
-      text-align: center;
-      color: #401700;
 
       &:focus,
       &:active {
@@ -227,25 +229,23 @@ async function addGoal() {
       }
 
       &::placeholder {
-        color: rgba(50, 40, 63, 0.563);
         font-size: 3rem;
-        text-align: center;
-        text-justify: center;
         font-style: italic;
+        text-align: center;
+        color: rgba(50, 40, 63, 0.563);
       }
     }
 
     .item__description {
-      font-size: 2.5rem;
-      padding: 1rem 5rem;
       width: 100%;
-      border: none;
+      padding: 1rem 6rem;
       resize: none;
-      caret-color: #000000;
-      background: transparent;
+      font-size: 2.5rem;
+      font-style: italic;
       text-align: left;
       color: #401700;
-      font-style: italic;
+      border: none;
+      background: transparent;
 
       &:focus {
         outline: none;
@@ -253,21 +253,20 @@ async function addGoal() {
       }
 
       &::placeholder {
-        color: rgba(50, 40, 63, 0.563);
         font-size: 3rem;
         text-align: center;
+        color: rgba(50, 40, 63, 0.563);
       }
     }
   }
 
   .card__item-data {
     @include vertical-flex;
-
     @include center-flex;
 
     .item-data {
-      font-size: 2rem;
       padding: 0.5rem;
+      font-size: 2rem;
       font-weight: 600;
       color: rgba(50, 40, 63, 0.563);
 
@@ -277,8 +276,8 @@ async function addGoal() {
         border-bottom: solid 1px rgba(50, 40, 63, 0.162);
       }
       &:nth-child(2) {
-        border: none;
         padding: 0.5rem 0rem 0rem 0rem;
+        border: none;
       }
       &.item-data--time-slot {
         color: rgb(190, 100, 36);
@@ -286,19 +285,19 @@ async function addGoal() {
     }
   }
   .card__controls {
-    width: 100%;
-    padding: 1rem;
-    height: max-content;
-    position: relative;
     display: grid;
     grid-template-columns: 50% 50%;
     grid-template-rows: 100%;
+    position: relative;
+    width: 100%;
+    height: max-content;
+    padding: 1rem;
 
     .btn {
+      justify-self: right;
       width: max-content;
       height: 5rem;
       padding: 0rem 1.5rem;
-
       font-size: 1.8rem;
       font-weight: 800;
       text-align: center;
@@ -309,7 +308,6 @@ async function addGoal() {
       box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);
       cursor: pointer;
       transition: all 0.2s ease;
-      justify-self: right;
 
       &:hover {
         box-shadow: 0rem 0.2rem 0.6rem rgba(128, 128, 128, 0.434);
@@ -334,7 +332,7 @@ async function addGoal() {
         border: none;
 
         &:hover {
-          color: rgb(16, 201, 177);
+          color: var(--hover-default);
         }
       }
     }

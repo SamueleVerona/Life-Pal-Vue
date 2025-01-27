@@ -62,19 +62,19 @@ const closeDialog = () => {
   font-family: "Poppins", sans-serif;
 }
 .dialog__underlay {
-  position: fixed;
-  top: 0;
-  left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(190, 196, 208, 0.295);
-  backdrop-filter: blur(10px);
-  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  z-index: 100;
   font-size: 4rem;
   color: rgb(128, 128, 128);
-  z-index: 100;
+  background: rgba(190, 196, 208, 0.295);
+  backdrop-filter: blur(10px);
   transition: all 0.2s ease;
 
   .underlay__text {
@@ -92,58 +92,58 @@ const closeDialog = () => {
 }
 
 .dialog {
-  position: absolute;
-  left: 50%;
-  top: 50%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   transform: translate(-50%, -50%);
-  background: var(--dialog-color-default);
+  width: 40rem;
+  z-index: 200;
   border-radius: 30px;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
-  z-index: 200;
-  width: 40rem;
 
   &.mode--expired-goals {
     height: max-content;
     width: 60%;
+    overflow-y: auto;
+    border-radius: 45px;
     background: transparent;
     scrollbar-width: thin;
     scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
-    overflow-y: auto;
-    border-radius: 45px;
   }
 
   .dialog__content {
     &.mode--expired-goals {
       max-height: 80vh;
-      padding: 1rem 0rem;
+      padding: 0.5rem 0rem;
+      box-sizing: border-box;
+      overflow-y: auto;
+
       background: rgb(244, 241, 255);
       scrollbar-width: thin;
       scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
-      overflow-y: auto;
-      box-sizing: border-box;
-      padding: 0rem 1rem;
-      border: none;
     }
     .dialog__message {
+      padding: 4rem 3rem;
+
+      font-family: "Poppins Black", sans-serif;
       font-size: 2.5rem;
       line-height: 3rem;
-      padding: 4rem 3rem;
-      color: white;
       text-align: center;
       align-content: center;
       white-space-collapse: preserve-breaks;
+      color: white;
     }
   }
 
   .dialog__btn {
-    font-size: 2.5rem;
-    padding: 1.5rem 0rem;
     min-height: max-content;
-    background: var(--dialog-button-color-default);
+    padding: 1.5rem 0rem;
+    font-size: 2.5rem;
+    background: var(--confirm-default);
     border: none;
     transition: all 0.2s ease;
 
@@ -154,7 +154,6 @@ const closeDialog = () => {
 
     &:not(.mode--expired-goals):enabled:hover {
       color: rgb(167, 0, 67);
-      background: var(--dialog-button-color-delete-darker);
     }
   }
 

@@ -27,3 +27,13 @@
     url("/src/assets/fonts/Poppins-Optimized/poppins-regular-webfont.woff2")
       format("woff2");
 }
+
+@font-face {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: "Comfortaa";
+  src: url("/src/assets/fonts/Comfortaa-Optimized/comfortaa-variablefont_wght-webfont.woff")
+      format("woff"),
+    url("/src/assets/fonts/Comfortaa-Optimized/comfortaa-variablefont_wght-webfont.woff2")
+      format("woff2");
+}

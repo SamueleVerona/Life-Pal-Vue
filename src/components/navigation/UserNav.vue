@@ -66,6 +66,7 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
 <style lang="scss" scoped>
 * {
   font-family: "Poppins", Sans-serif;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -74,42 +75,42 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
   overflow: visible;
 
   .nav__list {
-    height: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 100%;
     list-style: none;
     background: transparent;
 
     .btn {
       flex: 1;
-      box-sizing: border-box;
       width: max-content;
       padding: 0.5rem 1rem;
+      box-sizing: border-box;
 
+      color: inherit;
       font-size: 3rem;
       font-family: inherit;
       font-weight: bolder;
       background: none;
       border: none;
-      color: inherit;
 
       cursor: pointer;
       transition: color 0.1s ease-out;
 
       &:not(:disabled) {
         &:hover {
-          color: rgb(4, 167, 172);
+          color: var(--hover-default);
         }
         &:active {
-          border-color: rgb(1, 217, 229);
+          border-color: var(--hover-default);
           color: rgb(4, 167, 172);
         }
       }
 
       &.btn--flippable {
-        height: 100%;
         position: relative;
+        height: 100%;
 
         &.btn--flipped {
           width: 20rem;
@@ -139,16 +140,15 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
 
           &.btn__face--back {
             position: absolute;
-            align-content: center;
             top: 0;
             left: 0;
-
             min-width: 100%;
+            align-content: center;
+            line-height: 3rem;
 
+            opacity: 0;
             backface-visibility: hidden;
             transform: rotateX(180deg);
-            opacity: 0;
-            line-height: 3rem;
           }
         }
       }
@@ -166,28 +166,32 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
       }
 
       &.btn--profile {
-        margin-left: 0.5rem;
-        margin-right: 2rem;
         height: 6rem;
         aspect-ratio: 1/1;
-        background-image: url(/src/assets/user.png);
+        margin-left: 0.5rem;
+        margin-right: 2rem;
+        z-index: 1;
+        background-image: url(/src/assets/imgs/user.png);
         background-size: cover;
         background-clip: border-area;
         border: solid 2px rgb(221, 221, 221);
         border-radius: 100%;
         transition: all 0.2s ease;
-        z-index: 1;
 
         &:hover,
         &[toggled="true"] {
-          border-color: rgb(1, 217, 229);
+          border-color: var(--hover-default);
         }
       }
 
       &.btn--logout {
+        color: rgb(0, 145, 255);
         border: none;
         border-left: solid 1px rgb(218, 218, 218);
-        color: rgb(0, 145, 255);
+
+        &:hover {
+          color: orange;
+        }
       }
 
       &.btn--unsub {
@@ -212,22 +216,23 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
   .nav .nav__list .btn {
     font-size: 2.5rem;
 
-    &.btn--flippable.btn--flipped {
-      display: none;
+    &.btn--flippable {
+      &.btn--flipped {
+        display: none;
+      }
+
+      .btn__face {
+        font-size: 2.5rem;
+      }
     }
 
     &.btn--unsub {
-      // color: black;
       border: none;
       border-right: solid 1px rgb(218, 218, 218);
     }
 
     &.btn--logout {
       border: none;
-    }
-
-    .btn__face {
-      font-size: 2.5rem;
     }
   }
 }
