@@ -59,7 +59,7 @@ const closeDialog = () => {
 
 <style lang="scss" scoped>
 * {
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font-stack);
 }
 .dialog__underlay {
   display: flex;
@@ -128,14 +128,13 @@ const closeDialog = () => {
     }
     .dialog__message {
       padding: 4rem 3rem;
-
-      font-family: "Poppins Black", sans-serif;
       font-size: 2.5rem;
+      font-weight: 600;
       line-height: 3rem;
       text-align: center;
       align-content: center;
       white-space-collapse: preserve-breaks;
-      color: white;
+      color: var(--confirm-default);
     }
   }
 
@@ -143,12 +142,14 @@ const closeDialog = () => {
     min-height: max-content;
     padding: 1.5rem 0rem;
     font-size: 2.5rem;
+    font-weight: 600;
+
+    color: inherit;
     background: var(--confirm-default);
     border: none;
     transition: all 0.2s ease;
 
     &:enabled:hover {
-      font-weight: 500;
       cursor: pointer;
     }
 

@@ -5,6 +5,7 @@ import BaseDialog from "./components/base/BaseDialog.vue";
 import ListItem from "./components/base/ListItem.vue";
 import store from "../src/store/index.js";
 import "./assets/styles/fonts.css";
+import "./registerServiceWorker";
 
 const app = createApp(App);
 app.component("base-dialog", BaseDialog);

@@ -151,7 +151,7 @@ async function addGoal() {
 
 <style lang="scss" scoped>
 * {
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font-stack);
 }
 
 @mixin vertical-flex {
@@ -170,7 +170,6 @@ async function addGoal() {
   border: solid 2px var(--glow-default-dark);
   box-shadow: 0rem 3rem 4rem var(--glow-default-dark),
     0rem 6rem 5rem 5rem var(--glow-default-dark);
-
   animation: glow-default 2s infinite ease-in-out;
 
   @keyframes glow-default {
@@ -196,10 +195,9 @@ async function addGoal() {
   justify-content: space-between;
   position: relative;
   height: 100%;
-  background: linear-gradient(10deg, #d9eef81b 40%, #e7dfffdb 100%);
+  background: var(--theme-bkg);
 
   .card__label {
-    margin-bottom: 5rem;
     padding: 3rem 0rem;
     font-style: normal;
     font-size: 4rem;
@@ -214,7 +212,8 @@ async function addGoal() {
     padding: 1rem 0rem;
     .item__title {
       font-size: 3rem;
-      line-height: 3.5rem;
+      font-weight: 600;
+      line-height: 4rem;
       text-align: center;
       color: #401700;
       border: none;
@@ -241,6 +240,8 @@ async function addGoal() {
       padding: 1rem 6rem;
       resize: none;
       font-size: 2.5rem;
+      font-weight: 600;
+
       font-style: italic;
       text-align: left;
       color: #401700;
@@ -330,6 +331,7 @@ async function addGoal() {
       &.btn--back-action {
         background: transparent;
         border: none;
+        background: var(--confirm-default);
 
         &:hover {
           color: var(--hover-default);

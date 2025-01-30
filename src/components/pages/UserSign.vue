@@ -25,6 +25,7 @@
     <section class="section__sign" v-if="infoClosed">
       <h2 class="section__logo">Life<br />Pal</h2>
       <div class="section__3d-obj"></div>
+
       <section
         @submit.prevent
         class="section__form-container"
@@ -67,15 +68,20 @@
             </div>
           </section>
         </form>
+        <section
+          class="section__presets"
+          :class="{
+            'submit-mode--signup': mode === 'signup',
+          }"
+          inert
+        >
+          <span class="presets__credential">email: 'john.smith@email.com'</span>
+          <span class="presets__credential">password: 'password'</span>
+
+          <span class="presets__credential">email: 'jane.doe@email.com'</span>
+          <span class="presets__credential">password: 'passphrase'</span>
+        </section>
       </section>
-      <div class="section__presets">
-        <h3 class="presets__title">Presets</h3>
-        <span class="presets__credential">email: "john.smith@email.com"</span>
-        <span class="presets__credential">password: "password"</span>
-        <hr />
-        <span class="presets__credential">email: "jane.doe@email.com"</span>
-        <span class="presets__credential">password: "passphrase"</span>
-      </div>
     </section>
     <base-dialog
       :errorMessage="errorMessage"
@@ -146,7 +152,11 @@ async function submit() {
 
 <style lang="scss" scoped>
 * {
-  font-family: "Afacad Flux", sans-serif;
+  font-family: var(--font-stack);
+}
+@mixin vertical-flex {
+  display: flex;
+  flex-direction: column;
 }
 
 @property --angle {
@@ -156,8 +166,7 @@ async function submit() {
 }
 
 .section__disclaimer {
-  display: flex;
-  flex-direction: column;
+  @include vertical-flex;
   align-items: center;
   justify-content: center;
   position: absolute;
@@ -171,20 +180,27 @@ async function submit() {
     justify-content: center;
     align-items: center;
     position: relative;
+    width: 60%;
+    max-width: 60rem;
+    min-height: max-content;
     padding: 1.5rem 3rem;
+    margin-bottom: 2rem;
+    text-align: center;
 
-    font-size: 3.5rem;
-    color: white;
+    font-size: 3rem;
+    color: var(--confirm-default);
     background: rgb(255, 0, 64);
     border-radius: 40px;
     box-shadow: 0.2rem 0.5rem 0.5rem rgb(164, 75, 88);
     cursor: pointer;
 
     &:before {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       position: absolute;
       width: 100%;
       height: 100%;
-      align-content: center;
       content: "got it";
       color: inherit;
       text-align: center;
@@ -201,7 +217,7 @@ async function submit() {
   }
 
   .disclaimer__text-container {
-    display: flex;
+    display: contents;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -209,16 +225,18 @@ async function submit() {
     margin-top: 0.5rem;
     padding: 0.5rem;
     overflow: visible;
+    border-radius: 40px;
 
     .disclaimer__text-card {
       position: relative;
-      overflow: visible;
-      width: 60%;
+      width: 80%;
       max-width: 60rem;
+      height: 20rem;
       padding: 2rem;
       margin: 0.5rem 0rem;
-      font-size: 2.2rem;
-      font-weight: 500;
+      overflow: visible;
+      font-size: 1.8rem;
+      font-weight: 600;
       text-align: center;
       hyphens: auto;
       line-clamp: 6;
@@ -229,6 +247,10 @@ async function submit() {
       border-radius: 40px;
       background: rgb(254, 252, 255);
       border: solid rgba(255, 255, 255, 0.7);
+
+      @media screen and (max-width: 500px) {
+        width: 80%;
+      }
 
       &::before,
       &::after {
@@ -245,6 +267,7 @@ async function submit() {
           rgb(255, 255, 255)
         );
         background-size: 500% 500%;
+        will-change: background;
         animation: border-glow 4s linear infinite;
 
         @keyframes border-glow {
@@ -263,9 +286,9 @@ async function submit() {
       }
 
       .text--stressed {
-        font-size: 2.3rem;
+        font-size: 2rem;
         text-decoration: underline;
-        font-size: 600;
+        font-weight: 600;
         color: rgb(255, 0, 51);
       }
     }
@@ -273,20 +296,20 @@ async function submit() {
 }
 
 .section__sign {
-  display: flex;
-  flex-direction: column;
+  @include vertical-flex;
+
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  position: relative;
+  height: 100dvh;
+  overflow: hidden;
   background: linear-gradient(70deg, #d9eef81b 20%, #e7dfffdb 100%);
 
   .section__logo {
     position: absolute;
     left: 3%;
-    top: 6%;
+    top: 3%;
     margin-bottom: 1rem;
-
-    font-family: "Comfortaa", sans-serif;
 
     font-size: 12rem;
     font-weight: 700;
@@ -294,14 +317,14 @@ async function submit() {
     text-align: center;
     white-space: break-spaces;
     color: rgb(55, 51, 78);
-    -webkit-box-reflect: bottom;
-    background: url("/src/assets/imgs/logo-bkg-full.png");
-    background-size: 500%;
-    background-position: bottom;
-    background-position-y: 25%;
+    background: linear-gradient(
+      to bottom,
+      var(--theme-primary-dark) 25%,
+      var(--theme-primary-light)
+    );
+
     -webkit-text-fill-color: transparent;
     -webkit-background-clip: text;
-    background-repeat: no-repeat;
     filter: brightness(95%);
   }
 
@@ -311,7 +334,7 @@ async function submit() {
     right: 10%;
     width: 3rem;
     aspect-ratio: 1;
-    z-index: 6;
+    z-index: 4;
     overflow: visible;
 
     color: var(--theme-primary-dark);
@@ -351,15 +374,22 @@ async function submit() {
     }
   }
   .section__form-container {
-    display: flex;
-    justify-content: center;
+    @include vertical-flex;
+
+    justify-content: space-between;
     align-items: center;
     justify-self: center;
-    z-index: 5;
+    position: relative;
+    overflow: visible;
+    z-index: 6;
     padding: 6rem 0rem;
+
     border-radius: 80px;
     background: rgb(95, 48, 197);
-    box-shadow: 0.6rem 0.6rem 0.6rem rgb(180, 171, 214);
+    box-shadow: 0rem 0.6rem 0.6rem rgba(0, 0, 0, 0.229),
+      0rem 12rem 0rem var(--theme-primary-light),
+      0rem 12.5rem 0.6rem rgba(0, 0, 0, 0.229);
+
     transition: all 0.5s ease;
 
     &.submit-mode--login {
@@ -368,23 +398,35 @@ async function submit() {
 
     &.submit-mode--signup {
       background: var(--theme-secondary-mid);
+      box-shadow: 0rem 0.6rem 0.6rem rgba(0, 0, 0, 0.229);
+
+      .section__presets {
+        bottom: -11rem;
+        opacity: 0;
+      }
     }
 
     .form__card {
-      display: flex;
-      flex-direction: column;
+      @include vertical-flex;
+
       width: 80vw;
       max-width: 50rem;
-      color: white;
+      color: var(--confirm-default);
       border: solid rgba(159, 142, 255, 0.736);
       border: none;
       border-radius: 40px;
       background: transparent;
       transition: border-color 0.3s ease;
 
+      @media screen and(max-width:500px) {
+        min-width: 90vw;
+        max-width: 95vw;
+      }
+
       .form__input-section {
-        display: flex;
-        flex-direction: column;
+        @include vertical-flex;
+
+        color: var(--confirm-default);
 
         .form__label {
           padding: 0.8rem 0rem;
@@ -392,26 +434,26 @@ async function submit() {
           font-size: 3rem;
           font-weight: 500;
           text-align: center;
+          color: inherit;
         }
 
         .form__input {
+          align-self: center;
           width: 60%;
           height: 3.2rem;
           margin: 0.6rem 0rem 1rem 0rem;
           padding-left: 1rem;
 
-          align-self: center;
           font-size: 2.3rem;
-          font-weight: 400;
-          color: white;
+          font-weight: 500;
+          color: var(--confirm-default);
           caret-shape: bar;
           border: none;
           border-radius: 20px;
           background: transparent;
-          outline: solid rgb(239, 239, 239);
+          outline: 2px solid rgb(239, 239, 239);
 
           &::placeholder {
-            justify-self: center;
             color: rgb(232, 232, 232);
             font-size: 2.3rem;
           }
@@ -437,19 +479,24 @@ async function submit() {
       }
 
       .form__submit-section {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 1rem 11rem 0rem 11rem;
+        display: grid;
+        grid-template-columns: 50% 50%;
+        grid-auto-rows: auto;
+        padding: 1rem 0rem 0rem 0rem;
+        z-index: 6;
+        color: var(--confirm-default);
+
+        @media screen and(max-width:500px) {
+          padding: 1rem 6rem 0rem 6rem;
+        }
 
         .btn--action-submit {
-          flex: 1;
+          justify-self: flex-end;
           overflow: visible;
           font-size: 5rem;
           font-weight: bolder;
           text-decoration: none;
           color: inherit;
-
           border: none;
           background: none;
           cursor: pointer;
@@ -461,21 +508,19 @@ async function submit() {
         }
 
         .toggle__container {
-          display: flex;
-          flex-direction: column;
+          @include vertical-flex;
+
           justify-content: center;
-          align-items: center;
-          flex: 1;
+          align-items: flex-start;
           margin-left: 1rem;
           overflow: visible;
-          transform: translateY(25%);
 
           .toggle {
-            align-items: center;
-            justify-content: center;
             width: 5.7rem;
             height: 3.2rem;
             padding: 0.3rem;
+            transform: translateY(25%);
+            margin-left: 4rem;
             border-radius: 30px;
             background: rgb(244, 244, 244);
 
@@ -499,42 +544,40 @@ async function submit() {
         }
       }
     }
-  }
-  .section__presets {
-    display: flex;
-    flex-direction: column;
-    align-self: center;
-    position: absolute;
-    bottom: 1%;
-    min-width: max-content;
-    max-width: 50rem;
-    padding: 1rem 5rem;
-    font-size: 1.8rem;
-    font-weight: 400;
-    color: inherit;
+    .section__presets {
+      @include vertical-flex;
 
-    border: solid rgba(159, 142, 255, 0.138);
-    border-radius: 30px;
-    background: transparent;
-    transition: all 0.3s ease;
-    .presets__credential,
-    .presets__title {
-      padding-inline: 1rem;
-    }
+      align-items: center;
+      justify-content: flex-end;
+      align-self: center;
+      position: absolute;
+      bottom: -12rem;
+      z-index: 7;
+      width: 80vw;
+      max-width: 50rem;
+      aspect-ratio: 1;
+      padding: 1rem 5rem;
+      font-size: 1.8rem;
+      font-weight: 400;
+      line-height: 2.5rem;
+      font-weight: 600;
+      opacity: 1;
+      border-radius: 80px;
+      background: transparent;
+      transition: all 0.4s ease;
 
-    .presets__credential {
-      line-height: 1.8rem;
-    }
-
-    .presets__credential:nth-child(3) {
-      margin-bottom: 1rem;
-    }
-    .presets__credential:nth-child(5) {
-      margin-top: 1rem;
-    }
-
-    @media screen and (max-width: 500px) {
-      bottom: 5%;
+      @media screen and(max-width:500px) {
+        min-width: 90vw;
+        max-width: 95vw;
+      }
+      .presets__credential,
+      .presets__title {
+        color: var(--confirm-default);
+        padding-inline: 1rem;
+      }
+      .presets__credential:nth-child(2) {
+        margin-bottom: 0.5rem;
+      }
     }
   }
 }

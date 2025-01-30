@@ -290,6 +290,7 @@ function setMonthGoals(calendarView) {
   let timeSlots = calendarView.el.childNodes;
 
   timeSlots.forEach((slot) => {
+    slot.style = "";
     const slotInternalDate = slot.dataset.date;
     const firstOfMonth = slotInternalDate + "-01";
 
@@ -388,8 +389,8 @@ $active-bright: rgb(1, 217, 229);
   height: 100%;
   width: 100%;
   padding: 1rem;
-  font-family: "Poppins", sans-serif;
 
+  font-family: "Sf Pro Display", var(--font-stack);
   font-variant-numeric: tabular-nums;
   font-optical-sizing: auto;
 
@@ -437,7 +438,9 @@ $active-bright: rgb(1, 217, 229);
 :deep(td[role="gridcell"]) {
   overflow: visible;
 }
-
+:deep(.fc-scrollgrid-sync-table) {
+  table-layout: fixed;
+}
 :deep(.fc-dayGridMonth-view tbody[role="presentation"]),
 :deep(.fc-dayGridDay-view tbody[role="presentation"]) {
   display: flex;
@@ -447,10 +450,6 @@ $active-bright: rgb(1, 217, 229);
   width: 100%;
   height: 100%;
   padding: 1rem 0rem;
-}
-
-:deep(.fc-scrollgrid-sync-table) {
-  table-layout: fixed;
 }
 
 :deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]),
@@ -542,7 +541,6 @@ $active-bright: rgb(1, 217, 229);
 
 :deep(.fc .fc-button-primary) {
   padding: 0.5rem 1.5rem;
-  font-family: "Roboto", sans-serif;
   font-size: 2rem;
   line-height: 3rem;
   color: inherit;
@@ -578,7 +576,6 @@ $active-bright: rgb(1, 217, 229);
   width: max-content;
   margin: 0rem 0.5rem;
   padding: 0.5rem 1.5rem;
-  font-family: "Roboto ", sans-serif;
   font-size: 2rem;
   font-weight: 500;
   border-radius: 30px;
@@ -660,7 +657,6 @@ $active-bright: rgb(1, 217, 229);
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 100;
-  font-family: "Poppins ExtraBold", sans-serif;
   font-size: calc(2rem + 0.5vw);
   font-weight: 600;
   color: rgb(0, 149, 255);
@@ -681,6 +677,10 @@ $active-bright: rgb(1, 217, 229);
 }
 
 @media screen and (max-width: 500px) {
+  :deep(.fc .fc-toolbar-title) {
+    font-size: 3.5rem;
+  }
+
   :deep(.fc-view-harness.fc-view-harness-active) {
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
@@ -688,28 +688,25 @@ $active-bright: rgb(1, 217, 229);
   }
 
   :deep(.fc-multiMonthYear-view) {
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    width: 100%;
-    min-height: max-content;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-auto-rows: auto;
+    padding-top: 2rem;
   }
   :deep(.fc-multimonth-month) {
-    min-width: 40vw;
-    min-height: 15rem;
-    min-height: 40vw;
-    aspect-ratio: 1;
+    justify-self: center;
+    min-width: 89.5%;
 
-    margin: 2px 0px;
-    margin-bottom: 0.5rem;
-    border-radius: 30px;
+    min-height: 15rem;
+    margin: 0 0 0.9rem 0;
+    border-radius: 40px;
   }
   :deep(.fc-multimonth-month:not([is-valid])) {
     display: none;
   }
 
   :deep(.fc-scroller.fc-scroller-liquid-absolute) {
+    padding-top: 2rem;
     height: 100%;
     scrollbar-gutter: stable both-edges;
     scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
@@ -725,18 +722,18 @@ $active-bright: rgb(1, 217, 229);
     table-layout: auto;
     align-items: center;
     justify-content: center;
+    align-self: center;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
   }
 
   :deep(.fc-dayGridMonth-view tbody[role="presentation"]),
   :deep(.fc-dayGridDay-view tbody[role="presentation"]) {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: max-content;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-auto-rows: auto;
     height: 100%;
-    padding: 0rem;
+    padding-top: 1rem;
     overflow: visible;
   }
 
@@ -744,9 +741,12 @@ $active-bright: rgb(1, 217, 229);
   :deep(.fc-dayGridDay-view tbody[role="presentation"] tr[role="row"]) {
     display: flex;
     flex-direction: column;
-    margin: 0.5rem 0rem;
     padding: 0;
     overflow: visible;
+  }
+
+  :deep(.fc-dayGridMonth-view tbody[role="presentation"] tr[role="row"]) {
+    margin-bottom: 0.8rem;
   }
 
   :deep(
@@ -759,13 +759,26 @@ $active-bright: rgb(1, 217, 229);
 
   :deep(.fc-dayGridMonth-view tbody[role="presentation"] td),
   :deep(.fc-dayGridDay-view tbody[role="presentation"] td) {
-    min-width: 13%;
-    width: 40vw;
-    max-width: 40vw;
-    aspect-ratio: 1;
+    min-width: 100%;
+    width: 100%;
+    padding: 0;
   }
   :deep(.fc-dayGridDay-view tbody[role="presentation"] td) {
-    margin: 0.5rem 0rem;
+    margin-bottom: 0.8rem;
+  }
+
+  :deep(.fc-daygrid-day) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 15rem;
+    padding: 0;
+  }
+
+  :deep(.fc-daygrid-day-frame) {
+    width: 90%;
+    height: 100%;
+    border-radius: 40px;
   }
 }
 </style>

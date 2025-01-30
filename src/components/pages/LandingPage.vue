@@ -42,9 +42,7 @@
         </div>
         <div class="slideshow__card" v-else-if="slideCounter === 4">
           <div class="slideshow__img img--4"></div>
-          <span class="slideshow__text"
-            >or send a request to the developer</span
-          >
+          <span class="slideshow__text">send a request to the developer</span>
         </div>
         <div class="slideshow__card" v-else-if="slideCounter === 5">
           <div class="slideshow__img img--5"></div>
@@ -55,37 +53,43 @@
           <span class="slideshow__text">or confirm your success</span>
         </div>
       </transition>
-      <div class="slideshow__btns-container">
-        <div
+      <div class="slideshow__btns-container" @mousedown="selectSlide">
+        <button
           type="button"
+          data-btn-index="1"
           class="btn"
           :class="{ 'btn--active': slideCounter === 1 }"
-        ></div>
-        <div
+        ></button>
+        <button
           type="button"
+          data-btn-index="2"
           class="btn"
           :class="{ 'btn--active': slideCounter === 2 }"
-        ></div>
-        <div
+        ></button>
+        <button
           type="button"
+          data-btn-index="3"
           class="btn"
           :class="{ 'btn--active': slideCounter === 3 }"
-        ></div>
-        <div
+        ></button>
+        <button
           type="button"
+          data-btn-index="4"
           class="btn"
           :class="{ 'btn--active': slideCounter === 4 }"
-        ></div>
-        <div
+        ></button>
+        <button
           type="button"
+          data-btn-index="5"
           class="btn"
           :class="{ 'btn--active': slideCounter === 5 }"
-        ></div>
-        <div
+        ></button>
+        <button
           type="button"
+          data-btn-index="6"
           class="btn"
           :class="{ 'btn--active': slideCounter === 6 }"
-        ></div>
+        ></button>
       </div>
     </section>
     <button class="section__scrollto-btn" @mousedown="scrollSections"></button>
@@ -102,11 +106,22 @@ function handleSlides() {
   if (slideCounter.value > 6) slideCounter.value = 1;
 }
 
+function selectSlide(e) {
+  const target = e.target;
+  if (!target.classList.contains("btn")) return;
+  const btnIndex = +target.dataset.btnIndex;
+  slideCounter.value = btnIndex;
+}
+
 const positions = [
-  { inset: "15% 0 0 20%", zIndex: 1 }, //pink third
-  { inset: "20% 0 0 25%", zIndex: 2 }, //yel sec
-  { inset: "25% 0 0 30%", zIndex: 3 }, //blu first
+  {
+    inset: "46%",
+    zIndex: 1,
+  },
+  { inset: "48%", zIndex: 2 },
+  { inset: "50%", zIndex: 3 },
 ];
+
 let counter = 0;
 
 function handleAnimation(e) {
@@ -166,7 +181,7 @@ function handleScroll(e) {
   const scrollOffset = target.scrollTop;
   const viewportHeight = target.clientHeight;
 
-  if (scrollOffset > viewportHeight * 1.5) {
+  if (scrollOffset > viewportHeight * 1.1) {
     btnCounter = 2;
     target.querySelector(".section__scrollto-btn").classList.add("rotated");
   }
@@ -181,25 +196,35 @@ function handleScroll(e) {
 
 <style lang="scss" scoped>
 * {
-  font-family: "Afacad Flux", sans-serif;
+  font-family: var(--font-stack);
 }
+
+@mixin horizontal-flex {
+  display: flex;
+  flex-direction: row;
+}
+@mixin vertical-flex {
+  display: flex;
+  flex-direction: column;
+}
+
 .section {
   position: relative;
-  height: 100vh;
-  overflow-y: auto;
+  height: 100dvh;
+  overflow-y: scroll;
   scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
   scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
   background: var(--theme-bkg);
+  transition: all 0.3s ease;
 
   .section__hero {
-    display: flex;
-    flex-direction: column;
+    @include vertical-flex;
     justify-content: center;
     align-items: center;
     position: relative;
     z-index: 1;
-    height: 100vh;
+    height: 100dvh;
     overflow: visible;
 
     .hero__logo {
@@ -207,20 +232,19 @@ function handleScroll(e) {
       margin-bottom: 1rem;
       overflow: visible;
       font-size: 20rem;
-      font-family: "Comfortaa", sans-serif;
       line-height: 100%;
       text-align: center;
       white-space: break-spaces;
       opacity: 1;
 
-      background: url("/src/assets/imgs/logo-bkg-full.png");
-      background-size: 500%;
-      background-position: bottom;
-      background-position-y: 25%;
+      background: linear-gradient(
+        to bottom,
+        var(--theme-primary-dark) 25%,
+        var(--theme-primary-light)
+      );
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       -webkit-background-clip: text;
-      background-repeat: no-repeat;
-      filter: brightness(95%);
       animation: fade-in-top 2s ease;
 
       @keyframes fade-in-top {
@@ -233,35 +257,6 @@ function handleScroll(e) {
           transform: translateY(0px);
         }
       }
-
-      &:after {
-        position: absolute;
-        top: 0;
-        left: 5%;
-        width: 30rem;
-        aspect-ratio: 1;
-
-        content: "";
-        border-radius: 100%;
-        background: rgb(255, 255, 255);
-        backdrop-filter: contrast(100%) brightness(85%);
-        box-shadow: 0.3rem 0.5rem 0.8rem white;
-        offset-path: path("M.4 84.1s127.4 188 267.7 0 247.3 0 247.3 0");
-        offset-distance: 0%;
-        animation: bubble-out 2s ease forwards reverse;
-
-        @keyframes bubble-out {
-          0% {
-            offset-distance: 0%;
-            transform: scale(3);
-            background: rgba(255, 255, 255, 0);
-          }
-          100% {
-            offset-distance: 100%;
-            transform: scale(0);
-          }
-        }
-      }
     }
     .hero__link {
       position: absolute;
@@ -269,9 +264,9 @@ function handleScroll(e) {
 
       font-size: 5rem;
       font-weight: 600;
-      color: white;
+      color: var(--confirm-default);
       text-decoration: none;
-      filter: drop-shadow(-0rem -0.4rem 0.6rem rgb(162, 162, 162));
+      filter: drop-shadow(0rem -0.3rem 0.6rem rgb(162, 162, 162));
       cursor: pointer;
       transition: all 0.2s ease;
       animation: slide-in-bottom 2s ease forwards;
@@ -293,10 +288,9 @@ function handleScroll(e) {
     }
   }
   .section__bio {
-    display: flex;
-    flex-direction: column;
+    @include vertical-flex;
     justify-content: space-evenly;
-    min-height: 100vh;
+    height: 100dvh;
     overflow: visible;
 
     .bio__title {
@@ -307,20 +301,25 @@ function handleScroll(e) {
 
     .bio__cards-container {
       position: relative;
-      height: 70vh;
+      width: 100%;
+      height: 70lvh;
       overflow: visible;
 
       .bio__card {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         position: absolute;
-        height: 50%;
-        width: 50%;
+        transform: translate(-50%, -50%);
+
+        width: 80%;
+        max-width: 45rem;
+        aspect-ratio: 1;
         padding: 0rem 2rem;
-        margin: 0.5rem 0rem;
         overflow: visible;
 
-        align-content: center;
         font-size: 2.2rem;
-        font-weight: 500;
+        font-weight: 600;
         text-align: center;
         color: inherit;
 
@@ -329,24 +328,27 @@ function handleScroll(e) {
         background: rgb(255, 255, 255);
         background: rgba(235, 227, 255, 0.037);
         backdrop-filter: blur(100px);
-
         cursor: pointer;
         transition: all 0.5s ease;
 
+        @media screen and (max-width: 500px) {
+          max-width: 35rem;
+        }
+
         &.bio__card--1 {
-          inset: 25% 0 0 30%;
+          inset: 50%;
           z-index: 3;
           background: rgb(255, 254, 253);
         }
 
         &.bio__card--2 {
-          inset: 20% 0 0 25%;
+          inset: 48%;
           z-index: 2;
           background: rgb(255, 251, 244);
         }
 
         &.bio__card--3 {
-          inset: 15% 0 0 20%;
+          inset: 46%;
           z-index: 1;
           background: rgb(255, 249, 239);
         }
@@ -357,10 +359,10 @@ function handleScroll(e) {
           @keyframes card-shuffle {
             0%,
             100% {
-              transform: translate(0px, 0px);
+              transform: translate(-50%, -50%);
             }
             50% {
-              transform: translate(100px, 100px);
+              transform: translate(calc(-50% + 50px), calc(-50% + 50px));
             }
           }
         }
@@ -368,17 +370,15 @@ function handleScroll(e) {
     }
   }
   .section__slideshow {
-    display: flex;
-    flex-direction: column;
+    @include vertical-flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    height: 100vh;
+    height: 100dvh;
     padding: 2rem 0rem;
 
     .slideshow__card-container {
-      display: flex;
-      flex-direction: row;
+      @include horizontal-flex;
       align-items: center;
       justify-content: center;
       width: 100%;
@@ -387,8 +387,8 @@ function handleScroll(e) {
       overflow: visible;
     }
     .slideshow__card {
-      display: flex;
-      flex-direction: column;
+      @include vertical-flex;
+
       justify-content: center;
       align-items: center;
       min-width: 90%;
@@ -406,46 +406,50 @@ function handleScroll(e) {
         cursor: pointer;
         transition: all 0.5s ease;
 
+        @media screen and (max-width: 500px) {
+          width: 35rem;
+          height: 35rem;
+        }
+
         &:hover {
           transform: translateY(-5px);
         }
 
         &.img--1 {
-          background-image: url("/src/assets/imgs/lifepal-slide-1.webp");
+          background-image: url("/src/assets/imgs/lp-slide-1.webp");
         }
         &.img--2 {
-          background-image: url("/src/assets/imgs/lifepal-slide-2.webp");
+          background-image: url("/src/assets/imgs/lp-slide-2.webp");
         }
         &.img--3 {
-          background-image: url("/src/assets/imgs/lifepal-slide-3.webp");
+          background-image: url("/src/assets/imgs/lp-slide-3.webp");
         }
         &.img--4 {
-          background-image: url("/src/assets/imgs/lifepal-slide-4.webp");
+          background-image: url("/src/assets/imgs/lp-slide-4.webp");
         }
         &.img--5 {
-          background-image: url("/src/assets/imgs/lifepal-slide-5.webp");
+          background-image: url("/src/assets/imgs/lp-slide-5.webp");
         }
         &.img--6 {
-          background-image: url("/src/assets/imgs/lifepal-slide-6.webp");
+          background-image: url("/src/assets/imgs/lp-slide-6.webp");
         }
       }
 
       .slideshow__text {
         margin-top: 2rem;
         font-size: 2.5rem;
-        font-weight: 500;
-        text-shadow: 0rem 0.2rem 0.5rem rgb(191, 191, 191);
+        font-weight: 600;
+        text-shadow: 0.2rem 0.2rem 0.4rem rgb(191, 191, 191);
         color: inherit;
       }
     }
 
     .slideshow__btns-container {
-      display: flex;
-      flex-direction: row;
+      @include horizontal-flex;
       justify-content: space-around;
       align-items: center;
       position: absolute;
-      width: 10%;
+      width: 10rem;
       height: 1.5rem;
       margin-top: 2rem;
       bottom: 10%;
@@ -453,7 +457,7 @@ function handleScroll(e) {
       text-align: center;
 
       .btn {
-        width: 1.1rem;
+        width: 1rem;
         aspect-ratio: 1;
         margin: 0px 2px;
         border: none;
@@ -461,6 +465,7 @@ function handleScroll(e) {
 
         background: rgba(255, 255, 255, 0.389);
         box-shadow: 0rem 0.1rem 0.3rem grey;
+        cursor: pointer;
         &.btn--active {
           background: var(--warning);
           transition: all 0.3s ease;

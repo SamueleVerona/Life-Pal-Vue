@@ -7,7 +7,6 @@ import store from "./store";
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", redirect: "/landing" },
     { path: "/landing", component: LandingPage },
     {
       path: "/userSign",

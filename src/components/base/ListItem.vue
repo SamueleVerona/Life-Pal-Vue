@@ -230,7 +230,7 @@ watch(props.item, () => {
 
 <style lang="scss" scoped>
 * {
-  font-family: "Poppins", sans-serif;
+  font-family: var(--font-stack);
 }
 
 @mixin reply-format {
@@ -256,19 +256,7 @@ watch(props.item, () => {
   padding: 1rem;
   border-radius: 40px;
   box-shadow: var(--basic-shadow);
-  border: solid 3px rgb(230, 230, 230);
-  border-bottom: solid 10px rgba(157, 157, 157, 0.978);
-  border-bottom: solid 10px rgba(176, 176, 176, 0.978);
-  border: solid 1px rgba(162, 162, 162, 0.389);
-
-  background: radial-gradient(
-    ellipse at bottom left,
-    var(--warning) 1%,
-    rgba(255, 225, 161, 0.659) 20%,
-    rgba(244, 236, 209, 0.345) 13%,
-    rgba(234, 231, 224, 0.345) 15%,
-    transparent 95%
-  );
+  border: solid 2px rgba(162, 162, 162, 0.389);
 
   &.in-dialog {
     min-height: 40%;
@@ -277,48 +265,21 @@ watch(props.item, () => {
   }
 
   &.day {
-    border: solid 1px var(--theme-day);
-    background: radial-gradient(
-      ellipse at bottom right,
-      var(--theme-day) 1%,
-      rgba(169, 255, 219, 0.659) 35%,
-      rgba(209, 244, 231, 0.345) 18%,
-      rgba(224, 234, 230, 0.345) 20%,
-      transparent 95%
-    );
-
+    border-color: var(--theme-day);
     .item__title-text {
       color: var(--theme-day);
     }
   }
 
   &.week {
-    border: solid 1px var(--theme-week);
-    background: radial-gradient(
-      ellipse at bottom right,
-      rgba(255, 73, 60, 0.742) 1%,
-      rgba(236, 169, 255, 0.348) 35%,
-      rgba(209, 244, 231, 0.345) 18%,
-      rgba(224, 234, 230, 0.345) 20%,
-      transparent 25%
-    );
-
+    border-color: var(--theme-week);
     .item__title-text {
       color: var(--theme-week);
     }
   }
 
   &.month {
-    border: solid 1px var(--theme-month);
-    background: radial-gradient(
-      ellipse at bottom right,
-      var(--theme-month) 1%,
-      rgba(255, 199, 169, 0.348) 35%,
-      rgba(209, 244, 231, 0.345) 18%,
-      rgba(224, 234, 230, 0.345) 20%,
-      transparent 25%
-    );
-
+    border-color: var(--theme-month);
     .item__title-text {
       color: var(--theme-month);
     }
@@ -350,7 +311,7 @@ watch(props.item, () => {
       align-self: center;
       width: 90%;
       padding: 0.5rem 1.5rem 0.5rem 0.8rem;
-      font-weight: 500;
+      font-weight: 600;
       font-size: 2.2rem;
       text-align: center;
       border: none;
@@ -369,7 +330,7 @@ watch(props.item, () => {
       .item__status-text {
         font-size: 1.5rem;
         font-weight: bold;
-        line-height: 1.5rem;
+        line-height: 2rem;
 
         .status-title {
           color: rgb(0, 87, 187);
@@ -431,7 +392,6 @@ watch(props.item, () => {
 
       .progress-bar {
         height: 100%;
-        z-index: 100;
         background: linear-gradient(
           to right,
           rgb(183, 255, 242),
@@ -441,12 +401,16 @@ watch(props.item, () => {
         border-right: solid 4px rgb(125, 224, 196);
         border-top-right-radius: 50px;
         border-bottom-right-radius: 50px;
+        z-index: 4;
+        overflow: visible;
 
         &:after {
           position: absolute;
           bottom: 0;
           width: inherit;
           height: 100%;
+          z-index: 5;
+
           overflow: visible;
           content: "";
           box-shadow: 0rem 0rem 0.6rem 0.1rem rgb(67, 199, 251);
@@ -460,6 +424,8 @@ watch(props.item, () => {
 
           @keyframes progress-glow {
             0% {
+              z-index: 5;
+
               opacity: 0;
               width: 0rem;
             }
@@ -473,6 +439,8 @@ watch(props.item, () => {
             }
 
             100% {
+              z-index: 5;
+
               opacity: 0;
             }
           }
@@ -483,6 +451,7 @@ watch(props.item, () => {
           bottom: 0;
           transform: translateX(-50%);
           width: max-content;
+          z-index: 6;
 
           font-size: 1.2rem;
           font-weight: 600;
@@ -491,6 +460,7 @@ watch(props.item, () => {
           text-transform: lowercase;
           color: inherit;
           background: none;
+          will-change: transform;
         }
       }
     }

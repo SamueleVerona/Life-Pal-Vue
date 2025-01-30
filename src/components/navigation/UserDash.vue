@@ -8,7 +8,7 @@
     }"
   >
     <section class="section__dashboard">
-      <section class="section__controls--top" @mousedown="handleTopControls">
+      <section class="section__controls--top" @click="handleTopControls">
         <div class="selectors-container">
           <div class="selector selector--primary">
             <ul
@@ -33,6 +33,7 @@
           >
             <ul
               class="selector__list selector__list--secondary"
+              :class="{ overflowing: secondaryFilterOptions.length > 6 }"
               v-if="secondaryFilterToggle"
             >
               <li class="selector__option selector__option--secondary">all</li>
@@ -172,7 +173,10 @@
       </section>
     </section>
     <transition name="stats">
-      <section class="section__stats" v-if="statsToggled">
+      <section
+        class="section__stats"
+        v-if="statsToggled && !props.profileModeActive"
+      >
         <div class="stat">
           <h3 class="stat__text">
             All time goals:
@@ -418,6 +422,7 @@ function handleTopControls(e) {
     secondaryFilterToggle.value = false;
     userIsEditing.value = false;
   }
+
   if (isPrimFilter) {
     primaryFilterToggle.value = !primaryFilterToggle.value;
   }
@@ -573,14 +578,21 @@ onUnmounted(() => clearInterval(timer));
 
 <style lang="scss" scoped>
 * {
-  font-family: "Afacad Flux", sans-serif;
-
+  font-family: var(--font-stack);
   font-optical-sizing: auto;
 }
 
-.section {
+@mixin horizontal-flex {
   display: flex;
   flex-direction: row;
+}
+@mixin vertical-flex {
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  @include horizontal-flex;
   position: relative;
   border-radius: 30px;
 
@@ -634,14 +646,12 @@ onUnmounted(() => clearInterval(timer));
     }
   }
   .section__dashboard {
-    display: flex;
-    flex-direction: column;
+    @include vertical-flex;
     justify-content: space-between;
     flex: 1;
 
     .section__controls--top {
-      display: flex;
-      flex-direction: row;
+      @include horizontal-flex;
       align-items: center;
       justify-content: start;
       position: relative;
@@ -658,22 +668,21 @@ onUnmounted(() => clearInterval(timer));
         border: none;
       }
       .selectors-container {
-        display: flex;
-        flex-direction: row;
+        @include horizontal-flex;
         justify-content: space-evenly;
         align-items: center;
         overflow: visible;
 
         .selector {
+          display: flex;
+          justify-content: center;
+          align-items: center;
           position: relative;
           min-width: 10rem;
           max-width: max-content;
           height: 5rem;
           padding: 0rem 1.2rem;
           overflow: visible;
-
-          align-content: center;
-          font-size: 3rem;
           text-align: center;
           background: transparent;
           border: none;
@@ -722,10 +731,22 @@ onUnmounted(() => clearInterval(timer));
               }
             }
 
+            &.selector__list--secondary {
+              max-height: 23rem;
+              overflow-y: scroll;
+              scrollbar-gutter: stable both-edges;
+              scrollbar-width: thin;
+              scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
+
+              &.overflowing {
+                border-bottom: solid 3px var(--active-default);
+              }
+            }
+
             .selector__option {
               padding: 0rem 1rem 1.5rem 1.5rem;
-              font-family: "Poppins", sans-serif;
               font-size: 2rem;
+              font-weight: 500;
               text-align: left;
               border: none;
               cursor: pointer;
@@ -755,8 +776,8 @@ onUnmounted(() => clearInterval(timer));
           }
 
           .selector__option--selected {
-            font-family: "Poppins", sans-serif;
-            font-size: 2.3rem;
+            font-size: 2rem;
+            line-height: 2.5rem;
             font-weight: 600;
 
             &::after {
@@ -795,8 +816,7 @@ onUnmounted(() => clearInterval(timer));
       scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
 
       .list__placeholder {
-        display: flex;
-        flex-direction: column;
+        @include vertical-flex;
         justify-content: center;
         align-items: center;
         height: 100%;
@@ -839,9 +859,10 @@ onUnmounted(() => clearInterval(timer));
             right: 0;
             width: 100%;
             height: 100%;
+            z-index: 7;
 
             border-style: none;
-            border: solid 1px rgb(0, 255, 157);
+            border: none;
 
             border-radius: 40px;
             backdrop-filter: brightness(90%);
@@ -854,7 +875,6 @@ onUnmounted(() => clearInterval(timer));
                 rgba(255, 10, 22, 0.711),
                 transparent 60%
               );
-              border-color: red;
               backdrop-filter: brightness(100%);
             }
           }
@@ -905,10 +925,8 @@ onUnmounted(() => clearInterval(timer));
         }
 
         @media screen and (max-width: 600px) {
-          display: flex;
-          flex-direction: column;
+          @include vertical-flex;
           align-items: center;
-
           .list__item {
             width: 90%;
           }
@@ -916,8 +934,7 @@ onUnmounted(() => clearInterval(timer));
       }
     }
     .section__controls--bottom {
-      display: flex;
-      flex-direction: row;
+      @include horizontal-flex;
       justify-content: flex-end;
       position: absolute;
       bottom: 0;
@@ -929,8 +946,9 @@ onUnmounted(() => clearInterval(timer));
       overflow: visible;
 
       .btn--action-edit {
-        font-weight: 500;
-        color: white;
+        font-weight: 600;
+        font-kerning: auto;
+        color: var(--confirm-default);
         background: var(--warning-dark);
         border-color: var(--warning-dark);
         transition: all 0.3s ease;
@@ -941,7 +959,7 @@ onUnmounted(() => clearInterval(timer));
         }
       }
       .btn--action-remove {
-        color: white;
+        color: var(--confirm-default);
         background: rgba(173, 66, 66, 0.995);
         border: none;
 
@@ -956,15 +974,14 @@ onUnmounted(() => clearInterval(timer));
     }
   }
   .section__stats {
-    display: flex;
-    flex-direction: column;
+    @include vertical-flex;
     justify-content: center;
     align-items: center;
     position: absolute;
     right: 0;
-    top: 5%;
+    top: 0;
     width: 40%;
-    height: 90%;
+    height: 100%;
     backdrop-filter: blur(15px);
     border-left: solid 1px #1dffa8e3;
 
@@ -1022,13 +1039,14 @@ onUnmounted(() => clearInterval(timer));
       }
       .stat__text {
         padding: 0.5rem 0rem;
-        font-size: 2rem;
+        font-size: 1.8rem;
+        font-weight: 600;
         text-align: center;
       }
       .stat__bar {
-        justify-self: center;
         width: 60%;
         height: 1rem;
+        margin: auto;
         border: solid 1px rgb(186, 186, 186);
         border-radius: 30px;
 
@@ -1053,10 +1071,11 @@ onUnmounted(() => clearInterval(timer));
     height: 5rem;
     padding: 0rem 1.5rem;
     margin: 0rem 0.3rem;
-    font-size: 2.5rem;
-    font-weight: 400;
+    font-size: 2rem;
+    font-weight: 600;
     text-align: center;
-    background: white;
+    color: inherit;
+    background: var(--confirm-default);
     border: solid 2px rgba(128, 128, 128, 0.363);
     border-radius: 30px;
     box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);

@@ -1,9 +1,5 @@
 <template>
   <section class="user-content">
-    <div class="logo">
-      <h2>LifePal</h2>
-    </div>
-
     <user-nav
       v-if="!hasSomeExpired"
       class="navbar"
@@ -298,25 +294,17 @@ onMounted(() => {
   flex-direction: column;
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   padding: 2rem;
 
-  .logo {
-    position: absolute;
-    top: 1rem;
-    left: 1.5rem;
-    padding: 1rem;
-    font-family: "Comfortaa", sans-serif;
-    font-size: 1.6rem;
-    color: var(--theme-primary-dark);
-  }
   .navbar {
     display: flex;
     justify-content: flex-end;
-    min-height: 10vh;
+    min-height: 10dvh;
     width: 100%;
     margin: 0rem auto 1rem auto;
     padding: 0.5rem 1rem;
+    overflow: visible;
     border: solid 1px rgba(128, 128, 128, 0.308);
     border: none;
 
@@ -344,7 +332,7 @@ onMounted(() => {
     }
 
     @media screen and (max-width: 500px) {
-      width: 50rem;
+      width: 90%;
     }
   }
 

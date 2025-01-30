@@ -1,39 +1,30 @@
 @font-face {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Afacad Flux";
-  src: url("/src/assets/fonts/Afacad-Flux-Optimized/afacadflux-variablefont_slntwght-webfont.woff")
-      format("woff"),
-    url("/src/assets/fonts/Afacad-Flux-Optimized/afacadflux-variablefont_slntwght-webfont.woff2")
-      format("woff2");
-}
-
-@font-face {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   font-family: "Roboto";
   src: url("/src/assets/fonts/Roboto-Optimized/roboto-variablefont_wdthwght-webfont.woff")
       format("woff"),
     url("/src/assets/fonts/Roboto-Optimized/roboto-variablefont_wdthwght-webfont.woff2")
       format("woff2");
+  font-display: swap;
 }
 
 @font-face {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Poppins";
-  src: url("/src/assets/fonts/Poppins-Optimized/poppins-regular-webfont.woff")
+  font-family: "Helvetica Neue";
+  src: url("/src/assets/fonts/Helevetica-Neue-Optimized/helveticaneuelight-webfont.woff")
       format("woff"),
-    url("/src/assets/fonts/Poppins-Optimized/poppins-regular-webfont.woff2")
+    url("/src/assets/fonts/Helevetica-Neue-Optimized/helveticaneuelight-webfont.woff2")
       format("woff2");
+  font-display: swap;
 }
-
 @font-face {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Comfortaa";
-  src: url("/src/assets/fonts/Comfortaa-Optimized/comfortaa-variablefont_wght-webfont.woff")
+  font-family: "Sf Pro Display";
+  src: url("/src/assets/fonts/Sf-Pro-Display-Optimized/sfprodisplayregular-webfont.woff")
       format("woff"),
-    url("/src/assets/fonts/Comfortaa-Optimized/comfortaa-variablefont_wght-webfont.woff2")
+    url("/src/assets/fonts/Sf-Pro-Display-Optimized/sfprodisplayregular-webfont.woff2")
       format("woff2");
 }

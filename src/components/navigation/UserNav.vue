@@ -25,23 +25,13 @@
           <span class="btn__face btn__face--back" inert>requests</span>
         </button>
       </li>
-      <li>
-        <button
-          type="button"
-          data-button-id="unsub"
-          class="btn btn--unsub"
-          v-if="!props.isAdmin && props.toggleProfile && !props.isLocked"
-        >
+      <li v-if="!props.isAdmin && props.toggleProfile && !props.isLocked">
+        <button type="button" data-button-id="unsub" class="btn btn--unsub">
           delete account
         </button>
       </li>
-      <li>
-        <button
-          type="button"
-          data-button-id="logout"
-          class="btn btn--logout"
-          v-if="props.toggleProfile || props.isAdmin"
-        >
+      <li v-if="props.toggleProfile || props.isAdmin">
+        <button type="button" data-button-id="logout" class="btn btn--logout">
           log out
         </button>
       </li>
@@ -65,10 +55,7 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
 
 <style lang="scss" scoped>
 * {
-  font-family: "Poppins", Sans-serif;
-
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--font-stack);
 }
 .nav {
   position: relative;
@@ -83,14 +70,11 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
     background: transparent;
 
     .btn {
-      flex: 1;
-      width: max-content;
       padding: 0.5rem 1rem;
       box-sizing: border-box;
 
       color: inherit;
-      font-size: 3rem;
-      font-family: inherit;
+      font-size: 2.5rem;
       font-weight: bolder;
       background: none;
       border: none;
@@ -103,14 +87,13 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
           color: var(--hover-default);
         }
         &:active {
-          border-color: var(--hover-default);
-          color: rgb(4, 167, 172);
+          color: var(--active-default);
         }
       }
 
       &.btn--flippable {
         position: relative;
-        height: 100%;
+        height: max-content;
 
         &.btn--flipped {
           width: 20rem;
@@ -130,7 +113,7 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
         .btn__face {
           display: block;
           height: 100%;
-          font-size: 3rem;
+          font-size: 2.5rem;
           transition: transform 0.6s ease;
 
           &.btn__face--front {
@@ -166,14 +149,14 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
       }
 
       &.btn--profile {
-        height: 6rem;
+        height: 5rem;
         aspect-ratio: 1/1;
         margin-left: 0.5rem;
         margin-right: 2rem;
         z-index: 1;
+        overflow: visible;
         background-image: url(/src/assets/imgs/user.png);
         background-size: cover;
-        background-clip: border-area;
         border: solid 2px rgb(221, 221, 221);
         border-radius: 100%;
         transition: all 0.2s ease;
@@ -223,6 +206,10 @@ const props = defineProps(["toggleProfile", "isAdmin", "isLocked"]);
 
       .btn__face {
         font-size: 2.5rem;
+
+        &.btn__face--back {
+          display: none;
+        }
       }
     }
 

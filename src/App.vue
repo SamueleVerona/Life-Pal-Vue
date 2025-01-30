@@ -8,11 +8,43 @@
 
 <style lang="scss">
 @import "@/assets/styles/fonts.css";
+@mixin global-format {
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+  overflow: hidden;
+}
+
+* {
+  @include global-format;
+  &::before,
+  &::after {
+    @include global-format;
+  }
+  font-family: "Helvetica Neue"-apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+  font-kerning: none;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  color: #2c3e50;
+}
+
+body {
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 
 :root {
+  --font-stack: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI",
+    Roboto, Arial, sans-serif;
   --fc-neutral-bg-color: rgba(200, 177, 246, 0.526);
 
   --hover-default: rgb(0, 201, 208);
+  --active-default: rgb(0, 159, 164);
+
   --confirm-default: white;
   --confirm-delete: rgb(243, 243, 243);
   --confirm-delete-hover: rgb(255, 58, 58);
@@ -49,19 +81,15 @@
 }
 
 #app {
-  font-family: "Afacad Flux", Sans-serif;
+  display: block;
 
-  color: #2c3e50;
-  font-size: 62.5%;
+  @mixin default-flex-centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-style: normal;
-  overflow: hidden;
-}
 .app-enter-from {
   opacity: 0;
 }
