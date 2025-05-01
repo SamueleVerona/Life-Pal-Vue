@@ -11,7 +11,7 @@
     <section class="elements-section">
       <transition name="elements" mode="out-in">
         <user-calendar
-          class="elements__calendar"
+          class="calendar"
           v-if="navButtonClicked === 'calendar' && !isAdmin"
           :userGoals="userGoals"
           @send-time-id="
@@ -33,7 +33,7 @@
         ></user-calendar>
         <user-dash
           v-else-if="navButtonClicked === 'dashboard'"
-          class="elements__dashboard"
+          class="dashboard"
           :calendarTimeOpt="timeSelection"
           :allGoals="userGoals"
           :finished="finished"
@@ -56,7 +56,7 @@
           :itemLabel="dateLabel"
           :goalType="timeSelection"
           :isRequest="toggleProfile"
-          class="elements__item-card"
+          class="item-card"
           @goal-saved="resetNav"
           @back-action="handleBackAction"
         ></item-card>
@@ -316,54 +316,54 @@ onMounted(() => {
 
 .elements-section {
   display: contents;
+}
 
-  .elements__dashboard {
-    width: 100%;
-    height: 100%;
-  }
-  .elements__item-card {
-    width: 45rem;
-    height: 100%;
-    margin: 0rem auto;
-    transition: all 0.3s ease;
+.dashboard {
+  width: 100%;
+  height: 100%;
+}
+.item-card {
+  width: 45rem;
+  height: 100%;
+  margin: 0rem auto;
+  transition: all 0.3s ease;
 
-    @media screen and (max-width: 1024px) {
-      width: 40rem;
-    }
-
-    @media screen and (max-width: 500px) {
-      width: 90%;
-    }
+  @media screen and (max-width: 1024px) {
+    width: 40rem;
   }
 
-  .elements__calendar {
-    width: 100%;
-    height: 100%;
+  @media screen and (max-width: 500px) {
+    width: 90%;
+  }
+}
 
-    @media screen and (max-width: 500px) {
-      max-height: 90dvh;
-    }
-  }
+.calendar {
+  width: 100%;
+  height: 100%;
 
-  .elements-enter-from {
-    opacity: 0;
-    transform: rotateY(-15deg);
-    transform-origin: right;
+  @media screen and (max-width: 500px) {
+    max-height: 90dvh;
   }
-  .elements-leave-to {
-    opacity: 0;
-    transform: rotateY(-15deg);
-    transform-origin: left;
-  }
-  .elements-enter-active,
-  .elements-leave-active {
-    transition: all 0.4s ease;
-  }
+}
 
-  .elements-enter-to,
-  .elements-leave-from {
-    opacity: 1;
-    transform: rotateY(0deg);
-  }
+.elements-enter-from {
+  opacity: 0;
+  transform: rotateY(-15deg);
+  transform-origin: right;
+}
+.elements-leave-to {
+  opacity: 0;
+  transform: rotateY(-15deg);
+  transform-origin: left;
+}
+.elements-enter-active,
+.elements-leave-active {
+  transition: all 0.4s ease;
+}
+
+.elements-enter-to,
+.elements-leave-from {
+  opacity: 1;
+  transform: rotateY(0deg);
 }
 </style>

@@ -1,59 +1,63 @@
 <template>
-  <section class="section" @scrollend="handleScroll">
-    <section class="section__hero">
-      <h2 class="hero__logo">Life<br />Pal</h2>
-      <router-link class="hero__link" to="/userSign"
+  <section class="landing-page" @scrollend="handleScroll">
+    <section class="section-hero">
+      <h2 class="section-hero__logo">Life<br />Pal</h2>
+      <router-link class="section-hero__link" to="/userSign"
         >Sign up to start</router-link
       >
     </section>
-    <section class="section__bio">
-      <h3 class="bio__title">What's LifePal?</h3>
-      <div class="bio__cards-container" @click="handleAnimation">
-        <p class="bio__card bio__card--1">
+    <section class="section-statement">
+      <h3 class="section-statement__heading">What's LifePal?</h3>
+      <div class="section-statement__card-box" @click="handleAnimation">
+        <p class="section-statement__card section-statement__card--1">
           It's a interactive web app for setting and managing goals.
         </p>
-        <p class="bio__card bio__card--2">
+        <p class="section-statement__card section-statement__card--2">
           It's a demo project built with Vue.js to practice my knowledge of this
           framework and WebDev in general.
         </p>
-        <p class="bio__card bio__card--3">
+        <p class="section-statement__card section-statement__card--3">
           Check the slides below for a preview of what you'll find inside!
         </p>
       </div>
     </section>
-    <section class="section__slideshow">
+    <section class="section-slideshow">
       <transition
-        name="slideshow__carousel"
+        name="carousel"
         mode="out-in"
-        class="slideshow__card-container"
+        class="carousel"
         @click="handleSlides"
       >
-        <div class="slideshow__card" v-if="slideCounter === 1">
-          <div class="slideshow__img img--1"></div>
-          <span class="slideshow__text">choose a day, a week or a month</span>
+        <div class="carousel__card" v-if="slideCounter === 1">
+          <div class="carousel__card-img img--1"></div>
+          <span class="carousel__card-text"
+            >choose a day, a week or a month</span
+          >
         </div>
-        <div class="slideshow__card" v-else-if="slideCounter === 2">
-          <div class="slideshow__img img--2"></div>
-          <span class="slideshow__text">add a new goal</span>
+        <div class="carousel__card" v-else-if="slideCounter === 2">
+          <div class="carousel__card-img img--2"></div>
+          <span class="carousel__card-text">add a new goal</span>
         </div>
-        <div class="slideshow__card" v-else-if="slideCounter === 3">
-          <div class="slideshow__img img--3"></div>
-          <span class="slideshow__text">review it on your dashboard</span>
+        <div class="carousel__card" v-else-if="slideCounter === 3">
+          <div class="carousel__card-img img--3"></div>
+          <span class="carousel__card-text">review it on your dashboard</span>
         </div>
-        <div class="slideshow__card" v-else-if="slideCounter === 4">
-          <div class="slideshow__img img--4"></div>
-          <span class="slideshow__text">send a request to the developer</span>
+        <div class="carousel__card" v-else-if="slideCounter === 4">
+          <div class="carousel__card-img img--4"></div>
+          <span class="carousel__card-text"
+            >send a request to the developer</span
+          >
         </div>
-        <div class="slideshow__card" v-else-if="slideCounter === 5">
-          <div class="slideshow__img img--5"></div>
-          <span class="slideshow__text">delete what you don't like</span>
+        <div class="carousel__card" v-else-if="slideCounter === 5">
+          <div class="carousel__card-img img--5"></div>
+          <span class="carousel__card-text">delete what you don't like</span>
         </div>
-        <div class="slideshow__card" v-else>
-          <div class="slideshow__img img--6"></div>
-          <span class="slideshow__text">or confirm your success</span>
+        <div class="carousel__card" v-else>
+          <div class="carousel__card-img img--6"></div>
+          <span class="carousel__card-text">or confirm your success</span>
         </div>
       </transition>
-      <div class="slideshow__btns-container" @mousedown="selectSlide">
+      <div class="carousel__btns-box" @mousedown="selectSlide">
         <button
           type="button"
           data-btn-index="1"
@@ -92,7 +96,7 @@
         ></button>
       </div>
     </section>
-    <button class="section__scrollto-btn" @mousedown="scrollSections"></button>
+    <button class="btn--to-top" @mousedown="scrollSections"></button>
   </section>
 </template>
 
@@ -125,11 +129,11 @@ const positions = [
 let counter = 0;
 
 function handleAnimation(e) {
-  const validTarget = e.target.classList.contains("bio__card");
+  const validTarget = e.target.classList.contains("section-statement__card");
   if (!validTarget) return;
-  const firstCard = document.querySelector(".bio__card--1");
-  const secondCard = document.querySelector(".bio__card--2");
-  const thirdCard = document.querySelector(".bio__card--3");
+  const firstCard = document.querySelector(".section-statement__card--1");
+  const secondCard = document.querySelector(".section-statement__card--2");
+  const thirdCard = document.querySelector(".section-statement__card--3");
 
   const cards = [thirdCard, secondCard, firstCard];
 
@@ -156,9 +160,9 @@ function handleAnimation(e) {
 
 let btnCounter = 0;
 function scrollSections(e) {
-  const sectionHero = document.querySelector(".section__hero");
-  const sectionBio = document.querySelector(".section__bio");
-  const sectionSlides = document.querySelector(".section__slideshow");
+  const sectionHero = document.querySelector(".section-hero");
+  const sectionBio = document.querySelector(".section-statement");
+  const sectionSlides = document.querySelector(".section-slideshow");
   const target = e.target;
   btnCounter++;
 
@@ -183,13 +187,13 @@ function handleScroll(e) {
 
   if (scrollOffset > viewportHeight * 1.1) {
     btnCounter = 2;
-    target.querySelector(".section__scrollto-btn").classList.add("rotated");
+    target.querySelector(".btn--to-top").classList.add("rotated");
   }
 
   if (scrollOffset === 0) {
     btnCounter = 0;
 
-    target.querySelector(".section__scrollto-btn").classList.remove("rotated");
+    target.querySelector(".btn--to-top").classList.remove("rotated");
   }
 }
 </script>
@@ -208,7 +212,7 @@ function handleScroll(e) {
   flex-direction: column;
 }
 
-.section {
+.landing-page {
   position: relative;
   height: 100dvh;
   overflow-y: scroll;
@@ -217,305 +221,304 @@ function handleScroll(e) {
   scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
   background: var(--theme-bkg);
   transition: all 0.3s ease;
+}
 
-  .section__hero {
-    @include vertical-flex;
+.section-hero {
+  @include vertical-flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  height: 100dvh;
+  overflow: visible;
+
+  &__logo {
+    position: relative;
+    margin-bottom: 1rem;
+    overflow: visible;
+    font-size: 20rem;
+    line-height: 100%;
+    text-align: center;
+    white-space: break-spaces;
+    opacity: 1;
+
+    background: linear-gradient(
+      to bottom,
+      var(--theme-primary-dark) 25%,
+      var(--theme-primary-light)
+    );
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+    animation: fade-in-top 2s ease;
+
+    @keyframes fade-in-top {
+      0% {
+        opacity: 0;
+        transform: translateY(-40px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0px);
+      }
+    }
+  }
+  &__link {
+    position: absolute;
+    bottom: 10%;
+
+    font-size: 5rem;
+    font-weight: 600;
+    color: var(--confirm-default);
+    text-decoration: none;
+    filter: drop-shadow(0rem -0.3rem 0.6rem rgb(162, 162, 162));
+    cursor: pointer;
+    transition: all 0.2s ease;
+    animation: slide-in-bottom 2s ease forwards;
+
+    &:hover {
+      filter: drop-shadow(0rem -0.1rem 0.2rem rgb(162, 162, 162));
+    }
+
+    @keyframes slide-in-bottom {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0px);
+      }
+    }
+  }
+}
+.section-statement {
+  @include vertical-flex;
+  justify-content: space-evenly;
+  height: 100dvh;
+  overflow: visible;
+
+  &__heading {
+    align-self: center;
+    font-size: 6rem;
+    text-align: center;
+  }
+
+  &__card-box {
+    position: relative;
+    width: 100%;
+    height: 70lvh;
+    overflow: visible;
+  }
+
+  &__card {
+    display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    z-index: 1;
-    height: 100dvh;
+    position: absolute;
+    transform: translate(-50%, -50%);
+
+    width: 80%;
+    max-width: 45rem;
+    aspect-ratio: 1;
+    padding: 0rem 2rem;
     overflow: visible;
 
-    .hero__logo {
-      position: relative;
-      margin-bottom: 1rem;
-      overflow: visible;
-      font-size: 20rem;
-      line-height: 100%;
-      text-align: center;
-      white-space: break-spaces;
-      opacity: 1;
+    font-size: 2.2rem;
+    font-weight: 600;
+    text-align: center;
+    color: inherit;
 
-      background: linear-gradient(
-        to bottom,
-        var(--theme-primary-dark) 25%,
-        var(--theme-primary-light)
-      );
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      -webkit-background-clip: text;
-      animation: fade-in-top 2s ease;
+    border-radius: 40px;
+    box-shadow: 0.2rem 0.5rem 0.8rem rgb(169, 169, 169);
+    background: rgb(255, 255, 255);
+    background: rgba(235, 227, 255, 0.037);
+    backdrop-filter: blur(100px);
+    cursor: pointer;
+    transition: all 0.5s ease;
 
-      @keyframes fade-in-top {
-        0% {
-          opacity: 0;
-          transform: translateY(-40px);
-        }
+    @media screen and (max-width: 500px) {
+      max-width: 35rem;
+    }
+
+    &--1 {
+      inset: 50%;
+      z-index: 3;
+      background: rgb(255, 254, 253);
+    }
+
+    &--2 {
+      inset: 48%;
+      z-index: 2;
+      background: rgb(255, 251, 244);
+    }
+
+    &--3 {
+      inset: 46%;
+      z-index: 1;
+      background: rgb(255, 249, 239);
+    }
+
+    &.front-anim {
+      animation: card-shuffle 0.6s forwards;
+
+      @keyframes card-shuffle {
+        0%,
         100% {
-          opacity: 1;
-          transform: translateY(0px);
+          transform: translate(-50%, -50%);
+        }
+        50% {
+          transform: translate(calc(-50% + 50px), calc(-50% + 50px));
         }
       }
     }
-    .hero__link {
-      position: absolute;
-      bottom: 10%;
+  }
+}
+.section-slideshow {
+  @include vertical-flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 100dvh;
+  padding: 2rem 0rem;
+}
 
-      font-size: 5rem;
-      font-weight: 600;
-      color: var(--confirm-default);
-      text-decoration: none;
-      filter: drop-shadow(0rem -0.3rem 0.6rem rgb(162, 162, 162));
+.carousel {
+  @include horizontal-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: max-content;
+  height: 100%;
+  overflow: visible;
+
+  &__card {
+    @include vertical-flex;
+
+    justify-content: center;
+    align-items: center;
+    min-width: 90%;
+    margin: 0rem 1rem;
+    text-align: center;
+
+    .carousel__card-img {
+      width: 45rem;
+      height: 45rem;
+      padding: 1rem;
+      background-size: cover;
+      background-position: center;
+      border-radius: 40px;
+      box-shadow: 0.3rem 0.8rem 0.8rem rgba(128, 128, 128, 0.478);
       cursor: pointer;
-      transition: all 0.2s ease;
-      animation: slide-in-bottom 2s ease forwards;
+      transition: all 0.5s ease;
+
+      @media screen and (max-width: 500px) {
+        width: 35rem;
+        height: 35rem;
+      }
 
       &:hover {
-        filter: drop-shadow(0rem -0.1rem 0.2rem rgb(162, 162, 162));
+        transform: translateY(-5px);
       }
 
-      @keyframes slide-in-bottom {
-        0% {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0px);
-        }
+      &.img--1 {
+        background-image: url("/src/assets/imgs/lp-slide-1.webp");
       }
-    }
-  }
-  .section__bio {
-    @include vertical-flex;
-    justify-content: space-evenly;
-    height: 100dvh;
-    overflow: visible;
-
-    .bio__title {
-      align-self: center;
-      font-size: 6rem;
-      text-align: center;
-    }
-
-    .bio__cards-container {
-      position: relative;
-      width: 100%;
-      height: 70lvh;
-      overflow: visible;
-
-      .bio__card {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: absolute;
-        transform: translate(-50%, -50%);
-
-        width: 80%;
-        max-width: 45rem;
-        aspect-ratio: 1;
-        padding: 0rem 2rem;
-        overflow: visible;
-
-        font-size: 2.2rem;
-        font-weight: 600;
-        text-align: center;
-        color: inherit;
-
-        border-radius: 40px;
-        box-shadow: 0.2rem 0.5rem 0.8rem rgb(169, 169, 169);
-        background: rgb(255, 255, 255);
-        background: rgba(235, 227, 255, 0.037);
-        backdrop-filter: blur(100px);
-        cursor: pointer;
-        transition: all 0.5s ease;
-
-        @media screen and (max-width: 500px) {
-          max-width: 35rem;
-        }
-
-        &.bio__card--1 {
-          inset: 50%;
-          z-index: 3;
-          background: rgb(255, 254, 253);
-        }
-
-        &.bio__card--2 {
-          inset: 48%;
-          z-index: 2;
-          background: rgb(255, 251, 244);
-        }
-
-        &.bio__card--3 {
-          inset: 46%;
-          z-index: 1;
-          background: rgb(255, 249, 239);
-        }
-
-        &.front-anim {
-          animation: card-shuffle 0.6s forwards;
-
-          @keyframes card-shuffle {
-            0%,
-            100% {
-              transform: translate(-50%, -50%);
-            }
-            50% {
-              transform: translate(calc(-50% + 50px), calc(-50% + 50px));
-            }
-          }
-        }
+      &.img--2 {
+        background-image: url("/src/assets/imgs/lp-slide-2.webp");
       }
-    }
-  }
-  .section__slideshow {
-    @include vertical-flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    height: 100dvh;
-    padding: 2rem 0rem;
-
-    .slideshow__card-container {
-      @include horizontal-flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: max-content;
-      height: 100%;
-      overflow: visible;
-    }
-    .slideshow__card {
-      @include vertical-flex;
-
-      justify-content: center;
-      align-items: center;
-      min-width: 90%;
-      margin: 0rem 1rem;
-      text-align: center;
-
-      .slideshow__img {
-        width: 45rem;
-        height: 45rem;
-        padding: 1rem;
-        background-size: cover;
-        background-position: center;
-        border-radius: 40px;
-        box-shadow: 0.3rem 0.8rem 0.8rem rgba(128, 128, 128, 0.478);
-        cursor: pointer;
-        transition: all 0.5s ease;
-
-        @media screen and (max-width: 500px) {
-          width: 35rem;
-          height: 35rem;
-        }
-
-        &:hover {
-          transform: translateY(-5px);
-        }
-
-        &.img--1 {
-          background-image: url("/src/assets/imgs/lp-slide-1.webp");
-        }
-        &.img--2 {
-          background-image: url("/src/assets/imgs/lp-slide-2.webp");
-        }
-        &.img--3 {
-          background-image: url("/src/assets/imgs/lp-slide-3.webp");
-        }
-        &.img--4 {
-          background-image: url("/src/assets/imgs/lp-slide-4.webp");
-        }
-        &.img--5 {
-          background-image: url("/src/assets/imgs/lp-slide-5.webp");
-        }
-        &.img--6 {
-          background-image: url("/src/assets/imgs/lp-slide-6.webp");
-        }
+      &.img--3 {
+        background-image: url("/src/assets/imgs/lp-slide-3.webp");
       }
-
-      .slideshow__text {
-        margin-top: 2rem;
-        font-size: 2.5rem;
-        font-weight: 600;
-        text-shadow: 0.2rem 0.2rem 0.4rem rgb(191, 191, 191);
-        color: inherit;
+      &.img--4 {
+        background-image: url("/src/assets/imgs/lp-slide-4.webp");
+      }
+      &.img--5 {
+        background-image: url("/src/assets/imgs/lp-slide-5.webp");
+      }
+      &.img--6 {
+        background-image: url("/src/assets/imgs/lp-slide-6.webp");
       }
     }
 
-    .slideshow__btns-container {
-      @include horizontal-flex;
-      justify-content: space-around;
-      align-items: center;
-      position: absolute;
-      width: 10rem;
-      height: 1.5rem;
+    .carousel__card-text {
       margin-top: 2rem;
-      bottom: 10%;
-      overflow: visible;
-      text-align: center;
-
-      .btn {
-        width: 1rem;
-        aspect-ratio: 1;
-        margin: 0px 2px;
-        border: none;
-        border-radius: 50px;
-
-        background: rgba(255, 255, 255, 0.389);
-        box-shadow: 0rem 0.1rem 0.3rem grey;
-        cursor: pointer;
-        &.btn--active {
-          background: var(--warning);
-          transition: all 0.3s ease;
-        }
-      }
-    }
-
-    .slideshow__carousel-enter-from {
-      opacity: 0;
-      transform: translateX(100px);
-    }
-    .slideshow__carousel-enter-active {
-      transition: all 0.3s ease-out;
-    }
-    .slideshow__carousel-leave-active {
-      transition: all 0.3s ease-out;
-    }
-
-    .slideshow__carousel-enter-to,
-    .slideshow__carousel-leave-from {
-      opacity: 1;
-      transform: translateX(0px);
-    }
-
-    .slideshow__carousel-leave-to {
-      opacity: 0;
-      transform: translateX(-100px);
+      font-size: 2.5rem;
+      font-weight: 600;
+      text-shadow: 0.2rem 0.2rem 0.4rem rgb(191, 191, 191);
+      color: inherit;
     }
   }
 
-  .section__scrollto-btn {
-    position: fixed;
-    bottom: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3rem;
-    aspect-ratio: 1;
-    z-index: 5;
-    border-radius: 100%;
-    border: none;
-    background: url("/src/assets/imgs/down-arrow.png");
-    background-size: cover;
+  &__btns-box {
+    @include horizontal-flex;
+    justify-content: space-around;
+    align-items: center;
+    position: absolute;
+    width: 10rem;
+    height: 1.5rem;
+    margin-top: 2rem;
+    bottom: 10%;
+    overflow: visible;
+    text-align: center;
 
-    background-position: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    .btn {
+      width: 1rem;
+      aspect-ratio: 1;
+      margin: 0px 2px;
+      border: none;
+      border-radius: 50px;
 
-    &.rotated {
-      transform: rotate(180deg) translateX(50%);
+      background: rgba(255, 255, 255, 0.389);
+      box-shadow: 0rem 0.1rem 0.3rem grey;
+      cursor: pointer;
+      &.btn--active {
+        background: var(--warning);
+        transition: all 0.3s ease;
+      }
     }
+  }
+
+  &-enter-from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  &-enter-active {
+    transition: all 0.3s ease-out;
+  }
+  &-leave-active {
+    transition: all 0.3s ease-out;
+  }
+  &-enter-to,
+  &-leave-from {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+  &-leave-to {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+}
+
+.btn--to-top {
+  position: fixed;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3rem;
+  aspect-ratio: 1;
+  z-index: 5;
+  border-radius: 100%;
+  border: none;
+  background: url("/src/assets/imgs/down-arrow.png");
+  background-size: cover;
+
+  background-position: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &.rotated {
+    transform: rotate(180deg) translateX(50%);
   }
 }
 </style>

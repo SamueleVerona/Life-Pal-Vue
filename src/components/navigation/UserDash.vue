@@ -1,15 +1,15 @@
 <template>
   <section
-    class="section"
+    class="user-dashboard"
     :class="{
-      'section--not-empty': itemsArray.length > 0,
-      'section--completed': primaryOptionSelected === 'completed',
-      'section--failed': primaryOptionSelected === 'failed',
+      'user-dashboard--not-empty': itemsArray.length > 0,
+      'user-dashboard--completed': primaryOptionSelected === 'completed',
+      'user-dashboard--failed': primaryOptionSelected === 'failed',
     }"
   >
-    <section class="section__dashboard">
-      <section class="section__controls--top" @click="handleTopControls">
-        <div class="selectors-container">
+    <section class="dashboard-box">
+      <section class="list-top-controls" @click="handleTopControls">
+        <div class="selectors-box">
           <div class="selector selector--primary">
             <ul
               class="selector__list selector__list--primary"
@@ -70,9 +70,9 @@
           stats
         </button>
       </section>
-      <section class="list__container">
-        <div v-if="!itemsArray.length" class="list__placeholder">
-          <h2 v-if="!userIsAdding">
+      <section class="list-box">
+        <div v-if="!itemsArray.length" class="list-placeholder">
+          <h2 class="list-placeholder__text" v-if="!userIsAdding">
             {{
               props.profileModeActive || props.userIsAdmin
                 ? "No requests here!"
@@ -81,7 +81,7 @@
           </h2>
           <button
             type="button"
-            class="btn--fallback"
+            class="list-placeholder__btn btn--fallback"
             @mousedown="handleNewItemAction"
             v-if="!userIsAdding && !props.userIsAdmin"
           >
@@ -95,7 +95,7 @@
           mode="out-in"
           v-else-if="itemsArray.length"
         >
-          <li v-for="item in itemsArray" :key="item.id" class="list__item">
+          <li v-for="item in itemsArray" :key="item.id" class="list-item">
             <list-item
               :item="item"
               :isRequest="props.profileModeActive || props.userIsAdmin"
@@ -127,7 +127,7 @@
           </li>
         </transition-group>
       </section>
-      <section class="section__controls--bottom" @mousedown="handleListEdit">
+      <section class="list-bottom-controls" @mousedown="handleListEdit">
         <button
           type="button"
           data-button-id="save-change"
@@ -136,7 +136,6 @@
         >
           save
         </button>
-
         <button
           type="button"
           data-button-id="confirm"
@@ -174,7 +173,7 @@
     </section>
     <transition name="stats">
       <section
-        class="section__stats"
+        class="statistics"
         v-if="statsToggled && !props.profileModeActive"
       >
         <div class="stat">
@@ -188,9 +187,9 @@
             Ongoing:
             {{ userStats.stringRate }}
           </h3>
-          <div class="stat__bar">
+          <div class="stat__progress">
             <div
-              class="stat__bar--inner"
+              class="stat__progress-bar"
               :style="{
                 width: userStats.ongoingRate,
               }"
@@ -202,9 +201,9 @@
             Completed:
             {{ userStats.successRate }}
           </h3>
-          <div class="stat__bar">
+          <div class="stat__progress">
             <div
-              class="stat__bar--inner stat__bar--completed"
+              class="stat__progress-bar stat__progress-bar--completed"
               :style="{
                 width: userStats.successRate,
               }"
@@ -216,9 +215,9 @@
             Failed:
             {{ userStats.failRate }}
           </h3>
-          <div class="stat__bar">
+          <div class="stat__progress">
             <div
-              class="stat__bar--inner stat__bar--failed"
+              class="stat__progress-bar stat__progress-bar--failed"
               :style="{
                 width: userStats.failRate,
               }"
@@ -591,7 +590,7 @@ onUnmounted(() => clearInterval(timer));
   flex-direction: column;
 }
 
-.section {
+.user-dashboard {
   @include horizontal-flex;
   position: relative;
   border-radius: 30px;
@@ -599,16 +598,16 @@ onUnmounted(() => clearInterval(timer));
   border: solid 2px rgb(218, 218, 218);
   border-bottom: solid 3px rgb(218, 218, 218);
   background: transparent;
-  &.section--not-empty {
+  &--not-empty {
     background: var(--theme-bkg);
   }
-  &.section--completed {
+  &--completed {
     border: solid 2px var(--glow-positive-dark);
     border-bottom: solid 3px var(--glow-positive-dark);
     animation: shadow-glow-comp 3s infinite;
   }
 
-  &.section--failed {
+  &--failed {
     border: solid 2px var(--glow-negative-dark);
     border-bottom: solid 3px var(--glow-negative-dark);
     animation: shadow-glow-fail 3s infinite ease-out;
@@ -645,446 +644,449 @@ onUnmounted(() => clearInterval(timer));
         0rem 5rem 10rem 3rem var(--glow-negative-dark);
     }
   }
-  .section__dashboard {
-    @include vertical-flex;
-    justify-content: space-between;
-    flex: 1;
+}
 
-    .section__controls--top {
-      @include horizontal-flex;
-      align-items: center;
-      justify-content: start;
-      position: relative;
-      height: max-content;
+.dashboard-box {
+  @include vertical-flex;
+  justify-content: space-between;
+  flex: 1;
+}
 
-      padding: 1rem 1rem;
-      z-index: 1;
-      overflow: visible;
-      text-align: center;
+.list-top-controls {
+  @include horizontal-flex;
+  align-items: center;
+  justify-content: start;
+  position: relative;
+  height: max-content;
 
-      .btn--stats {
-        position: absolute;
-        right: 1rem;
-        border: none;
+  padding: 1rem 1rem;
+  z-index: 1;
+  overflow: visible;
+  text-align: center;
+
+  .selectors-box {
+    @include horizontal-flex;
+    justify-content: space-evenly;
+    align-items: center;
+    overflow: visible;
+  }
+}
+
+.selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  min-width: 10rem;
+  max-width: max-content;
+  height: 5rem;
+  padding: 0rem 1.2rem;
+  overflow: visible;
+  text-align: center;
+  background: transparent;
+  border: none;
+  border-right: solid 1px rgba(128, 128, 128, 0.363);
+  cursor: pointer;
+
+  &:not(:has(.selector__list)):hover {
+    .selector__option--selected {
+      color: var(--hover-default);
+    }
+  }
+
+  &:last-child {
+    border: none;
+  }
+
+  &--secondary {
+    margin-left: 0.5rem;
+  }
+
+  &__list {
+    position: absolute;
+    top: 5.5rem;
+    left: 0;
+    min-width: 100%;
+    width: max-content;
+
+    padding-top: 0.25rem;
+    background: transparent;
+    backdrop-filter: blur(15px);
+    border-right: solid 1px;
+    border-bottom: solid 1px;
+    border-color: rgb(206, 206, 206);
+    border-bottom-right-radius: 30px;
+    animation: slide-in-top 0.4s ease forwards;
+
+    @keyframes slide-in-top {
+      0% {
+        opacity: 0;
+        transform: translateY(-50px);
       }
-      .selectors-container {
-        @include horizontal-flex;
-        justify-content: space-evenly;
-        align-items: center;
-        overflow: visible;
+      100% {
+        opacity: 1;
 
-        .selector {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          position: relative;
-          min-width: 10rem;
-          max-width: max-content;
-          height: 5rem;
-          padding: 0rem 1.2rem;
-          overflow: visible;
-          text-align: center;
-          background: transparent;
-          border: none;
-          border-right: solid 1px rgba(128, 128, 128, 0.363);
-          cursor: pointer;
-
-          &:not(:has(.selector__list)):hover {
-            .selector__option--selected {
-              color: var(--hover-default);
-            }
-          }
-
-          &:last-child {
-            border: none;
-          }
-
-          &.selector--secondary {
-            margin-left: 0.5rem;
-          }
-
-          .selector__list {
-            position: absolute;
-            top: 5.5rem;
-            left: 0;
-            min-width: 100%;
-            width: max-content;
-
-            padding-top: 0.25rem;
-            background: transparent;
-            backdrop-filter: blur(15px);
-            border-right: solid 1px;
-            border-bottom: solid 1px;
-            border-color: rgb(206, 206, 206);
-            border-bottom-right-radius: 30px;
-            animation: slide-in-top 0.4s ease forwards;
-
-            @keyframes slide-in-top {
-              0% {
-                opacity: 0;
-                transform: translateY(-50px);
-              }
-              100% {
-                opacity: 1;
-
-                transform: translateY(0px);
-              }
-            }
-
-            &.selector__list--secondary {
-              max-height: 23rem;
-              overflow-y: scroll;
-              scrollbar-gutter: stable both-edges;
-              scrollbar-width: thin;
-              scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
-
-              &.overflowing {
-                border-bottom: solid 3px var(--active-default);
-              }
-            }
-
-            .selector__option {
-              padding: 0rem 1rem 1.5rem 1.5rem;
-              font-size: 2rem;
-              font-weight: 500;
-              text-align: left;
-              border: none;
-              cursor: pointer;
-              animation: slide-in-top 0.15s ease backwards;
-
-              &:hover,
-              &.selector__option--selected:hover {
-                color: var(--hover-default);
-              }
-
-              &:nth-child(2) {
-                animation-delay: 0.1s;
-              }
-              &:nth-child(3) {
-                animation-delay: 0.15s;
-              }
-              &:nth-child(4) {
-                animation-delay: 0.2s;
-              }
-              &:nth-child(5) {
-                animation-delay: 0.25s;
-              }
-              &:nth-child(6) {
-                animation-delay: 0.3s;
-              }
-            }
-          }
-
-          .selector__option--selected {
-            font-size: 2rem;
-            line-height: 2.5rem;
-            font-weight: 600;
-
-            &::after {
-              display: inline-block;
-              justify-items: center;
-              width: 2rem;
-              height: 2rem;
-              margin-left: 1rem;
-              content: "";
-              background-image: url("/src/assets/imgs/down-arrow.png");
-              background-size: cover;
-              background-position: center;
-              transform: translateY(10%);
-              transition: transform 0.2s ease;
-            }
-          }
-
-          &:has(.selector__list) {
-            .selector__option--selected {
-              &::after {
-                transform: rotate(180deg);
-              }
-            }
-          }
-        }
+        transform: translateY(0px);
       }
     }
-    .list__container {
-      height: 100%;
-      padding: 1rem 1rem;
-      overflow-y: auto;
-      overflow-x: visible;
-      z-index: 0;
+
+    &--secondary {
+      max-height: 23rem;
+      overflow-y: scroll;
       scrollbar-gutter: stable both-edges;
       scrollbar-width: thin;
       scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
 
-      .list__placeholder {
-        @include vertical-flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-        padding-bottom: 10rem;
-
-        h2,
-        .btn--fallback {
-          padding: 0.5rem 1.5rem;
-          font-size: 3rem;
-        }
-        .btn--fallback {
-          font-weight: bold;
-          color: rgb(255, 0, 85);
-          background: none;
-          border: none;
-          &:hover {
-            color: var(--hover-default);
-            cursor: pointer;
-          }
-        }
-      }
-
-      .list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-auto-rows: auto;
-        grid-template-areas: "li li";
-        gap: 0;
-        overflow: visible;
-        list-style: none;
-
-        .list__item {
-          margin: 0rem 0.5rem;
-          z-index: 1;
-          overflow: visible;
-
-          .item__checkbox {
-            position: absolute;
-            bottom: 0rem;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 7;
-
-            border-style: none;
-            border: none;
-
-            border-radius: 40px;
-            backdrop-filter: brightness(90%);
-            appearance: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            &:checked {
-              background: linear-gradient(
-                to bottom right,
-                rgba(255, 10, 22, 0.711),
-                transparent 60%
-              );
-              backdrop-filter: brightness(100%);
-            }
-          }
-        }
-
-        .list-enter-from,
-        .list-leave-to {
-          opacity: 0;
-          transform: scale(0.1);
-          transform-origin: center;
-        }
-        .list-enter-active:nth-child(even) {
-          transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        .list-enter-active:nth-child(odd) {
-          transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) 0.2s;
-        }
-
-        .list-leave-active {
-          position: absolute;
-          transition: all 0.5s ease-out;
-        }
-        .list-leave-active:nth-child(odd) {
-          position: absolute;
-          transition: all 0.5s ease-out 0.05s;
-        }
-        .list-enter-to,
-        .list-leave-from {
-          transform: scale(1);
-          opacity: 1;
-          transform-style: preserve-3d;
-        }
-
-        .list-move {
-          transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        @media screen and (min-width: 1025px) {
-          grid-template-columns: 1fr 1fr 1fr;
-          grid-auto-rows: auto;
-          grid-template-areas: "li li li";
-        }
-
-        @media screen and (max-width: 1024px) {
-          grid-template-columns: 50% 1fr;
-          grid-auto-rows: auto;
-          grid-template-areas: "li li";
-        }
-
-        @media screen and (max-width: 600px) {
-          @include vertical-flex;
-          align-items: center;
-          .list__item {
-            width: 90%;
-          }
-        }
-      }
-    }
-    .section__controls--bottom {
-      @include horizontal-flex;
-      justify-content: flex-end;
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      min-height: max-content;
-      padding: 1rem;
-
-      z-index: 1;
-      overflow: visible;
-
-      .btn--action-edit {
-        font-weight: 600;
-        font-kerning: auto;
-        color: var(--confirm-default);
-        background: var(--warning-dark);
-        border-color: var(--warning-dark);
-        transition: all 0.3s ease;
-
-        &.btn--action-edit-active {
-          background: var(--danger-dark);
-          border-color: var(--danger-light);
-        }
-      }
-      .btn--action-remove {
-        color: var(--confirm-default);
-        background: rgba(173, 66, 66, 0.995);
-        border: none;
-
-        &:hover {
-          color: var(--hover-default);
-          background: rgba(255, 77, 77, 0.995);
-        }
-      }
-      .bt--action-select-all {
-        border: solid 1px rgba(35, 212, 243, 0.704);
+      .overflowing {
+        border-bottom: solid 3px var(--active-default);
       }
     }
   }
-  .section__stats {
+
+  &__option {
+    padding: 0rem 1rem 1.5rem 1.5rem;
+    font-size: 2rem;
+    font-weight: 500;
+    text-align: left;
+    border: none;
+    cursor: pointer;
+    animation: slide-in-top 0.15s ease backwards;
+
+    &--selected {
+      font-size: 2rem;
+      line-height: 2.5rem;
+      font-weight: 600;
+
+      &::after {
+        display: inline-block;
+        justify-items: center;
+        width: 2rem;
+        height: 2rem;
+        margin-left: 1rem;
+        content: "";
+        background-image: url("/src/assets/imgs/down-arrow.png");
+        background-size: cover;
+        background-position: center;
+        transform: translateY(10%);
+        transition: transform 0.2s ease;
+      }
+    }
+
+    &:hover,
+    &--selected:hover {
+      color: var(--hover-default);
+    }
+
+    &:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.15s;
+    }
+    &:nth-child(4) {
+      animation-delay: 0.2s;
+    }
+    &:nth-child(5) {
+      animation-delay: 0.25s;
+    }
+    &:nth-child(6) {
+      animation-delay: 0.3s;
+    }
+  }
+
+  &:has(.selector__list) {
+    .selector__option--selected {
+      &::after {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+.list-box {
+  height: 100%;
+  padding: 1rem 1rem;
+  overflow-y: auto;
+  overflow-x: visible;
+  z-index: 0;
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(98, 37, 253, 0) rgba(3, 3, 255, 0);
+
+  .list-placeholder {
     @include vertical-flex;
     justify-content: center;
     align-items: center;
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 40%;
     height: 100%;
-    backdrop-filter: blur(15px);
-    border-left: solid 1px #1dffa8e3;
+    padding-bottom: 10rem;
 
-    &.stats-enter-from,
-    &.stats-leave-to {
+    &__text,
+    &__btn {
+      padding: 0.5rem 1.5rem;
+      font-size: 3rem;
+    }
+    &__btn {
+      font-weight: bold;
+      color: rgb(255, 0, 85);
+      background: none;
+      border: none;
+      &:hover {
+        color: var(--hover-default);
+        cursor: pointer;
+      }
+    }
+  }
+
+  .list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+    grid-template-areas: "li li";
+    gap: 0;
+    overflow: visible;
+    list-style: none;
+
+    &-item {
+      margin: 0rem 0.5rem;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .list-enter-from,
+    .list-leave-to {
       opacity: 0;
-      transform: translateX(200px);
+      transform: scale(0.1);
+      transform-origin: center;
+    }
+    .list-enter-active:nth-child(even) {
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+    .list-enter-active:nth-child(odd) {
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) 0.2s;
     }
 
-    &.stats-enter-active,
-    &.stats-leave-active {
-      transition: all 0.4s ease;
+    .list-leave-active {
+      position: absolute;
+      transition: all 0.5s ease-out;
     }
-
-    &.stats-leave-from,
-    &.stats-enter-to {
+    .list-leave-active:nth-child(odd) {
+      position: absolute;
+      transition: all 0.5s ease-out 0.05s;
+    }
+    .list-enter-to,
+    .list-leave-from {
+      transform: scale(1);
       opacity: 1;
-      transform: translateX(0px);
+      transform-style: preserve-3d;
     }
 
-    .stat {
-      width: 80%;
-      padding: 1rem;
-      margin: 1rem 0rem;
-      border: solid 1px rgb(9, 249, 205);
-      border-radius: 30px;
-      box-shadow: 0.2rem 0.3rem 0.5rem rgb(186, 186, 186);
-      animation: pop-out 0.35s cubic-bezier(0.6, -0.28, 0.735, 0.045) backwards;
-      &:nth-child(1) {
-        animation-delay: 0.1s;
-      }
-      &:nth-child(2) {
-        animation-delay: 0.2s;
-      }
-      &:nth-child(3) {
-        animation-delay: 0.3s;
-      }
-      &:nth-child(4) {
-        animation-delay: 0.4s;
-      }
-      @keyframes pop-out {
-        0% {
-          opacity: 0;
-        }
-        0%,
-        100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.1) translateY(5px);
-        }
-        100% {
-          opacity: 1;
-        }
-      }
-      .stat__text {
-        padding: 0.5rem 0rem;
-        font-size: 1.8rem;
-        font-weight: 600;
-        text-align: center;
-      }
-      .stat__bar {
-        width: 60%;
-        height: 1rem;
-        margin: auto;
-        border: solid 1px rgb(186, 186, 186);
-        border-radius: 30px;
+    .list-move {
+      transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+    }
 
-        .stat__bar--inner {
-          height: 100%;
-          background: rgb(158, 233, 252);
-          &.stat__bar--completed {
-            background: rgb(47, 255, 147);
-          }
-          &.stat__bar--failed {
-            background: rgb(255, 47, 92);
-          }
-        }
+    @media screen and (min-width: 1025px) {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-auto-rows: auto;
+      grid-template-areas: "li li li";
+    }
+
+    @media screen and (max-width: 1024px) {
+      grid-template-columns: 50% 1fr;
+      grid-auto-rows: auto;
+      grid-template-areas: "li li";
+    }
+
+    @media screen and (max-width: 600px) {
+      @include vertical-flex;
+      align-items: center;
+      .list-item {
+        width: 90%;
       }
     }
   }
+}
+.list-bottom-controls {
+  @include horizontal-flex;
+  justify-content: flex-end;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  min-height: max-content;
+  padding: 1rem;
 
-  .dialog {
-    z-index: 200;
+  z-index: 1;
+  overflow: visible;
+}
+.btn {
+  height: 5rem;
+  padding: 0rem 1.5rem;
+  margin: 0rem 0.3rem;
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+  color: inherit;
+  background: var(--confirm-default);
+  border: solid 2px rgba(128, 128, 128, 0.363);
+  border-radius: 30px;
+  box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);
+  cursor: pointer;
+  transition: all 0.1s ease;
+
+  &:hover {
+    color: var(--hover-default);
+    box-shadow: 0rem 0.2rem 0.5rem rgba(128, 128, 128, 0.434);
   }
-  .btn {
-    height: 5rem;
-    padding: 0rem 1.5rem;
-    margin: 0rem 0.3rem;
-    font-size: 2rem;
+
+  &--stats {
+    position: absolute;
+    right: 1rem;
+    border: none;
+  }
+
+  &--action-edit {
     font-weight: 600;
-    text-align: center;
-    color: inherit;
-    background: var(--confirm-default);
-    border: solid 2px rgba(128, 128, 128, 0.363);
-    border-radius: 30px;
-    box-shadow: 0rem 0.3rem 0.8rem rgba(128, 128, 128, 0.434);
-    cursor: pointer;
-    transition: all 0.1s ease;
+    font-kerning: auto;
+    color: var(--confirm-default);
+    background: var(--warning-dark);
+    border-color: var(--warning-dark);
+    transition: all 0.3s ease;
+
+    &-active {
+      background: var(--danger-dark);
+      border-color: var(--danger-light);
+    }
+  }
+  &-remove {
+    color: var(--confirm-default);
+    background: rgba(173, 66, 66, 0.995);
+    border: none;
+
     &:hover {
       color: var(--hover-default);
-      box-shadow: 0rem 0.2rem 0.5rem rgba(128, 128, 128, 0.434);
+      background: rgba(255, 77, 77, 0.995);
     }
   }
+  &-select-all {
+    border: solid 1px rgba(35, 212, 243, 0.704);
+  }
+}
+.statistics {
+  @include vertical-flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 40%;
+  height: 100%;
+  backdrop-filter: blur(15px);
+  border-left: solid 1px #1dffa8e3;
+
+  &.stats-enter-from,
+  &.stats-leave-to {
+    opacity: 0;
+    transform: translateX(200px);
+  }
+
+  &.stats-enter-active,
+  &.stats-leave-active {
+    transition: all 0.4s ease;
+  }
+
+  &.stats-leave-from,
+  &.stats-enter-to {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+
+  .stat {
+    width: 80%;
+    padding: 1rem;
+    margin: 1rem 0rem;
+    border: solid 1px rgb(9, 249, 205);
+    border-radius: 30px;
+    box-shadow: 0.2rem 0.3rem 0.5rem rgb(186, 186, 186);
+    animation: pop-out 0.35s cubic-bezier(0.6, -0.28, 0.735, 0.045) backwards;
+
+    &__text {
+      padding: 0.5rem 0rem;
+      font-size: 1.8rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    &__progress {
+      width: 60%;
+      height: 1rem;
+      margin: auto;
+      border: solid 1px rgb(186, 186, 186);
+      border-radius: 30px;
+
+      &-bar {
+        height: 100%;
+        background: rgb(158, 233, 252);
+        &--completed {
+          background: rgb(47, 255, 147);
+        }
+        &--failed {
+          background: rgb(255, 47, 92);
+        }
+      }
+    }
+
+    &:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+    &:nth-child(4) {
+      animation-delay: 0.4s;
+    }
+    @keyframes pop-out {
+      0% {
+        opacity: 0;
+      }
+      0%,
+      100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1) translateY(5px);
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  }
+}
+.item__checkbox {
+  position: absolute;
+  bottom: 0rem;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 7;
+
+  border-style: none;
+  border: none;
+
+  border-radius: 40px;
+  backdrop-filter: brightness(90%);
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  &:checked {
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 10, 22, 0.711),
+      transparent 60%
+    );
+    backdrop-filter: brightness(100%);
+  }
+}
+.dialog {
+  z-index: 200;
 }
 </style>

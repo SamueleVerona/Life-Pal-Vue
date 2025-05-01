@@ -6,12 +6,12 @@
           open
           v-if="show"
           class="dialog"
-          :class="{ 'mode--expired-goals': props.userActive }"
+          :class="{ 'dialog--expired-goals': props.userActive }"
           :style="{ background: props.wrapperBackground }"
         >
           <section
             class="dialog__content"
-            :class="{ 'mode--expired-goals': props.userActive }"
+            :class="{ 'dialog__content--expired-goals': props.userActive }"
           >
             <slot name="content">
               <p class="dialog__message">{{ props.errorMessage }}</p>
@@ -20,7 +20,7 @@
           <button
             @mousedown="submit"
             class="dialog__btn"
-            :class="{ 'mode--expired-goals': props.userActive }"
+            :class="{ 'dialog__btn--expired-goals': props.userActive }"
             :style="{ background: props.buttonBackground }"
             :disabled="!props.allConfirmed"
           >
@@ -28,8 +28,8 @@
           </button>
         </dialog>
       </transition>
-      <div class="dialog__underlay" v-if="show" @mousedown="closeDialog">
-        <span class="underlay__text" v-if="!props.userActive">back</span>
+      <div class="dialog-underlay" v-if="show" @mousedown="closeDialog">
+        <span class="dialog-underlay-text" v-if="!props.userActive">back</span>
       </div>
     </teleport>
   </div>
@@ -61,36 +61,6 @@ const closeDialog = () => {
 * {
   font-family: var(--font-stack);
 }
-.dialog__underlay {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 100;
-  font-size: 4rem;
-  color: rgb(128, 128, 128);
-  background: rgba(190, 196, 208, 0.295);
-  backdrop-filter: blur(10px);
-  transition: all 0.2s ease;
-
-  .underlay__text {
-    position: absolute;
-    bottom: 10rem;
-    font-size: 3rem;
-    cursor: pointer;
-    transition: all 0.1s ease;
-
-    &:hover {
-      color: rgb(0, 0, 0);
-      font-weight: 500;
-    }
-  }
-}
-
 .dialog {
   display: flex;
   flex-direction: column;
@@ -100,12 +70,13 @@ const closeDialog = () => {
   top: 50%;
   transform: translate(-50%, -50%);
   width: 40rem;
+  max-width: 50rem;
   z-index: 200;
   border-radius: 30px;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
 
-  &.mode--expired-goals {
+  &--expired-goals {
     height: max-content;
     width: 60%;
     overflow-y: auto;
@@ -115,8 +86,8 @@ const closeDialog = () => {
     scrollbar-color: rgb(120, 37, 253) rgba(3, 3, 255, 0);
   }
 
-  .dialog__content {
-    &.mode--expired-goals {
+  &__content {
+    &--expired-goals {
       max-height: 80vh;
       padding: 0.5rem 0rem;
       box-sizing: border-box;
@@ -138,7 +109,7 @@ const closeDialog = () => {
     }
   }
 
-  .dialog__btn {
+  &__btn {
     min-height: max-content;
     padding: 1.5rem 0rem;
     font-size: 2.5rem;
@@ -177,6 +148,35 @@ const closeDialog = () => {
 
   @media screen and (max-width: 748px) {
     width: 35rem;
+  }
+}
+.dialog-underlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  font-size: 4rem;
+  color: rgb(128, 128, 128);
+  background: rgba(190, 196, 208, 0.295);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+
+  &-text {
+    position: absolute;
+    bottom: 10rem;
+    font-size: 3rem;
+    cursor: pointer;
+    transition: all 0.1s ease;
+
+    &:hover {
+      color: rgb(0, 0, 0);
+      font-weight: 500;
+    }
   }
 }
 </style>
